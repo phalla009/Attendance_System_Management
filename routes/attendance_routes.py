@@ -9,8 +9,10 @@ from forms.attendance_form import AttendanceForm
 from wtforms import SelectField, StringField
 from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired
+from flask_login import login_required, current_user
 
 attendance_bp = Blueprint('attendance', __name__, url_prefix='/attendance')
+
 
 class QrCodeForm(FlaskForm):
     SessionID = SelectField('Session', coerce=int, validators=[DataRequired()])
@@ -19,6 +21,7 @@ class QrCodeForm(FlaskForm):
     SubjectID = SelectField('Subject', coerce=int, validators=[DataRequired()])
     StartDate = StringField('Start Date & Time', validators=[DataRequired()])
     EndDate = StringField('End Date & Time', validators=[DataRequired()])
+
 
 # 1. New Dashboard Route matching the UI Layout
 @attendance_bp.route('/dashboard', methods=['GET'])
@@ -71,6 +74,7 @@ def dashboard():
         hourly_counts=hourly_counts if hourly_counts else [0] * 5
     )
 
+
 # 2. Existing QR Code Management Route
 @attendance_bp.route('/qrcodes', methods=['GET', 'POST'])
 def manage_qrcodes():
@@ -113,7 +117,6 @@ def edit_qrcode(id):
     qr = QrCode.query.get_or_404(id)
     form = QrCodeForm()
 
-    # ផ្ដល់តម្លៃ Choices ឱ្យ Form វិញ
     form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
     form.ClassID.choices = [(c.ClassID, c.Name) for c in Class.query.all()]
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
@@ -149,6 +152,8 @@ def delete_qrcode(id):
         flash('Cannot delete this QR Code because it is linked to attendance records!', 'danger')
 
     return redirect(url_for('attendance.manage_qrcodes'))
+
+
 # 3. Attendance Records Management Route
 @attendance_bp.route('/records', methods=['GET', 'POST'])
 def manage_attendances():
@@ -189,6 +194,7 @@ def manage_attendances():
         attendances=attendances
     )
 
+
 # 4. Edit Attendance Route
 @attendance_bp.route('/records/edit/<int:id>', methods=['POST'])
 def edit_attendance(id):
@@ -218,6 +224,7 @@ def edit_attendance(id):
 
     return redirect(url_for('attendance.manage_attendances'))
 
+
 # 5. Delete Attendance Route
 @attendance_bp.route('/records/delete/<int:id>', methods=['POST'])
 def delete_attendance(id):
@@ -228,35 +235,51 @@ def delete_attendance(id):
     return redirect(url_for('attendance.manage_attendances'))
 
 
-@attendance_bp.route('/scan', methods=['GET', 'POST'])
-def scan_attendance():
+# 6. QR Code Scanning Route (Requires Login & uses specific qrid)
+@attendance_bp.route('/scan/<int:qrid>', methods=['GET', 'POST'])
+@login_required
+def scan_attendance(qrid):
+    qr = QrCode.query.get_or_404(qrid)
     now = datetime.now()
-    active_qr = QrCode.query.filter(QrCode.StartDate <= now, QrCode.EndDate >= now) \
-        .order_by(QrCode.QrCodeID.desc()).first()
+
+    # ពិនិត្យម៉ោងចាប់ផ្តើម និងបញ្ចប់របស់ QR Code
+    if not (qr.StartDate <= now <= qr.EndDate):
+        flash('QR Code នេះបានផុតកំណត់ ឬមិនទាន់ដល់ម៉ោងស្កេនទេ។', 'danger')
+        return render_template('attendance/scan.html', qr=qr, status='expired')
+
+    # ទាញយក ID របស់អ្នកប្រើដែលបាន Login (ប្រើ current_user.ProfileID ឬ current_user.id អាស្រ័យលើ User Model របស់អ្នក)
+    user_profile_id = getattr(current_user, 'ProfileID', getattr(current_user, 'id', None))
+
+    # ពិនិត្យថាតើធ្លាប់ស្កេនរួចរាល់ហើយឬยัง
+    existing_attendance = Attendance.query.filter_by(
+        ProfileID=user_profile_id,
+        QrCodeID=qr.QrCodeID
+    ).first()
+
+    if existing_attendance:
+        flash('អ្នកបានកត់ត្រាវត្តមានសម្រាប់វគ្គសិក្សានេះរួចរាល់ហើយ!', 'warning')
+        return render_template('attendance/scan.html', qr=qr, status='already_recorded')
 
     if request.method == 'POST':
-        scan_code = request.form.get('ScanNumber')
-        profile_id = request.form.get('ProfileID')
+        try:
+            attendance = Attendance(
+                ProfileID=user_profile_id,
+                QrCodeID=qr.QrCodeID,
+                ScanNumber=request.form.get('ScanNumber', f'QR-SCAN-{qr.QrCodeID}'),
+                Status='Present',
+                GroupID=qr.session.GroupID if hasattr(qr, 'session') and qr.session else None,
+                SubjectID=qr.SubjectID,
+                Date=datetime.now(),
+                Remarks='Scanned via QR Code'
+            )
+            db.session.add(attendance)
+            db.session.commit()
 
-        if not active_qr:
-            flash('No active QR code session found for scanning.', 'danger')
-            return redirect(url_for('attendance.scan_attendance'))
+            flash('កត់ត្រាវត្តមានបានដោយជោគជ័យ!', 'success')
+            return render_template('attendance/scan.html', qr=qr, status='success')
 
-        existing = Attendance.query.filter_by(ProfileID=profile_id, QrCodeID=active_qr.QrCodeID).first()
-        if existing:
-            flash('Attendance already recorded for this session!', 'warning')
-            return redirect(url_for('attendance.scan_attendance'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'មានបញ្ហាពេលកត់ត្រាវត្តមាន: {e}', 'danger')
 
-        attendance = Attendance(
-            ProfileID=profile_id,
-            QrCodeID=active_qr.QrCodeID,
-            ScanNumber=scan_code,
-            Status='Present',
-            Date=datetime.now()
-        )
-        db.session.add(attendance)
-        db.session.commit()
-        flash('Attendance recorded successfully!', 'success')
-        return redirect(url_for('attendance.scan_attendance'))
-    return render_template('attendance/scan.html', active_qr=active_qr)
-
+    return render_template('attendance/scan.html', qr=qr)
