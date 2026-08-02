@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="km">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>កត់ត្រាវត្តមានតាម QR Code</title>
+    <title>Scan Attendance via QR Code</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans Khmer', sans-serif; background-color: #0b0f19; color: #fff; }
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #fff; }
         .scan-card { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 30px; max-width: 450px; margin: 80px auto; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="scan-card shadow-lg">
-            <h3 class="fw-bold mb-3 text-indigo">កត់ត្រាវត្តមាន</h3>
+            <h3 class="fw-bold mb-3 text-indigo">Attendance Scanning</h3>
 
-            <!-- បង្ហាញ Flash Messages -->
+            <!-- Display Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
@@ -26,15 +26,15 @@
             {% endwith %}
 
             <div class="mb-4 text-start bg-dark p-3 rounded border border-secondary border-opacity-25">
-                <p class="mb-1"><strong>មុខវិជ្ជា:</strong> {{ qr.subject.Name if qr.subject else 'N/A' }}</p>
-                <p class="mb-1"><strong>ម៉ោងចាប់ផ្តើម:</strong> {{ qr.StartDate.strftime('%Y-%m-%d %I:%M %p') }}</p>
-                <p class="mb-0"><strong>ម៉ោងបញ្ចប់:</strong> {{ qr.EndDate.strftime('%Y-%m-%d %I:%M %p') }}</p>
+                <p class="mb-1"><strong>Subject:</strong> {{ qr.subject.Name if qr.subject else 'N/A' }}</p>
+                <p class="mb-1"><strong>Start Time:</strong> {{ qr.StartDate.strftime('%Y-%m-%d %I:%M %p') }}</p>
+                <p class="mb-0"><strong>End Time:</strong> {{ qr.EndDate.strftime('%Y-%m-%d %I:%M %p') }}</p>
             </div>
 
             <form method="POST">
                 <input type="hidden" name="ScanNumber" value="MOBILE-SCAN-{{ qr.QrCodeID }}">
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="background-color: #6366f1; border: none;">
-                    ยืนยันវត្តមាន (Confirm Attendance)
+                    Confirm Attendance
                 </button>
             </form>
         </div>
