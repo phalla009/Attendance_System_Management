@@ -106,6 +106,49 @@ def manage_qrcodes():
     qrcodes = QrCode.query.all()
     return render_template('attendance/qrcodes.html', form=form, qrcodes=qrcodes)
 
+
+# ----------------- QR CODES (EDIT & DELETE) -----------------
+@attendance_bp.route('/qrcodes/edit/<int:id>', methods=['POST'])
+def edit_qrcode(id):
+    qr = QrCode.query.get_or_404(id)
+    form = QrCodeForm()
+
+    # ផ្ដល់តម្លៃ Choices ឱ្យ Form វិញ
+    form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
+    form.ClassID.choices = [(c.ClassID, c.Name) for c in Class.query.all()]
+    form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
+    form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
+
+    if form.validate_on_submit():
+        try:
+            qr.SessionID = form.SessionID.data
+            qr.SubjectID = form.SubjectID.data
+            qr.StartDate = datetime.strptime(form.StartDate.data, '%Y-%m-%dT%H:%M')
+            qr.EndDate = datetime.strptime(form.EndDate.data, '%Y-%m-%dT%H:%M')
+
+            db.session.commit()
+            flash('QR Code session updated successfully!', 'success')
+            return redirect(url_for('attendance.manage_qrcodes'))
+        except ValueError as e:
+            flash(f'Date format error: {e}', 'danger')
+
+    qrcodes = QrCode.query.all()
+    flash('Failed to update QR Code. Please check your inputs.', 'danger')
+    return render_template('attendance/qrcodes.html', form=form, qrcodes=qrcodes, edit_error_id=id)
+
+
+@attendance_bp.route('/qrcodes/delete/<int:id>', methods=['POST'])
+def delete_qrcode(id):
+    qr = QrCode.query.get_or_404(id)
+    try:
+        db.session.delete(qr)
+        db.session.commit()
+        flash('QR Code session deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Cannot delete this QR Code because it is linked to attendance records!', 'danger')
+
+    return redirect(url_for('attendance.manage_qrcodes'))
 # 3. Attendance Records Management Route
 @attendance_bp.route('/records', methods=['GET', 'POST'])
 def manage_attendances():
