@@ -1,54 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="km">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Active QR Code Sessions</title>
+    <title>កត់ត្រាវត្តតាម QR Code (Scan Attendance)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #fff; }
-        .scan-container { max-width: 600px; margin: 60px auto; padding: 20px; }
-        .card-session { background: #111827; border: 1px solid #1f2937; border-radius: 12px; }
+        body { font-family: 'Noto Sans Khmer', sans-serif; background-color: #0b0f19; color: #fff; }
+        .scan-container { max-width: 500px; margin: 80px auto; padding: 25px; }
+        .card-scan { background: #111827; border: 1px solid #1f2937; border-radius: 12px; }
     </style>
 </head>
 <body>
     <div class="container scan-container">
-        <h2 class="fw-bold mb-4 text-center">Active Attendance Sessions</h2>
+        <div class="card card-scan p-4 shadow-lg">
+            <h3 class="fw-bold mb-3 text-center" style="color: #6366f1;">បញ្ជាក់វត្តមាន (Confirm Attendance)</h3>
 
-        <!-- Display Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} py-2">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+            <!-- Display Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-        {% if active_qrs %}
-            <div class="list-group">
-                {% for qr in active_qrs %}
-                    <div class="card-session p-3 mb-3 d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-1 text-indigo"><strong>Subject:</strong> {{ qr.subject.Name if qr.subject else 'N/A' }}</h5>
-                            <p class="mb-0 text-muted small">
-                                Ends at: {{ qr.EndDate.strftime('%Y-%m-%d %I:%M %p') }}
-                            </p>
-                        </div>
-                        <a href="{{ url_for('attendance.scan_attendance', qrid=qr.QrCodeID) }}" class="btn btn-primary btn-sm px-4 fw-bold" style="background-color: #6366f1; border: none;">
-                            Scan Now
-                        </a>
+            {% if status == 'expired' %}
+                <div class="text-center py-4">
+                    <p class="text-danger fw-bold">វគ្គស្កេននេះបានផុតកំណត់ ឬមិនទាន់ចាប់ផ្តើមទេ។</p>
+                    <a href="{{ url_for('attendance.active_scan_sessions') }}" class="btn btn-secondary mt-3">ត្រឡប់ក្រោយវិញ</a>
+                </div>
+            {% elif status == 'already_recorded' %}
+                <div class="text-center py-4">
+                    <p class="text-warning fw-bold">អ្នកបានកត់ត្រាវត្តមានសម្រាប់វគ្គនេះរួចរាល់ហើយ!</p>
+                    <a href="{{ url_for('attendance.active_scan_sessions') }}" class="btn btn-primary mt-3" style="background-color: #6366f1; border: none;">មើលវគ្គផ្សេងទៀត</a>
+                </div>
+            {% elif status == 'success' %}
+                <div class="text-center py-4">
+                    <p class="text-success fw-bold fs-5">🎉 កត់ត្រាវត្តមានបានដោយជោគជ័យ!</p>
+                    <a href="{{ url_for('attendance.active_scan_sessions') }}" class="btn btn-success mt-3">បន្តការស្កេនផ្សេងទៀត</a>
+                </div>
+            {% else %}
+                <!-- Session Info -->
+                <div class="mb-4 p-3 bg-dark rounded border border-secondary">
+                    <p class="mb-1"><strong>មុខវិជ្ជា:</strong> {{ qr.subject.Name if qr.subject else 'N/A' }}</p>
+                    <p class="mb-0 text-muted small">ម៉ោងបញ្ចប់: {{ qr.EndDate.strftime('%Y-%m-%d %I:%M %p') }}</p>
+                </div>
+
+                <!-- Form Submit to Save Attendance -->
+                <form method="POST">
+                    <input type="hidden" name="ScanNumber" value="QR-SESSION-{{ qr.QrCodeID }}">
+                    <div class="d-grid">
+                        <button type="submit" class="py-2 btn btn-primary fw-bold" style="background-color: #6366f1; border: none;">
+                            ចុចទីនេះដើម្បីបញ្ជាក់វត្តមាន (Submit Attendance)
+                        </button>
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="card-session p-5 text-center">
-                <p class="text-muted mb-0">No active attendance scanning sessions at the moment.</p>
-            </div>
-        {% endif %}
+                </form>
+            {% endif %}
 
-        <div class="text-center mt-4">
-            <a href="{{ url_for('attendance.dashboard') }}" class="text-decoration-none text-muted">&larr; Back to Dashboard</a>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('attendance.active_scan_sessions') }}" class="text-decoration-none text-muted small">&larr; ត្រឡប់ទៅបញ្ជីវគ្គសកម្ម</a>
+            </div>
         </div>
     </div>
 </body>

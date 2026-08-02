@@ -242,7 +242,6 @@ def active_scan_sessions():
     active_qrs = QrCode.query.filter(QrCode.StartDate <= now, QrCode.EndDate >= now).all()
     return render_template('attendance/active_scans.html', active_qrs=active_qrs)
 
-
 # 7. QR Code Scanning Route (Requires Login & uses specific qrid)
 @attendance_bp.route('/scan/<int:qrid>', methods=['GET', 'POST'])
 @login_required
@@ -250,15 +249,15 @@ def scan_attendance(qrid):
     qr = QrCode.query.get_or_404(qrid)
     now = datetime.now()
 
-    # Check if the QR code session is active or expired
+    # ១. ពិនិត្យមើលថាតើ QR Code ផុតកំណត់ឬនៅ
     if not (qr.StartDate <= now <= qr.EndDate):
         flash('This QR code session has expired or is not yet active for scanning.', 'danger')
         return render_template('attendance/scan.html', qr=qr, status='expired')
 
-    # Retrieve the Profile ID of the currently logged-in user
+    # ២. យក Profile ID របស់ User ដែលកំពុង Login
     user_profile_id = getattr(current_user, 'ProfileID', getattr(current_user, 'id', None))
 
-    # Check if attendance has already been recorded for this session
+    # ៣. ពិនិត្យមើលថាតើធ្លាប់បានកត់ត្រាវត្តមានរួចហើយឬនៅ
     existing_attendance = Attendance.query.filter_by(
         ProfileID=user_profile_id,
         QrCodeID=qr.QrCodeID
@@ -268,26 +267,25 @@ def scan_attendance(qrid):
         flash('You have already recorded your attendance for this session!', 'warning')
         return render_template('attendance/scan.html', qr=qr, status='already_recorded')
 
-    if request.method == 'POST':
-        try:
-            attendance = Attendance(
-                ProfileID=user_profile_id,
-                QrCodeID=qr.QrCodeID,
-                ScanNumber=request.form.get('ScanNumber', f'QR-SCAN-{qr.QrCodeID}'),
-                Status='Present',
-                GroupID=qr.session.GroupID if hasattr(qr, 'session') and qr.session else None,
-                SubjectID=qr.SubjectID,
-                Date=datetime.now(),
-                Remarks='Scanned via QR Code'
-            )
-            db.session.add(attendance)
-            db.session.commit()
+    # ៤. រក្សាទុកចូល Database ដោយស្វ័យប្រវត្តិភ្លាមៗ ពេលចូលមកដល់ (មិនបាច់រង់ចាំចុច Submit)
+    try:
+        attendance = Attendance(
+            ProfileID=user_profile_id,
+            QrCodeID=qr.QrCodeID,
+            ScanNumber=f'QR-SCAN-{qr.QrCodeID}',
+            Status='Present',
+            GroupID=qr.session.GroupID if hasattr(qr, 'session') and qr.session else None,
+            SubjectID=qr.SubjectID,
+            Date=datetime.now(),
+            Remarks='Scanned via QR Code'
+        )
+        db.session.add(attendance)
+        db.session.commit()
 
-            flash('Attendance recorded successfully!', 'success')
-            return render_template('attendance/scan.html', qr=qr, status='success')
+        flash('Attendance recorded successfully!', 'success')
+        return render_template('attendance/scan.html', qr=qr, status='success')
 
-        except Exception as e:
-            db.session.rollback()
-            flash(f'An error occurred while recording attendance: {e}', 'danger')
-
-    return render_template('attendance/scan.html', qr=qr)
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred while recording attendance: {e}', 'danger')
+        return render_template('attendance/scan.html', qr=qr)
