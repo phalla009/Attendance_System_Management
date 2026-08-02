@@ -2,38 +2,258 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Scan Attendance</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-dark text-white">
-    <div class="container mt-5 text-center">
-        <h2>System Attendance Scanner</h2>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Attendance - Attendance Dashboard</title>
 
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/static/images/logo/logo.png">
+
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #111827;
+            --border-color: #1f2937;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --accent-indigo: #6366f1;
+            --accent-success: #10b981;
+        }
+
+        * { font-family: 'Inter', 'Noto Sans Khmer', sans-serif; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .scanner-container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .scanner-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .scanner-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-indigo);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 20px auto;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .scanner-card h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .scanner-card p.subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .session-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .session-box h5 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .session-info-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .session-info-item span:last-child {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .btn-checkin {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-checkin:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            color: white;
+        }
+
+        .empty-state-box {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 14px;
+            padding: 30px 20px;
+            color: #f87171;
+            font-size: 14px;
+        }
+
+        .empty-state-box i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        /* Toast Messages */
+        .toast-container-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+        .custom-toast {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Flash Messages Toasts -->
+    <div class="toast-container-custom">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for cat, msg in messages %}
-                    <div class="alert alert-{{ cat }}">{{ msg }}</div>
+                {% for category, message in messages %}
+                    <div class="custom-toast" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="bi bi-exclamation-circle-fill text-danger fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-warning fs-5"></i>
+                            {% endif %}
+                            <span style="font-size: 13px; font-weight: 500;">{{ message }}</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 10px;" onclick="this.parentElement.remove()"></button>
+                    </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
+    </div>
 
-        {% if active_qr %}
-            <div class="card bg-secondary text-white p-4 mx-auto" style="max-width: 400px;">
-                <h4>Session កំពុងបើកដំណើរការ</h4>
-                <p>ចាប់ផ្តើមពី: {{ active_qr.StartDate }}</p>
+    <div class="scanner-container">
+        <div class="scanner-card">
+
+            <div class="scanner-icon">
+                <i class="bi bi-qr-code-scan"></i>
+            </div>
+
+            <h2>Attendance Scanner</h2>
+            <p class="subtitle">ធ្វើការពិនិត្យវត្តមានដោយស្វ័យប្រវត្តិឆ្លងកាត់ QR Code សកម្ម</p>
+
+            {% if active_qr %}
+                <div class="session-box">
+                    <h5><i class="bi bi-broadcast text-success animate-pulse"></i> Session កំពុងបើកដំណើរការ</h5>
+                    <div class="session-info-item">
+                        <span>Session ID:</span>
+                        <span>#{{ active_qr.QrCodeID }}</span>
+                    </div>
+                    <div class="session-info-item">
+                        <span>Subject:</span>
+                        <span>{{ active_qr.subject.Name if active_qr.subject else 'N/A' }}</span>
+                    </div>
+                    <div class="session-info-item">
+                        <span>ចាប់ផ្តើមពី:</span>
+                        <span class="text-success">{{ active_qr.StartDate.strftime('%I:%M %p, %d %b %Y') if active_qr.StartDate else '-' }}</span>
+                    </div>
+                    <div class="session-info-item">
+                        <span>ដល់ម៉ោង:</span>
+                        <span class="text-danger">{{ active_qr.EndDate.strftime('%I:%M %p, %d %b %Y') if active_qr.EndDate else '-' }}</span>
+                    </div>
+                </div>
 
                 <!-- Form បញ្ជូនទិន្នន័យពេល Scan ជោគជ័យ -->
                 <form method="POST">
                     <input type="hidden" name="ScanNumber" value="SCAN-{{ active_qr.QrCodeID }}-USER">
-                    <!-- បញ្ជាក់ ProfileID របស់ User ដែលកំពុង Login (អាចទាញយកពី current_user.ProfileID) -->
-                    <input type="hidden" name="ProfileID" value="1">
+                    <!-- ProfileID (អាចផ្ដល់តម្លៃតាម Session របស់អ្នក ឧទាហរណ៍: session.get('user_id') ឬលេខ 1) -->
+                    <input type="hidden" name="ProfileID" value="{{ session.get('user_id', 1) }}">
 
-                    <button type="submit" class="btn btn-success w-100 mt-3">Check-In Attendance Now</button>
+                    <button type="submit" class="btn-checkin">
+                        <i class="bi bi-fingerprint fs-5"></i> Check-In Attendance Now
+                    </button>
                 </form>
-            </div>
-        {% else %}
-            <div class="alert alert-warning">មិនមាន QR Code សម្រាប់ស្កែនពេលនេះទេ!</div>
-        {% endif %}
+            {% else %}
+                <div class="empty-state-box">
+                    <i class="bi bi-exclamation-octagon"></i>
+                    <strong>គ្មានវគ្គសិក្សា (Session) សម្រាប់ស្កែនពេលនេះទេ!</strong>
+                    <p class="text-muted small mt-1 mb-0">សូមរង់ចាំគ្រូបង្កើត QR Code បើកដំណើរការសិន។</p>
+                </div>
+            {% endif %}
+
+        </div>
     </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
