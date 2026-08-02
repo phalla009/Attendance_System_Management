@@ -234,8 +234,16 @@ def delete_attendance(id):
     flash('Attendance deleted successfully!', 'success')
     return redirect(url_for('attendance.manage_attendances'))
 
+# 6. Active QR Code Sessions Listing Route for Scanning
+@attendance_bp.route('/scan/active', methods=['GET'])
+@login_required
+def active_scan_sessions():
+    now = datetime.now()
+    active_qrs = QrCode.query.filter(QrCode.StartDate <= now, QrCode.EndDate >= now).all()
+    return render_template('attendance/active_scans.html', active_qrs=active_qrs)
 
-# 6. QR Code Scanning Route (Requires Login & uses specific qrid)
+
+# 7. QR Code Scanning Route (Requires Login & uses specific qrid)
 @attendance_bp.route('/scan/<int:qrid>', methods=['GET', 'POST'])
 @login_required
 def scan_attendance(qrid):
