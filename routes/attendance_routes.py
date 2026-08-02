@@ -259,3 +259,4 @@ def scan_attendance():
         flash('Attendance recorded successfully!', 'success')
         return redirect(url_for('attendance.scan_attendance'))
     return render_template('attendance/scan.html', active_qr=active_qr)
+
