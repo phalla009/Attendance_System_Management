@@ -1,16 +1,19 @@
 from extensions import db
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from flask_migrate import Migrate
 import models
 
-# នាំចូល Blueprints ទាំងអស់ពីថត routes
+# Import all Blueprints from the routes package
 from routes import academic_bp, attendance_bp, location_bp, user_bp
 
-# Import ម៉ូឌែលទីតាំងសម្រាប់ធ្វើការ query ចំនួនសរុប (Total Counts)
+# Import location models for total count queries
 from models.location import Commune, District, Province, Village
 
-# Import ម៉ូឌែល User ពី models.user
+# Import User models from models.user
 import models.user as user_models
+
+# Import Flask-Login
+from flask_login import LoginManager, login_required
 
 app = Flask(__name__)
 
@@ -21,7 +24,19 @@ app.config['SECRET_KEY'] = 'your-super-secret-key-here'
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# ចុះឈ្មោះ Blueprints ទាំងអស់
+# Initialize Flask-Login and bind it explicitly to the app
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'  # Name of the login route function
+app.login_manager = login_manager  # Explicitly attach login_manager attribute to the Flask app instance
+
+@login_manager.user_loader
+def load_user(user_id):
+    if hasattr(user_models, 'User'):
+        return user_models.User.query.get(int(user_id))
+    return user_models.UserProfile.query.get(int(user_id))
+
+# Register all Blueprints
 app.register_blueprint(academic_bp)
 app.register_blueprint(attendance_bp)
 app.register_blueprint(location_bp, url_prefix='/location')
@@ -33,7 +48,7 @@ def api():
     return 'Attendance System Database API is running!'
 
 
-# ទំព័រដើម (Home Dashboard) សម្រាប់ផ្នែក Academic
+# Academic Home Dashboard
 @app.route('/academic/index')
 def index():
     total_sessions = (
@@ -61,7 +76,7 @@ def index():
     )
 
 
-# ទំព័រដើមសម្រាប់ផ្នែក User Management (Dashboard)
+# User Management Home Dashboard
 @app.route('/user/index')
 def user_index():
     total_profiles = (
@@ -80,7 +95,6 @@ def user_index():
         else 0
     )
 
-    # ត្រួតពិនិត្យ Address ថាតើស្ថិតក្នុង models.user ឬ models.location
     total_addresses = 0
     if hasattr(user_models, 'Address'):
         total_addresses = user_models.Address.query.count()
@@ -97,7 +111,7 @@ def user_index():
     )
 
 
-# ទំព័រដើមសម្រាប់ផ្នែក Location Management
+# Location Management Home Dashboard
 @app.route('/location/index')
 def location_index():
     total_provinces = Province.query.count() if 'Province' in globals() else 0
@@ -115,7 +129,7 @@ def location_index():
     )
 
 
-# ទំព័រ Analytics / Dashboard ផ្លាស់ប្តូរមក path នេះវិញ
+# Analytics / Dashboard Route
 @app.route('/dashboard')
 def dashboard():
     return render_template(
@@ -127,13 +141,22 @@ def dashboard():
         late_count=10,
         absent_count=5,
     )
+
+
+# Direct Scan Route redirecting to active sessions
+@app.route('/scan')
+@login_required
+def root_scan():
+    return redirect(url_for('attendance.active_scan_sessions'))
+
+
 @app.route('/')
 def login():
     return render_template(
         'users/login.html',
         active_page='login',
-
     )
+
 
 if __name__ == '__main__':
     app.run(debug=True)
