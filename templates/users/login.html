@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - System Portal</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold tracking-wide">Portal Login</h2>
+            <p class="text-sm text-gray-400 mt-1">Sign in as Teacher or Student</p>
+        </div>
+
+        <!-- Flash Messages Display -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4 space-y-2">
+                    {% for category, message in messages %}
+                        <div class="p-3 text-sm rounded-lg {% if category == 'success' %}bg-emerald-900/50 text-emerald-300 border border-emerald-700{% else %}bg-rose-900/50 text-rose-300 border border-rose-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Login Form -->
+        <!-- Login Form -->
+        <form method="POST" action="{{ url_for('user.login') }}" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Student Name</label>
+                <input type="text" name="username" required placeholder="Enter your full name"
+                    class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-gray-100">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Contact Number</label>
+                <input type="text" name="password" required placeholder="Enter your phone number"
+                    class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-gray-100">
+            </div>
+
+            <button type="submit"
+                class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition duration-200 shadow-md">
+                Sign In
+            </button>
+        </form>
+    </div>
+
+</body>
+</html>

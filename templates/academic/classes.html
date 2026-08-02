@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Classes - Attendance Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/static/images/logo/logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Flash Messages as Popup Toasts -->
+    <div class="toast-container-custom">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="custom-toast alert-{{ category }}" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="bi bi-exclamation-circle-fill text-danger fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-warning fs-5"></i>
+                            {% endif %}
+                            <span style="font-size: 13px; font-weight: 500;">{{ message }}</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 10px;" onclick="this.parentElement.remove()"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Wrapper Area -->
+    <div class="wrapper">
+
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div>
+                <h1>Manage Classes</h1>
+                <p>គ្រប់គ្រងថ្នាក់រៀន និងព័ត៌មានសិក្សាផ្សេងៗ</p>
+            </div>
+            <div>
+                <a href="{{ url_for('index') }}" class="btn-custom-secondary">
+                    <i class="bi bi-house-door"></i> Back to Academic Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Class List Panel Table -->
+        <div class="panel">
+            <div class="panel-title">
+                <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> Class List</span>
+                <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                    <i class="bi bi-plus-circle-fill"></i> Add New Class
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark-custom">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Code</th>
+                            <th>Class Name</th>
+                            <th>Session Name</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if classes %}
+                            {% for c, session_name in classes %}
+                            <tr>
+                                <td><span class="id-badge">{{ c.ClassID }}</span></td>
+                                <td><span class="code-pill">{{ c.Code }}</span></td>
+                                <td>{{ c.Name }}</td>
+                                <td><span class="session-badge"><i class="bi bi-calendar3"></i> {{ session_name }}</span></td>
+                                <td class="text-center">
+                                    <div class="d-inline-flex gap-2">
+                                        <!-- Edit Trigger Button -->
+                                        <button type="button" class="btn-action btn-edit" title="Edit"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editClassModal"
+                                                data-id="{{ c.ClassID }}"
+                                                data-code="{{ c.Code }}"
+                                                data-name="{{ c.Name }}"
+                                                data-session="{{ c.SessionID }}">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+
+                                        <!-- Delete Trigger Button -->
+                                        <button type="button" class="btn-action btn-delete" title="Delete"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteClassModal"
+                                                data-id="{{ c.ClassID }}"
+                                                data-name="{{ c.Name }}">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox"></i>
+                                        No classes found in the system.
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. Add Class Modal -->
+    <div class="modal fade" id="addClassModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle-fill" style="color: var(--accent-indigo);"></i> Add New Class</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            {{ form.Code.label(class="form-label") }}
+                            {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else "")) }}
+                            {% for error in form.Code.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.Name.label(class="form-label") }}
+                            {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else "")) }}
+                            {% for error in form.Name.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.SessionID.label(class="form-label") }}
+                            {{ form.SessionID(class="form-select " + ("is-invalid" if form.SessionID.errors else "")) }}
+                            {% for error in form.SessionID.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-save btn-sm" style="width: auto; padding: 6px 16px;">Save Class</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Edit Class Modal -->
+    <div class="modal fade" id="editClassModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Class</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editForm" method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            {{ form.Code.label(class="form-label") }}
+                            {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
+                            {% for error in form.Code.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.Name.label(class="form-label") }}
+                            {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
+                            {% for error in form.Name.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.SessionID.label(class="form-label") }}
+                            {{ form.SessionID(class="form-select " + ("is-invalid" if form.SessionID.errors else ""), id="edit_session") }}
+                            {% for error in form.SessionID.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning btn-sm text-white" style="width: auto; padding: 6px 16px;">Update Class</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteClassModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete class <strong id="delete_class_name" class="text-warning"></strong>?</p>
+                    <p class="text-muted small mb-0">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteForm" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">Delete Class</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript សម្រាប់គ្រប់គ្រង Modal, Toast Auto-hide និង Re-opening Modal on Error -->
+    <script>
+        // Populate Edit Modal Data
+        const editClassModal = document.getElementById('editClassModal');
+        editClassModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (button) {
+                const classId = button.getAttribute('data-id');
+                const code = button.getAttribute('data-code');
+                const name = button.getAttribute('data-name');
+                const sessionId = button.getAttribute('data-session');
+
+                document.getElementById('edit_code').value = code;
+                document.getElementById('edit_name').value = name;
+                document.getElementById('edit_session').value = sessionId;
+
+                const editForm = document.getElementById('editForm');
+                editForm.action = `/academic/classes/edit/${classId}`;
+            }
+        });
+
+        // Populate Delete Modal Data
+        const deleteClassModal = document.getElementById('deleteClassModal');
+        deleteClassModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const classId = button.getAttribute('data-id');
+            const className = button.getAttribute('data-name');
+
+            document.getElementById('delete_class_name').textContent = className;
+
+            const deleteForm = document.getElementById('deleteForm');
+            deleteForm.action = `/academic/classes/delete/${classId}`;
+        });
+
+        // Auto-hide Toast Notifications after 4 seconds
+        document.addEventListener("DOMContentLoaded", function() {
+            const toasts = document.querySelectorAll('.custom-toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('hide');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 500);
+                }, 4000);
+            });
+        });
+    </script>
+
+    <!-- Script សម្រាប់បើក Modal ឡើងវិញស្វ័យប្រវត្តិប្រសិនបើ Form មាន Error -->
+    {% if form.errors %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            {% if edit_error_id %}
+                const editForm = document.getElementById('editForm');
+                editForm.action = `/academic/classes/edit/{{ edit_error_id }}`;
+                var editModal = new bootstrap.Modal(document.getElementById('editClassModal'));
+                editModal.show();
+            {% else %}
+                var addModal = new bootstrap.Modal(document.getElementById('addClassModal'));
+                addModal.show();
+            {% endif %}
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

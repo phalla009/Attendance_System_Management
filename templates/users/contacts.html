@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Contact Numbers - Attendance Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/static/images/logo/logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Flash Messages as Popup Toasts -->
+    <div class="toast-container-custom">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="custom-toast alert-{{ category }}" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="bi bi-exclamation-circle-fill text-danger fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-warning fs-5"></i>
+                            {% endif %}
+                            <span style="font-size: 13px; font-weight: 500;">{{ message }}</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 10px;" onclick="this.parentElement.remove()"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Wrapper Area -->
+    <div class="wrapper">
+
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div>
+                <h1>Manage Contact Numbers</h1>
+                <p>គ្រប់គ្រងលេខទូរស័ព្ទ និងព័ត៌មានទំនាក់ទំនងរបស់អ្នកប្រើប្រាស់ក្នុងប្រព័ន្ធ</p>
+            </div>
+            <div>
+                <a href="{{ url_for('user_index') }}" class="btn-custom-secondary">
+                    <i class="bi bi-house-door"></i> Back to User Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Contacts List Panel Table -->
+        <div class="panel">
+            <div class="panel-title">
+                <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> Contact List</span>
+                <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
+                    <i class="bi bi-plus-circle-fill"></i> Add New Contact
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark-custom">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Contact Number</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if contacts %}
+                            {% for c in contacts %}
+                            <tr>
+                                <td><span class="id-badge">{{ c.ContactID }}</span></td>
+                                <td><i class="bi bi-telephone text-muted me-1"></i> {{ c.ContactNumber }}</td>
+                                <td class="text-center">
+                                    <div class="d-inline-flex gap-2">
+                                        <!-- Edit Trigger Button -->
+                                        <button type="button" class="btn-action btn-edit" title="Edit"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editContactModal"
+                                                data-id="{{ c.ContactID }}"
+                                                data-number="{{ c.ContactNumber }}">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+
+                                        <!-- Delete Trigger Button -->
+                                        <button type="button" class="btn-action btn-delete" title="Delete"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteContactModal"
+                                                data-id="{{ c.ContactID }}"
+                                                data-number="{{ c.ContactNumber }}">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3">
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox"></i>
+                                        No contact numbers found in the system.
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. Add Contact Modal -->
+    <div class="modal fade" id="addContactModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle-fill" style="color: var(--accent-indigo);"></i> Add New Contact Number</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            {{ form.ContactNumber.label(class="form-label") }}
+                            {{ form.ContactNumber(class="form-control " + ("is-invalid" if form.ContactNumber.errors else "")) }}
+                            {% for error in form.ContactNumber.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-save btn-sm" style="width: auto; padding: 6px 16px;">Save Contact</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Edit Contact Modal -->
+    <div class="modal fade" id="editContactModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Contact Number</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editForm" method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            {{ form.ContactNumber.label(class="form-label") }}
+                            {{ form.ContactNumber(class="form-control " + ("is-invalid" if form.ContactNumber.errors else ""), id="edit_contact_number") }}
+                            {% for error in form.ContactNumber.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning btn-sm text-white" style="width: auto; padding: 6px 16px;">Update Contact</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteContactModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete contact number <strong id="delete_contact_number" class="text-warning"></strong>?</p>
+                    <p class="text-muted small mb-0">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteForm" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">Delete Contact</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript សម្រាប់គ្រប់គ្រង Modal, Toast និង Data Population -->
+    <script>
+        // Populate Edit Modal Data
+        const editContactModal = document.getElementById('editContactModal');
+        editContactModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (button) {
+                const contactId = button.getAttribute('data-id');
+                const contactNumber = button.getAttribute('data-number');
+
+                document.getElementById('edit_contact_number').value = contactNumber;
+
+                const editForm = document.getElementById('editForm');
+                editForm.action = `/users/contacts/edit/${contactId}`;
+            }
+        });
+
+        // Populate Delete Modal Data
+        const deleteContactModal = document.getElementById('deleteContactModal');
+        deleteContactModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const contactId = button.getAttribute('data-id');
+            const contactNumber = button.getAttribute('data-number');
+
+            document.getElementById('delete_contact_number').textContent = contactNumber;
+
+            const deleteForm = document.getElementById('deleteForm');
+            deleteForm.action = `/users/contacts/delete/${contactId}`;
+        });
+
+        // Auto-hide Toast Notifications
+        document.addEventListener("DOMContentLoaded", function() {
+            const toasts = document.querySelectorAll('.custom-toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('hide');
+                    setTimeout(() => { toast.remove(); }, 500);
+                }, 4000);
+            });
+        });
+    </script>
+
+    <!-- Script សម្រាប់បើក Modal ឡើងវិញស្វ័យប្រវត្តិប្រសិនបើ Form មាន Error -->
+    {% if form.errors %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            {% if edit_error_id %}
+                const editForm = document.getElementById('editForm');
+                editForm.action = `/users/contacts/edit/{{ edit_error_id }}`;
+                var editModal = new bootstrap.Modal(document.getElementById('editContactModal'));
+                editModal.show();
+            {% else %}
+                var addModal = new bootstrap.Modal(document.getElementById('addContactModal'));
+                addModal.show();
+            {% endif %}
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

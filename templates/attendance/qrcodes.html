@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Management - Attendance Dashboard</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/static/images/logo/logo.png">
+
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Bootstrap Icons & FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- qrcode.js CDN សម្រាប់ Generate រូបភាព QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #111827;
+            --border-color: #1f2937;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --accent-indigo: #6366f1;
+        }
+
+        * { font-family: 'Inter', 'Noto Sans Khmer', sans-serif; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        .wrapper {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 24px 30px;
+            border-radius: 16px;
+        }
+        .dashboard-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+        .dashboard-header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .card, .modal-content {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 16px !important;
+            color: var(--text-main) !important;
+        }
+        .card-header, .modal-header, .modal-footer {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-main) !important;
+        }
+
+        .form-label { color: var(--text-main); font-size: 13px; font-weight: 500; }
+        .form-control, .form-select {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border-color: var(--accent-indigo) !important;
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25) !important;
+            color: var(--text-main) !important;
+        }
+        .form-select option { background-color: var(--bg-card); color: var(--text-main); }
+
+        /* ធ្វើឱ្យ Date/Time Picker បង្ហាញពណ៌ស្អាតលើ Dark Theme */
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        .btn-custom-primary {
+            background: var(--accent-indigo);
+            color: white;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s ease;
+        }
+        .btn-custom-primary:hover { opacity: 0.9; color: white; }
+
+        /* Toast Messages */
+        .toast-container-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .custom-toast {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-width: 300px;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { display: none; }
+            .wrapper { margin-left: 0; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Flash Messages Toasts -->
+    <div class="toast-container-custom">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="custom-toast" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="bi bi-exclamation-circle-fill text-danger fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-warning fs-5"></i>
+                            {% endif %}
+                            <span style="font-size: 13px; font-weight: 500;">{{ message }}</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 10px;" onclick="this.parentElement.remove()"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Wrapper Area -->
+    <div class="wrapper">
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div>
+                <h1>QR Code Management</h1>
+                <p>បង្កើត និងគ្រប់គ្រង QR Codes សម្រាប់វគ្គសិក្សា (Session, Class, Group, Subject និង Time)។</p>
+            </div>
+            <div>
+                <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#createQrModal">
+                    <i class="bi bi-plus-lg"></i> Generate QR Code
+                </button>
+            </div>
+        </div>
+
+        <!-- Active QR Codes Grid -->
+        <div class="row g-4">
+            <div class="col-lg-12">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h5 class="mb-0 fw-bold fs-6"><i class="fas fa-qrcode me-2 text-indigo"></i> Active QR Codes for Scanning</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for qr in qrcodes %}
+                            <div class="col-md-4 text-center">
+                                <div class="p-4 border border-secondary border-opacity-25 rounded-3 bg-dark">
+    <!-- បង្ហាញ Session Name -->
+    <p class="fw-semibold text-white mb-1">
+        Session: {{ qr.session.Session_name if qr.session else qr.SessionID }}
+    </p>
+
+    <!-- បង្ហាញ Subject Name -->
+    <p class="text-info small mb-1">
+        Subject: {{ qr.subject.Name if qr.subject else 'N/A' }}
+    </p>
+
+    <!-- QR ID -->
+    <p class="text-muted small mb-3">QR ID: #{{ qr.QrCodeID }}</p>
+
+    <!-- Render QR Code Image -->
+    <div id="qrcode-{{ qr.QrCodeID }}" class="d-flex justify-content-center bg-white p-3 rounded mb-3 mx-auto" style="width: fit-content;"></div>
+
+    <!-- Start & End Date Time (AM/PM Format) -->
+    <div class="text-start small text-white bg-black bg-opacity-25 p-2 rounded">
+        <div class="mb-1">
+            <i class="bi bi-play-circle text-success me-1"></i>
+            <strong>Start:</strong> <span class="text-white">{{ qr.StartDate.strftime('%Y-%m-%d %I:%M %p') if qr.StartDate else '-' }}</span>
+        </div>
+        <div>
+            <i class="bi bi-stop-circle text-danger me-1"></i>
+            <strong>End:</strong> <span class="text-white">{{ qr.EndDate.strftime('%Y-%m-%d %I:%M %p') if qr.EndDate else '-' }}</span>
+        </div>
+    </div>
+</div>
+                            </div>
+
+                            <!-- Script Generate QR Code -->
+                            <script>
+                                document.addEventListener("DOMContentLoaded", function() {
+                                    let scanUrl = "{{ url_for('attendance.scan_attendance', qrid=qr.QrCodeID, _external=True) }}";
+                                    new QRCode(document.getElementById("qrcode-{{ qr.QrCodeID }}"), {
+                                        text: scanUrl,
+                                        width: 130,
+                                        height: 130,
+                                        colorDark: "#000000",
+                                        colorLight: "#ffffff",
+                                        correctLevel: QRCode.CorrectLevel.H
+                                    });
+                                });
+                            </script>
+                            {% else %}
+                            <div class="col-12 text-center text-muted py-4">
+                                No active QR codes found. Please create a new one.
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create QR Code Modal -->
+    <div class="modal fade" id="createQrModal" tabindex="-1" aria-labelledby="createQrModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('attendance.manage_qrcodes') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="modal-header">
+                        <h5 class="modal-title fs-6 fw-bold" id="createQrModalLabel">
+                            <i class="fas fa-qrcode me-2 text-indigo"></i> Generate New QR Code Session
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-start">
+                        <div class="mb-3">
+                            {{ form.SessionID.label(class="form-label") }}
+                            {{ form.SessionID(class="form-select") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.ClassID.label(class="form-label") }}
+                            {{ form.ClassID(class="form-select") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.GroupID.label(class="form-label") }}
+                            {{ form.GroupID(class="form-select") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.SubjectID.label(class="form-label") }}
+                            {{ form.SubjectID(class="form-select") }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.StartDate.label(class="form-label") }}
+                                {{ form.StartDate(class="form-control", type="datetime-local") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.EndDate.label(class="form-label") }}
+                                {{ form.EndDate(class="form-control", type="datetime-local") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary btn-sm">
+                            <i class="fas fa-save me-1"></i> Generate QR
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

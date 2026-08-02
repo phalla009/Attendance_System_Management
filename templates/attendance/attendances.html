@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management - Attendance Dashboard</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/static/images/logo/logo.png">
+
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #111827;
+            --border-color: #1f2937;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --accent-indigo: #6366f1;
+            --accent-green: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #d97706;
+        }
+
+        * { font-family: 'Inter', 'Noto Sans Khmer', sans-serif; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        /* ---------- Main Wrapper ---------- */
+        .wrapper {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ---------- Header ---------- */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 24px 30px;
+            border-radius: 16px;
+        }
+        .dashboard-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+        }
+        .dashboard-header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* ---------- Panels & Cards ---------- */
+        .card, .panel, .modal-content {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 16px !important;
+            color: var(--text-main) !important;
+        }
+        .card-header, .modal-header, .modal-footer {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-main) !important;
+        }
+
+        /* ---------- Form Elements ---------- */
+        .form-label {
+            color: var(--text-main);
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .form-control, .form-select {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border-color: var(--accent-indigo) !important;
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25) !important;
+            color: var(--text-main) !important;
+        }
+        .form-select option {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        /* ---------- Buttons ---------- */
+        .btn-custom-primary {
+            background: var(--accent-indigo);
+            color: white;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s ease;
+        }
+        .btn-custom-primary:hover {
+            opacity: 0.9;
+            color: white;
+        }
+
+        /* ---------- Table Styles ---------- */
+        .table {
+            color: var(--text-main) !important;
+            margin-bottom: 0;
+            vertical-align: middle;
+        }
+        .table > :not(caption) > * > * {
+            background-color: transparent !important;
+            color: var(--text-main) !important;
+            border-bottom-color: var(--border-color) !important;
+            padding: 12px 16px;
+        }
+        .table thead th {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-muted) !important;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        code {
+            color: #818cf8;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Toast Messages */
+        .toast-container-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .custom-toast {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-width: 300px;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { display: none; }
+            .wrapper { margin-left: 0; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Flash Messages as Popup Toasts -->
+    <div class="toast-container-custom">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="custom-toast" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="bi bi-exclamation-circle-fill text-danger fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-warning fs-5"></i>
+                            {% endif %}
+                            <span style="font-size: 13px; font-weight: 500;">{{ message }}</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 10px;" onclick="this.parentElement.remove()"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Wrapper Area -->
+    <div class="wrapper">
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div>
+                <h1>Attendance Management</h1>
+                <p>គ្រប់គ្រង និងតាមដានបញ្ជីវត្តមានរបស់សិស្ស ឬអ្នកប្រើប្រាស់ក្នុងប្រព័ន្ធ។</p>
+            </div>
+            <div class="d-flex gap-2">
+                <!-- Add New Button Trigger Modal -->
+                <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addAttendanceModal">
+                    <i class="bi bi-plus-lg"></i> Add New Attendance
+                </button>
+                <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-secondary text-white border-secondary px-3" style="border-radius: 8px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Table Column (Full-Width List Attendances) -->
+            <div class="col-lg-12">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold fs-6"><i class="fas fa-list-alt me-2"></i> Attendance Records</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Scan Code</th>
+                                        <th>User / Student Name</th>
+                                        <th>Group / Class</th>
+                                        <th>Subject</th>
+                                        <th>Date & Time</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for att in attendances %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td><code>{{ att.ScanNumber }}</code></td>
+
+                                        <!-- User / Student Name -->
+                                        <td>
+                                            <div class="fw-semibold text-white">
+                                                {{ att.user.Name if att.user else 'Unknown User' }}
+                                            </div>
+                                            <small class="text-white" style="font-size: 11px;">ID: {{ att.ProfileID }}</small>
+                                        </td>
+
+                                        <!-- Group / Class -->
+                                        <td>
+                                            <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 px-2 py-1">
+                                                {{ att.group.Name if att.group else 'N/A' }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Subject -->
+                                        <td>
+                                            <span class="text-info fw-medium">
+                                                {% if att.subject %}
+                                                    {{ att.subject.Name }}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </span>
+                                        </td>
+
+                                        <td>{{ att.Date.strftime('%Y-%m-%d %H:%M') if att.Date else '-' }}</td>
+                                        <td>
+                                            {% if att.Status == 'Present' %}
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Present</span>
+                                            {% elif att.Status == 'Late' %}
+                                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">Late</span>
+                                            {% elif att.Status == 'Absent' %}
+                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">Absent</span>
+                                            {% else %}
+                                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">Permission</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <!-- Edit Button Trigger Modal -->
+                                            <button type="button" class="btn btn-sm btn-outline-info border-0 me-1" data-bs-toggle="modal" data-bs-target="#editModal{{ att.AttendanceID }}" title="Edit">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+
+                                            <!-- Delete Button Trigger Modal -->
+                                            <button type="button" class="btn btn-sm btn-outline-danger border-0" data-bs-toggle="modal" data-bs-target="#deleteModal{{ att.AttendanceID }}" title="Delete">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Edit Modal (2 Columns layout) -->
+                                    <div class="modal fade" id="editModal{{ att.AttendanceID }}" tabindex="-1" aria-labelledby="editModalLabel{{ att.AttendanceID }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <form action="{{ url_for('attendance.edit_attendance', id=att.AttendanceID) }}" method="POST">
+                                                    {{ form.hidden_tag() }}
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title fs-6 fw-bold" id="editModalLabel{{ att.AttendanceID }}"><i class="bi bi-pencil-square text-indigo me-2"></i> Edit Attendance (#{{ att.AttendanceID }})</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body text-start">
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">Code</label>
+                                                                <input type="text" name="Code" class="form-control" value="{{ att.ScanNumber }}" required>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">Group</label>
+                                                                <select name="GroupID" class="form-select">
+                                                                    {% for g_id, g_name in form.GroupID.choices %}
+                                                                        <option value="{{ g_id }}" {% if g_id == att.GroupID %}selected{% endif %}>{{ g_name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">User / Student</label>
+                                                                <select name="UserID" class="form-select">
+                                                                    {% for u_id, u_name in form.UserID.choices %}
+                                                                        <option value="{{ u_id }}" {% if u_id == att.ProfileID %}selected{% endif %}>{{ u_name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">Subject</label>
+                                                                <select name="SubjectID" class="form-select">
+                                                                    {% for s_id, s_name in form.SubjectID.choices %}
+                                                                        <option value="{{ s_id }}" {% if s_id == att.SubjectID %}selected{% endif %}>{{ s_name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">Date</label>
+                                                                <input type="date" name="Date" class="form-control" value="{{ att.Date.strftime('%Y-%m-%d') if att.Date else '' }}" required>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">Time</label>
+                                                                <input type="time" name="Time" class="form-control" value="{{ att.Date.strftime('%H:%M') if att.Date else '' }}" required>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">Status</label>
+                                                                <select name="Status" class="form-select">
+                                                                    <option value="Present" {% if att.Status == 'Present' %}selected{% endif %}>Present</option>
+                                                                    <option value="Late" {% if att.Status == 'Late' %}selected{% endif %}>Late</option>
+                                                                    <option value="Absent" {% if att.Status == 'Absent' %}selected{% endif %}>Absent</option>
+                                                                    <option value="Permission" {% if att.Status == 'Permission' %}selected{% endif %}>Permission</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">Remarks</label>
+                                                                <input type="text" name="Remarks" class="form-control" value="{{ att.Remarks or '' }}">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-custom-primary btn-sm">Save Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteModal{{ att.AttendanceID }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ att.AttendanceID }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                                            <div class="modal-content text-center p-3">
+                                                <div class="modal-body">
+                                                    <i class="bi bi-exclamation-circle text-danger fs-1 mb-2"></i>
+                                                    <h5 class="modal-title fs-6 fw-bold mb-1" id="deleteModalLabel{{ att.AttendanceID }}">Confirm Delete</h5>
+                                                    <p class="text-muted small mb-3">តើអ្នកពិតជាចង់លុបវត្តមាននេះមែនទេ?</p>
+                                                    <form action="{{ url_for('attendance.delete_attendance', id=att.AttendanceID) }}" method="POST">
+                                                        {{ form.hidden_tag() }}
+                                                        <div class="d-flex justify-content-center gap-2">
+                                                            <button type="button" class="btn btn-secondary btn-sm w-50" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger btn-sm w-50">Delete</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">No attendance records found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Attendance Modal (2 Columns layout) -->
+    <div class="modal fade" id="addAttendanceModal" tabindex="-1" aria-labelledby="addAttendanceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('attendance.manage_attendances') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="modal-header">
+                        <h5 class="modal-title fs-6 fw-bold" id="addAttendanceModalLabel">
+                            <i class="fas fa-user-check me-2 text-indigo"></i> Record Attendance
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-start">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.Code.label(class="form-label") }}
+                                {{ form.Code(class="form-control", placeholder="Enter scan/code number") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.GroupID.label(class="form-label") }}
+                                {{ form.GroupID(class="form-select") }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.UserID.label(class="form-label") }}
+                                {{ form.UserID(class="form-select") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.SubjectID.label(class="form-label") }}
+                                {{ form.SubjectID(class="form-select") }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.Date.label(class="form-label") }}
+                                {{ form.Date(class="form-control", type="date") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.Time.label(class="form-label") }}
+                                {{ form.Time(class="form-control", type="time") }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.Status.label(class="form-label") }}
+                                {{ form.Status(class="form-select") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.Remarks.label(class="form-label") }}
+                                {{ form.Remarks(class="form-control", placeholder="Optional remarks...") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary btn-sm">
+                            <i class="fas fa-save me-1"></i> Save Attendance
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

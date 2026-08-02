@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Districts - Attendance Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/static/images/logo/logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Flash Messages as Popup Toasts -->
+    <div class="toast-container-custom">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="custom-toast alert-{{ category }}" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="bi bi-exclamation-circle-fill text-danger fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-warning fs-5"></i>
+                            {% endif %}
+                            <span style="font-size: 13px; font-weight: 500;">{{ message }}</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 10px;" onclick="this.parentElement.remove()"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Wrapper Area -->
+    <div class="wrapper">
+
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div>
+                <h1>Manage Districts</h1>
+                <p>គ្រប់គ្រងទិន្នន័យក្រុង ស្រុក ខណ្ឌ ទូទាំងប្រទេស</p>
+            </div>
+            <div>
+                <a href="{{ url_for('location_index') }}" class="btn-custom-secondary">
+                    <i class="bi bi-house-door"></i> Back to Location Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- District List Panel Table -->
+        <div class="panel">
+            <div class="panel-title">
+                <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> District List</span>
+                <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addDistrictModal">
+                    <i class="bi bi-plus-circle-fill"></i> Add New District
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark-custom">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Code</th>
+                            <th>District Name</th>
+                            <th>Province Name</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if districts %}
+                            {% for d in districts %}
+                            <tr>
+                                <td><span class="id-badge">{{ d.DistrictID }}</span></td>
+                                <td><span class="code-pill">{{ d.Code }}</span></td>
+                                <td>{{ d.Name }}</td>
+                                <td><span class="session-badge"><i class="bi bi-map"></i> {{ d.province.Name if d.province else 'N/A' }}</span></td>
+                                <td class="text-center">
+                                    <div class="d-inline-flex gap-2">
+                                        <!-- Edit Trigger Button -->
+                                        <button type="button" class="btn-action btn-edit" title="Edit"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editDistrictModal"
+                                                data-id="{{ d.DistrictID }}"
+                                                data-code="{{ d.Code }}"
+                                                data-name="{{ d.Name }}"
+                                                data-province="{{ d.ProvinceID }}">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+
+                                        <!-- Delete Trigger Button -->
+                                        <button type="button" class="btn-action btn-delete" title="Delete"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteDistrictModal"
+                                                data-id="{{ d.DistrictID }}"
+                                                data-name="{{ d.Name }}">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox"></i>
+                                        No districts found in the system.
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. Add District Modal -->
+    <div class="modal fade" id="addDistrictModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle-fill" style="color: var(--accent-indigo);"></i> Add New District</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            {{ form.Code.label(class="form-label") }}
+                            {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else "")) }}
+                            {% for error in form.Code.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.Name.label(class="form-label") }}
+                            {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else "")) }}
+                            {% for error in form.Name.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.ProvinceID.label(class="form-label") }}
+                            {{ form.ProvinceID(class="form-select " + ("is-invalid" if form.ProvinceID.errors else "")) }}
+                            {% for error in form.ProvinceID.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-save btn-sm" style="width: auto; padding: 6px 16px;">Save District</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Edit District Modal -->
+    <div class="modal fade" id="editDistrictModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit District</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editForm" method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            {{ form.Code.label(class="form-label") }}
+                            {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
+                            {% for error in form.Code.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.Name.label(class="form-label") }}
+                            {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
+                            {% for error in form.Name.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.ProvinceID.label(class="form-label") }}
+                            {{ form.ProvinceID(class="form-select " + ("is-invalid" if form.ProvinceID.errors else ""), id="edit_province") }}
+                            {% for error in form.ProvinceID.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning btn-sm text-white" style="width: auto; padding: 6px 16px;">Update District</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteDistrictModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete district <strong id="delete_district_name" class="text-warning"></strong>?</p>
+                    <p class="text-muted small mb-0">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteForm" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">Delete District</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript សម្រាប់គ្រប់គ្រង Modal, Toast Auto-hide និង Re-opening Modal on Error -->
+    <script>
+        // Populate Edit Modal Data
+        const editDistrictModal = document.getElementById('editDistrictModal');
+        editDistrictModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (button) {
+                const districtId = button.getAttribute('data-id');
+                const code = button.getAttribute('data-code');
+                const name = button.getAttribute('data-name');
+                const provinceId = button.getAttribute('data-province');
+
+                document.getElementById('edit_code').value = code;
+                document.getElementById('edit_name').value = name;
+                document.getElementById('edit_province').value = provinceId;
+
+                const editForm = document.getElementById('editForm');
+                editForm.action = `/location/districts/edit/${districtId}`;
+            }
+        });
+
+        // Populate Delete Modal Data
+        const deleteDistrictModal = document.getElementById('deleteDistrictModal');
+        deleteDistrictModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const districtId = button.getAttribute('data-id');
+            const districtName = button.getAttribute('data-name');
+
+            document.getElementById('delete_district_name').textContent = districtName;
+
+            const deleteForm = document.getElementById('deleteForm');
+            deleteForm.action = `/location/districts/delete/${districtId}`;
+        });
+
+        // Auto-hide Toast Notifications after 4 seconds
+        document.addEventListener("DOMContentLoaded", function() {
+            const toasts = document.querySelectorAll('.custom-toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('hide');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 500);
+                }, 4000);
+            });
+        });
+    </script>
+
+    <!-- Script សម្រាប់បើក Modal ឡើងវិញស្វ័យប្រវត្តិប្រសិនបើ Form មាន Error -->
+    {% if form.errors %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            {% if edit_error_id %}
+                const editForm = document.getElementById('editForm');
+                editForm.action = `/location/districts/edit/{{ edit_error_id }}`;
+                var editModal = new bootstrap.Modal(document.getElementById('editDistrictModal'));
+                editModal.show();
+            {% else %}
+                var addModal = new bootstrap.Modal(document.getElementById('addDistrictModal'));
+                addModal.show();
+            {% endif %}
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

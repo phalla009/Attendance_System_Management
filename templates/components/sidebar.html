@@ -1,0 +1,115 @@
+<!-- Sidebar Navigation -->
+<aside class="sidebar" id="sidebar">
+    <div class="logo" style="display: flex; align-items: center; gap: 10px;margin-left: 25px; font-weight: 600; font-size: 1.1rem;">
+        <img src="{{ url_for('static', filename='images/logo/logo.png') }}" alt="Dashdark X Logo" style="width: 150px; height: 150px; object-fit: contain; border-radius: 6px;">
+        <span class="logo-icon" style="display: none;"><i class="bi bi-calendar2-check-fill"></i></span>
+    </div>
+
+    {% if session.get('user_type') == 'Teacher' %}
+        <div class="nav-label">Main Menu</div>
+        <!-- Analytics Menu -->
+        <a href="{{ url_for('dashboard') }}" class="nav-item-custom {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-bar-chart-fill"></i> Analytics
+        </a>
+
+        <div class="nav-label">Academic Management</div>
+        <!-- Academic Modules & Dashboards Dropdown -->
+        <button class="nav-item-custom dropdown-toggle-custom {% if 'academic' not in request.endpoint and request.endpoint != 'index' %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#academicDropdown" aria-expanded="{% if 'academic' in request.endpoint or request.endpoint == 'index' %}true{% else %}false{% endif %}" aria-controls="academicDropdown">
+            <span class="d-flex align-items-center gap-2"><i class="bi bi-journal-album"></i> Academic Model</span>
+            <i class="bi bi-chevron-down"></i>
+        </button>
+
+        <!-- Dropdown Collapse Menu -->
+        <div class="collapse {% if 'academic' in request.endpoint or request.endpoint == 'index' %}show{% endif %}" id="academicDropdown" data-bs-parent="#sidebar">
+            <div class="dropdown-container">
+                <a href="{{ url_for('index') }}" class="nav-item-custom {% if request.endpoint == 'index' %}active{% endif %}">
+                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                </a>
+                <a href="{{ url_for('academic.manage_sessions') }}" class="nav-item-custom {% if 'manage_sessions' in request.endpoint %}active{% endif %}">
+                    <i class="bi bi-calendar-week"></i> Sessions
+                </a>
+                <a href="{{ url_for('academic.manage_classes') }}" class="nav-item-custom {% if 'manage_classes' in request.endpoint %}active{% endif %}">
+                    <i class="bi bi-easel"></i> Classes
+                </a>
+                <a href="{{ url_for('academic.manage_groups') }}" class="nav-item-custom {% if 'manage_groups' in request.endpoint %}active{% endif %}">
+                    <i class="bi bi-people"></i> Groups
+                </a>
+                <a href="{{ url_for('academic.manage_subjects') }}" class="nav-item-custom {% if 'manage_subjects' in request.endpoint %}active{% endif %}">
+                    <i class="bi bi-journal-bookmark"></i> Subjects
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Users Management (បង្ហាញទាំង Teacher និង User ធម្មតា) -->
+    <div class="nav-label">Users Management</div>
+    <!-- User Management Dropdown Menu -->
+    <button class="nav-item-custom dropdown-toggle-custom {% if 'user' not in request.endpoint %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#userDropdown" aria-expanded="{% if 'user' in request.endpoint %}true{% else %}false{% endif %}" aria-controls="userDropdown">
+        <span class="d-flex align-items-center gap-2"><i class="bi bi-people-fill"></i> Users Model</span>
+        <i class="bi bi-chevron-down"></i>
+    </button>
+
+    <!-- Dropdown Collapse Menu for Users -->
+    <div class="collapse {% if 'user' in request.endpoint %}show{% endif %}" id="userDropdown" data-bs-parent="#sidebar">
+        <div class="dropdown-container">
+            <a href="{{ url_for('user_index') }}" class="nav-item-custom {% if request.endpoint == 'user_index' %}active{% endif %}">
+                <i class="bi bi-grid-1x2-fill"></i> Dashboard
+            </a>
+            <a href="{{ url_for('user.manage_profiles') }}" class="nav-item-custom {% if 'manage_profiles' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-person-badge"></i> Profiles
+            </a>
+            <a href="{{ url_for('user.manage_usertypes') }}" class="nav-item-custom {% if 'manage_usertypes' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-shield-lock"></i> User Types
+            </a>
+            <a href="{{ url_for('user.manage_contacts') }}" class="nav-item-custom {% if 'manage_contacts' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-telephone"></i> Contact Numbers
+            </a>
+            <a href="{{ url_for('user.manage_addresses') }}" class="nav-item-custom {% if 'manage_addresses' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-geo-alt"></i> Addresses
+            </a>
+        </div>
+    </div>
+
+    {% if session.get('user_type') == 'Teacher' %}
+        <div class="nav-label">Location Management</div>
+        <!-- Location Dropdown Menu -->
+        <button class="nav-item-custom dropdown-toggle-custom {% if 'location' not in request.endpoint %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#locationDropdown" aria-expanded="{% if 'location' in request.endpoint %}true{% else %}false{% endif %}" aria-controls="locationDropdown">
+            <span class="d-flex align-items-center gap-2"><i class="bi bi-geo-alt-fill"></i> Location Model</span>
+            <i class="bi bi-chevron-down"></i>
+        </button>
+
+        <!-- Dropdown Collapse Menu for Locations -->
+        <div class="collapse {% if 'location' in request.endpoint %}show{% endif %}" id="locationDropdown" data-bs-parent="#sidebar">
+            <div class="dropdown-container">
+                <a href="{{ url_for('location_index') }}" class="nav-item-custom {% if request.endpoint == 'location_index' %}active{% endif %}">
+                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                </a>
+                <a href="{{ url_for('location.manage_provinces') }}" class="nav-item-custom {% if 'manage_provinces' in request.endpoint %}active{% endif %}">
+                    <i class="bi bi-map"></i> Provinces
+                </a>
+                <a href="{{ url_for('location.manage_districts') }}" class="nav-item-custom {% if 'manage_districts' in request.endpoint %}active{% endif %}">
+                    <i class="bi bi-signpost-split"></i> Districts
+                </a>
+                <a href="{{ url_for('location.manage_communes') }}" class="nav-item-custom {% if 'manage_communes' in request.endpoint %}active{% endif %}">
+                    <i class="bi bi-buildings"></i> Communes
+                </a>
+                <a href="{{ url_for('location.manage_villages') }}" class="nav-item-custom {% if 'manage_villages' in request.endpoint %}active{% endif %}">
+                    <i class="bi bi-house-door"></i> Villages
+                </a>
+            </div>
+        </div>
+
+        <div class="nav-label">Verification</div>
+        <a href="{{ url_for('attendance.manage_qrcodes') }}" class="nav-item-custom {% if 'manage_qrcodes' in request.endpoint %}active{% endif %}">
+            <i class="bi bi-qr-code-scan"></i> QR Codes
+        </a>
+        <a href="{{ url_for('attendance.manage_attendances') }}" class="nav-item-custom {% if 'manage_attendances' in request.endpoint %}active{% endif %}">
+            <i class="bi bi-calendar-check"></i> Attendance Records
+        </a>
+    {% endif %}
+
+    <div class="nav-label">System</div>
+    <a href="{{ url_for('user.logout') }}" class="nav-item-custom text-danger" style="color: #f87171 !important;">
+        <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+</aside>

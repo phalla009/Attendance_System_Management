@@ -1,0 +1,218 @@
+from datetime import datetime, date
+from extensions import db
+from flask import Blueprint, flash, redirect, render_template, url_for, request
+from sqlalchemy import extract
+from models.academic import Session, Class, Group, Subject
+from models.attendance import Attendance, QrCode
+from models.user import UserProfile
+from forms.attendance_form import AttendanceForm
+from wtforms import SelectField, StringField
+from flask_wtf import FlaskForm
+from wtforms.validators import DataRequired
+
+attendance_bp = Blueprint('attendance', __name__, url_prefix='/attendance')
+
+class QrCodeForm(FlaskForm):
+    SessionID = SelectField('Session', coerce=int, validators=[DataRequired()])
+    ClassID = SelectField('Class', coerce=int, validators=[DataRequired()])
+    GroupID = SelectField('Group', coerce=int, validators=[DataRequired()])
+    SubjectID = SelectField('Subject', coerce=int, validators=[DataRequired()])
+    StartDate = StringField('Start Date & Time', validators=[DataRequired()])
+    EndDate = StringField('End Date & Time', validators=[DataRequired()])
+
+# 1. New Dashboard Route matching the UI Layout
+@attendance_bp.route('/dashboard', methods=['GET'])
+def dashboard():
+    today = date.today()
+
+    total_users = UserProfile.query.count() if hasattr(UserProfile, 'query') else 0
+
+    present_count = Attendance.query.filter(
+        Attendance.Status == 'Present',
+        db.func.date(Attendance.Date) == today
+    ).count()
+
+    late_count = Attendance.query.filter(
+        Attendance.Status == 'Late',
+        db.func.date(Attendance.Date) == today
+    ).count() if hasattr(Attendance, 'Status') else 0
+
+    absent_count = Attendance.query.filter(
+        Attendance.Status == 'Absent',
+        db.func.date(Attendance.Date) == today
+    ).count() if hasattr(Attendance, 'Status') else 0
+    present_rate = round((present_count / total_users * 100) if total_users > 0 else 0, 1)
+    current_year = datetime.now().year
+    monthly_counts = []
+    for month in range(1, 13):
+        count = Attendance.query.filter(
+            extract('year', Attendance.Date) == current_year,
+            extract('month', Attendance.Date) == month,
+            Attendance.Status == 'Present'
+        ).count()
+        monthly_counts.append(count)
+
+    time_slots = [8, 10, 12, 14, 16]
+    hourly_counts = []
+    for hour in time_slots:
+        count = Attendance.query.filter(
+            extract('hour', Attendance.Date) == hour
+        ).count()
+        hourly_counts.append(count)
+
+    return render_template(
+        'attendance/dashboard.html',
+        total_users=total_users or 0,
+        present_count=present_count or 0,
+        late_count=late_count or 0,
+        absent_count=absent_count or 0,
+        present_rate=present_rate or 0.0,
+        monthly_counts=monthly_counts if monthly_counts else [0] * 12,
+        hourly_counts=hourly_counts if hourly_counts else [0] * 5
+    )
+
+# 2. Existing QR Code Management Route
+@attendance_bp.route('/qrcodes', methods=['GET', 'POST'])
+def manage_qrcodes():
+    form = QrCodeForm()
+    form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
+    form.ClassID.choices = [(c.ClassID, c.Name) for c in Class.query.all()]
+    form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
+    form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
+
+    if form.validate_on_submit():
+        try:
+            start_dt = datetime.strptime(form.StartDate.data, '%Y-%m-%dT%H:%M')
+            end_dt = datetime.strptime(form.EndDate.data, '%Y-%m-%dT%H:%M')
+
+            qr = QrCode(
+                SessionID=form.SessionID.data,
+                SubjectID=form.SubjectID.data,
+                StartDate=start_dt,
+                EndDate=end_dt,
+            )
+            db.session.add(qr)
+            db.session.commit()
+            flash('QR Code session created successfully!', 'success')
+            return redirect(url_for('attendance.manage_qrcodes'))
+        except ValueError as e:
+            flash(f'Date format error: {e}', 'danger')
+
+    if form.errors:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'Validation Error [{field}]: {error}', 'danger')
+
+    qrcodes = QrCode.query.all()
+    return render_template('attendance/qrcodes.html', form=form, qrcodes=qrcodes)
+
+# 3. Attendance Records Management Route
+@attendance_bp.route('/records', methods=['GET', 'POST'])
+def manage_attendances():
+    form = AttendanceForm()
+
+    form.UserID.choices = [(u.ProfileID, u.Name) for u in UserProfile.query.all()]
+    form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
+    form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
+
+    if form.validate_on_submit():
+        latest_qr = QrCode.query.order_by(QrCode.QrCodeID.desc()).first()
+        qr_id = latest_qr.QrCodeID if latest_qr else 1
+
+        attendance = Attendance(
+            ProfileID=form.UserID.data,
+            QrCodeID=qr_id,
+            ScanNumber=form.Code.data,
+            Status=form.Status.data,
+            GroupID=form.GroupID.data,
+            SubjectID=form.SubjectID.data,
+            Date=datetime.combine(form.Date.data, form.Time.data),
+            Remarks=form.Remarks.data if hasattr(form, 'Remarks') else None
+        )
+        db.session.add(attendance)
+        db.session.commit()
+        flash('Attendance recorded successfully!', 'success')
+        return redirect(url_for('attendance.manage_attendances'))
+
+    if form.errors:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'Validation Error [{field}]: {error}', 'danger')
+
+    attendances = Attendance.query.all()
+    return render_template(
+        'attendance/attendances.html',
+        form=form,
+        attendances=attendances
+    )
+
+# 4. Edit Attendance Route
+@attendance_bp.route('/records/edit/<int:id>', methods=['POST'])
+def edit_attendance(id):
+    attendance = Attendance.query.get_or_404(id)
+    form = AttendanceForm()
+
+    form.UserID.choices = [(u.ProfileID, u.Name) for u in UserProfile.query.all()]
+    form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
+    form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
+
+    if form.validate_on_submit():
+        attendance.ProfileID = form.UserID.data
+        attendance.ScanNumber = form.Code.data
+        attendance.Status = form.Status.data
+        attendance.GroupID = form.GroupID.data
+        attendance.SubjectID = form.SubjectID.data
+        attendance.Date = datetime.combine(form.Date.data, form.Time.data)
+        if hasattr(attendance, 'Remarks'):
+            attendance.Remarks = form.Remarks.data
+
+        db.session.commit()
+        flash('Attendance updated successfully!', 'success')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'Edit Validation Error [{field}]: {error}', 'danger')
+
+    return redirect(url_for('attendance.manage_attendances'))
+
+# 5. Delete Attendance Route
+@attendance_bp.route('/records/delete/<int:id>', methods=['POST'])
+def delete_attendance(id):
+    attendance = Attendance.query.get_or_404(id)
+    db.session.delete(attendance)
+    db.session.commit()
+    flash('Attendance deleted successfully!', 'success')
+    return redirect(url_for('attendance.manage_attendances'))
+
+
+@attendance_bp.route('/scan', methods=['GET', 'POST'])
+def scan_attendance():
+    now = datetime.now()
+    active_qr = QrCode.query.filter(QrCode.StartDate <= now, QrCode.EndDate >= now) \
+        .order_by(QrCode.QrCodeID.desc()).first()
+
+    if request.method == 'POST':
+        scan_code = request.form.get('ScanNumber')
+        profile_id = request.form.get('ProfileID')
+
+        if not active_qr:
+            flash('No active QR code session found for scanning.', 'danger')
+            return redirect(url_for('attendance.scan_attendance'))
+
+        existing = Attendance.query.filter_by(ProfileID=profile_id, QrCodeID=active_qr.QrCodeID).first()
+        if existing:
+            flash('Attendance already recorded for this session!', 'warning')
+            return redirect(url_for('attendance.scan_attendance'))
+
+        attendance = Attendance(
+            ProfileID=profile_id,
+            QrCodeID=active_qr.QrCodeID,
+            ScanNumber=scan_code,
+            Status='Present',
+            Date=datetime.now()
+        )
+        db.session.add(attendance)
+        db.session.commit()
+        flash('Attendance recorded successfully!', 'success')
+        return redirect(url_for('attendance.scan_attendance'))
+    return render_template('attendance/scan.html', active_qr=active_qr)
