@@ -189,7 +189,7 @@
                         {{ form.Code.label(class="form-label") }}
                         <!-- ⚙️ បន្ថែម readonly និង background-color ឱ្យវាស្มัทស្រួលមើល -->
                         {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
-                        <div class="form-text text-muted" style="font-size: 11px;">Subject code cannot be changed.</div>
+                        <div class="form-text text-white" style="font-size: 11px;">Subject code cannot be changed.</div>
                         {% for error in form.Code.errors %}
                             <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                         {% endfor %}
@@ -228,7 +228,7 @@
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to delete subject <strong id="delete_subject_name" class="text-warning"></strong>?</p>
-                    <p class="text-muted small mb-0">This action cannot be undone.</p>
+                    <p class="text-white small mb-0">This action cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>

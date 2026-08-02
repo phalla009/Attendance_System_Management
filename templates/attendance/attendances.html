@@ -24,7 +24,7 @@
             --bg-card: #111827;
             --border-color: #1f2937;
             --text-main: #f9fafb;
-            --text-muted: #9ca3af;
+            --text-white: #9ca3af;
             --accent-indigo: #6366f1;
             --accent-green: #10b981;
             --accent-rose: #f43f5e;
@@ -70,7 +70,7 @@
             color: var(--text-main);
         }
         .dashboard-header p {
-            color: var(--text-muted);
+            color: var(--text-white);
             font-size: 14px;
             margin: 0;
         }
@@ -148,7 +148,7 @@
             background-color: rgba(255, 255, 255, 0.02) !important;
             font-weight: 600;
             font-size: 13px;
-            color: var(--text-muted) !important;
+            color: var(--text-white) !important;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
@@ -284,7 +284,7 @@
                                                 {% if att.subject %}
                                                     {{ att.subject.Name }}
                                                 {% else %}
-                                                    <span class="text-muted">N/A</span>
+                                                    <span class="text-white">N/A</span>
                                                 {% endif %}
                                             </span>
                                         </td>
@@ -402,7 +402,7 @@
                                                 <div class="modal-body">
                                                     <i class="bi bi-exclamation-circle text-danger fs-1 mb-2"></i>
                                                     <h5 class="modal-title fs-6 fw-bold mb-1" id="deleteModalLabel{{ att.AttendanceID }}">Confirm Delete</h5>
-                                                    <p class="text-muted small mb-3">តើអ្នកពិតជាចង់លុបវត្តមាននេះមែនទេ?</p>
+                                                    <p class="text-white small mb-3">តើអ្នកពិតជាចង់លុបវត្តមាននេះមែនទេ?</p>
                                                     <form action="{{ url_for('attendance.delete_attendance', id=att.AttendanceID) }}" method="POST">
                                                         {{ form.hidden_tag() }}
                                                         <div class="d-flex justify-content-center gap-2">
@@ -417,7 +417,7 @@
 
                                     {% else %}
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">No attendance records found.</td>
+                                        <td colspan="8" class="text-center text-white py-4">No attendance records found.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
