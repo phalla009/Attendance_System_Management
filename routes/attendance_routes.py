@@ -242,22 +242,22 @@ def scan_attendance(qrid):
     qr = QrCode.query.get_or_404(qrid)
     now = datetime.now()
 
-    # ពិនិត្យម៉ោងចាប់ផ្តើម និងបញ្ចប់របស់ QR Code
+    # Check if the QR code session is active or expired
     if not (qr.StartDate <= now <= qr.EndDate):
-        flash('QR Code នេះបានផុតកំណត់ ឬមិនទាន់ដល់ម៉ោងស្កេនទេ។', 'danger')
+        flash('This QR code session has expired or is not yet active for scanning.', 'danger')
         return render_template('attendance/scan.html', qr=qr, status='expired')
 
-    # ទាញយក ID របស់អ្នកប្រើដែលបាន Login (ប្រើ current_user.ProfileID ឬ current_user.id អាស្រ័យលើ User Model របស់អ្នក)
+    # Retrieve the Profile ID of the currently logged-in user
     user_profile_id = getattr(current_user, 'ProfileID', getattr(current_user, 'id', None))
 
-    # ពិនិត្យថាតើធ្លាប់ស្កេនរួចរាល់ហើយឬยัง
+    # Check if attendance has already been recorded for this session
     existing_attendance = Attendance.query.filter_by(
         ProfileID=user_profile_id,
         QrCodeID=qr.QrCodeID
     ).first()
 
     if existing_attendance:
-        flash('អ្នកបានកត់ត្រាវត្តមានសម្រាប់វគ្គសិក្សានេះរួចរាល់ហើយ!', 'warning')
+        flash('You have already recorded your attendance for this session!', 'warning')
         return render_template('attendance/scan.html', qr=qr, status='already_recorded')
 
     if request.method == 'POST':
@@ -275,11 +275,11 @@ def scan_attendance(qrid):
             db.session.add(attendance)
             db.session.commit()
 
-            flash('កត់ត្រាវត្តមានបានដោយជោគជ័យ!', 'success')
+            flash('Attendance recorded successfully!', 'success')
             return render_template('attendance/scan.html', qr=qr, status='success')
 
         except Exception as e:
             db.session.rollback()
-            flash(f'មានបញ្ហាពេលកត់ត្រាវត្តមាន: {e}', 'danger')
+            flash(f'An error occurred while recording attendance: {e}', 'danger')
 
     return render_template('attendance/scan.html', qr=qr)
