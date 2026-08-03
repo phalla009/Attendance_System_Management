@@ -237,8 +237,12 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-save btn-sm" style="width: auto; padding: 6px 16px;">Save Profile</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-save btn-sm" style="width: auto; padding: 6px 16px;">
+                            <i class="bi bi-check-lg me-1"></i> Save Profile
+                        </button>
                     </div>
                 </form>
             </div>
@@ -260,10 +264,17 @@
                             <div class="col-md-6 mb-3">
                                 {{ form.Code.label(class="form-label") }}
                                 {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
+                                <div class="form-text text-white" style="font-size: 11px;">User code cannot be changed.</div>
+                                {% for error in form.Code.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.Name.label(class="form-label") }}
                                 {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
+                                {% for error in form.Name.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                         </div>
 
@@ -271,10 +282,16 @@
                             <div class="col-md-6 mb-3">
                                 {{ form.DOB.label(class="form-label") }}
                                 {{ form.DOB(class="form-control " + ("is-invalid" if form.DOB.errors else ""), id="edit_dob", type="date") }}
+                                {% for error in form.DOB.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.Photo.label(class="form-label") }}
                                 {{ form.Photo(class="form-control " + ("is-invalid" if form.Photo.errors else ""), id="edit_photo", type="file") }}
+                                {% for error in form.Photo.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                         </div>
 
@@ -282,10 +299,16 @@
                             <div class="col-md-6 mb-3">
                                 {{ form.TypeID.label(class="form-label") }}
                                 {{ form.TypeID(class="form-select " + ("is-invalid" if form.TypeID.errors else ""), id="edit_typeid") }}
+                                {% for error in form.TypeID.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.GroupID.label(class="form-label") }}
                                 {{ form.GroupID(class="form-select " + ("is-invalid" if form.GroupID.errors else ""), id="edit_groupid") }}
+                                {% for error in form.GroupID.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                         </div>
 
@@ -293,10 +316,16 @@
                             <div class="col-md-6 mb-3">
                                 {{ form.ClassID.label(class="form-label") }}
                                 {{ form.ClassID(class="form-select " + ("is-invalid" if form.ClassID.errors else ""), id="edit_classid") }}
+                                {% for error in form.ClassID.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.SubjectID.label(class="form-label") }}
                                 {{ form.SubjectID(class="form-select " + ("is-invalid" if form.SubjectID.errors else ""), id="edit_subjectid") }}
+                                {% for error in form.SubjectID.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                         </div>
 
@@ -304,16 +333,26 @@
                             <div class="col-md-6 mb-3">
                                 {{ form.AddressID.label(class="form-label") }}
                                 {{ form.AddressID(class="form-select " + ("is-invalid" if form.AddressID.errors else ""), id="edit_addressid") }}
+                                {% for error in form.AddressID.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.ContactNoID.label(class="form-label") }}
                                 {{ form.ContactNoID(class="form-select " + ("is-invalid" if form.ContactNoID.errors else ""), id="edit_contactid") }}
+                                {% for error in form.ContactNoID.errors %}
+                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning btn-sm text-white" style="width: auto; padding: 6px 16px;">Update Profile</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-warning btn-sm text-white" style="width: auto; padding: 6px 16px;">
+                            <i class="bi bi-arrow-repeat me-1"></i> Update Profile
+                        </button>
                     </div>
                 </form>
             </div>
@@ -333,9 +372,13 @@
                     <p class="text-white small mb-0">This action cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </button>
                     <form id="deleteForm" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">Delete Profile</button>
+                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">
+                            <i class="bi bi-trash3-fill me-1"></i> Delete Profile
+                        </button>
                     </form>
                 </div>
             </div>

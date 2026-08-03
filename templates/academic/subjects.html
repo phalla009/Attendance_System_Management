@@ -166,8 +166,12 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-save btn-sm" style="width: auto; padding: 6px 16px;">Save Subject</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-save btn-sm" style="width: auto; padding: 6px 16px;">
+                            <i class="bi bi-check-lg me-1"></i> Save Subject
+                        </button>
                     </div>
                 </form>
             </div>
@@ -175,48 +179,52 @@
     </div>
 
     <!-- 2. Edit Subject Modal -->
-<div class="modal fade" id="editSubjectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Subject</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="editSubjectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Subject</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editForm" method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            {{ form.Code.label(class="form-label") }}
+                            <!-- ⚙️ បន្ថែម readonly និង background-color ឱ្យវាស្មัทស្រួលមើល -->
+                            {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
+                            <div class="form-text text-white" style="font-size: 11px;">Subject code cannot be changed.</div>
+                            {% for error in form.Code.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.Name.label(class="form-label") }}
+                            {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
+                            {% for error in form.Name.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.GroupID.label(class="form-label") }}
+                            {{ form.GroupID(class="form-select " + ("is-invalid" if form.GroupID.errors else ""), id="edit_group") }}
+                            {% for error in form.GroupID.errors %}
+                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-warning btn-sm text-white" style="width: auto; padding: 6px 16px;">
+                            <i class="bi bi-arrow-repeat me-1"></i> Update Subject
+                        </button>
+                    </div>
+                </form>
             </div>
-            <form id="editForm" method="POST" novalidate>
-                {{ form.hidden_tag() }}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        {{ form.Code.label(class="form-label") }}
-                        <!-- ⚙️ បន្ថែម readonly និង background-color ឱ្យវាស្มัทស្រួលមើល -->
-                        {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
-                        <div class="form-text text-white" style="font-size: 11px;">Subject code cannot be changed.</div>
-                        {% for error in form.Code.errors %}
-                            <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                    <div class="mb-3">
-                        {{ form.Name.label(class="form-label") }}
-                        {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
-                        {% for error in form.Name.errors %}
-                            <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                    <div class="mb-3">
-                        {{ form.GroupID.label(class="form-label") }}
-                        {{ form.GroupID(class="form-select " + ("is-invalid" if form.GroupID.errors else ""), id="edit_group") }}
-                        {% for error in form.GroupID.errors %}
-                            <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning btn-sm text-white" style="width: auto; padding: 6px 16px;">Update Subject</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
 
     <!-- 3. Delete Confirmation Modal -->
     <div class="modal fade" id="deleteSubjectModal" tabindex="-1" aria-hidden="true">
@@ -231,9 +239,13 @@
                     <p class="text-white small mb-0">This action cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </button>
                     <form id="deleteForm" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">Delete Subject</button>
+                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">
+                            <i class="bi bi-trash3-fill me-1"></i> Delete Subject
+                        </button>
                     </form>
                 </div>
             </div>
