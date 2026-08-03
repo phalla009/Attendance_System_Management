@@ -5,6 +5,7 @@ from models.academic import Class, Group, Session, Subject
 
 academic_bp = Blueprint('academic', __name__, url_prefix='/academic')
 
+
 # ==================== HOME / INDEX ROUTE ====================
 @academic_bp.route('/index')
 def index():
@@ -22,10 +23,16 @@ def index():
         total_subjects=total_subjects
     )
 
+
 # ==================== SESSIONS ROUTES ====================
 @academic_bp.route('/sessions', methods=['GET', 'POST'])
 def manage_sessions():
     form = SessionForm()
+
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
     if form.validate_on_submit():
         session = Session(Code=form.Code.data, Session_name=form.Session_name.data)
         db.session.add(session)
@@ -33,8 +40,17 @@ def manage_sessions():
         flash('Session added successfully!', 'success')
         return redirect(url_for('academic.manage_sessions'))
 
-    sessions = Session.query.all()
-    return render_template('academic/sessions.html', form=form, sessions=sessions)
+    pagination = Session.query.paginate(page=page, per_page=per_page, error_out=False)
+    sessions = pagination.items
+
+    prev_url = url_for('academic.manage_sessions', page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('academic.manage_sessions', page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
+
+    return render_template('academic/sessions.html', form=form, sessions=sessions, per_page=per_page, prev_url=prev_url,
+                           next_url=next_url)
+
 
 @academic_bp.route('/sessions/edit/<int:id>', methods=['POST'])
 def edit_session(id):
@@ -50,8 +66,14 @@ def edit_session(id):
         return redirect(url_for('academic.manage_sessions'))
 
     flash('Please correct the errors in the form.', 'danger')
-    sessions = Session.query.all()
-    return render_template('academic/sessions.html', form=form, sessions=sessions, edit_error_id=id)
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    pagination = Session.query.paginate(page=page, per_page=per_page, error_out=False)
+    sessions = pagination.items
+
+    return render_template('academic/sessions.html', form=form, sessions=sessions, per_page=per_page, edit_error_id=id)
+
 
 @academic_bp.route('/sessions/delete/<int:id>', methods=['POST'])
 def delete_session(id):
@@ -65,11 +87,16 @@ def delete_session(id):
         flash('Cannot delete this session because it is related to other data.', 'danger')
     return redirect(url_for('academic.manage_sessions'))
 
+
 # ==================== CLASSES ROUTES ====================
 @academic_bp.route('/classes', methods=['GET', 'POST'])
 def manage_classes():
     form = ClassForm()
     form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
+
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
 
     if form.validate_on_submit():
         new_class = Class(
@@ -82,12 +109,21 @@ def manage_classes():
         flash('Class added successfully!', 'success')
         return redirect(url_for('academic.manage_classes'))
 
-    classes = (
+    query = (
         db.session.query(Class, Session.Session_name.label('SessionName'))
         .join(Session, Class.SessionID == Session.SessionID)
-        .all()
     )
-    return render_template('academic/classes.html', form=form, classes=classes)
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    classes = pagination.items
+
+    prev_url = url_for('academic.manage_classes', page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('academic.manage_classes', page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
+
+    return render_template('academic/classes.html', form=form, classes=classes, per_page=per_page, prev_url=prev_url,
+                           next_url=next_url)
+
 
 @academic_bp.route('/classes/edit/<int:id>', methods=['POST'])
 def edit_class(id):
@@ -105,12 +141,18 @@ def edit_class(id):
         return redirect(url_for('academic.manage_classes'))
 
     flash('Please correct the errors in the form.', 'danger')
-    classes = (
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    query = (
         db.session.query(Class, Session.Session_name.label('SessionName'))
         .join(Session, Class.SessionID == Session.SessionID)
-        .all()
     )
-    return render_template('academic/classes.html', form=form, classes=classes, edit_error_id=id)
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    classes = pagination.items
+
+    return render_template('academic/classes.html', form=form, classes=classes, per_page=per_page, edit_error_id=id)
+
 
 @academic_bp.route('/classes/delete/<int:id>', methods=['POST'])
 def delete_class(id):
@@ -124,11 +166,17 @@ def delete_class(id):
         flash('Cannot delete this class because it is related to other data.', 'danger')
     return redirect(url_for('academic.manage_classes'))
 
+
 # ==================== GROUPS ROUTES ====================
 @academic_bp.route('/groups', methods=['GET', 'POST'])
 def manage_groups():
     form = GroupForm()
     form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
+
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
     if form.validate_on_submit():
         group = Group(
             Code=form.Code.data,
@@ -141,12 +189,21 @@ def manage_groups():
         flash('Group added successfully!', 'success')
         return redirect(url_for('academic.manage_groups'))
 
-    groups = (
+    query = (
         db.session.query(Group, Session.Session_name.label('SessionName'))
         .join(Session, Group.SessionID == Session.SessionID)
-        .all()
     )
-    return render_template('academic/groups.html', form=form, groups=groups)
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    groups = pagination.items
+
+    prev_url = url_for('academic.manage_groups', page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('academic.manage_groups', page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
+
+    return render_template('academic/groups.html', form=form, groups=groups, per_page=per_page, prev_url=prev_url,
+                           next_url=next_url)
+
 
 @academic_bp.route('/groups/edit/<int:id>', methods=['POST'])
 def edit_group(id):
@@ -165,12 +222,18 @@ def edit_group(id):
         return redirect(url_for('academic.manage_groups'))
 
     flash('Please correct the errors in the form.', 'danger')
-    groups = (
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    query = (
         db.session.query(Group, Session.Session_name.label('SessionName'))
         .join(Session, Group.SessionID == Session.SessionID)
-        .all()
     )
-    return render_template('academic/groups.html', form=form, groups=groups, edit_error_id=id)
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    groups = pagination.items
+
+    return render_template('academic/groups.html', form=form, groups=groups, per_page=per_page, edit_error_id=id)
+
 
 @academic_bp.route('/groups/delete/<int:id>', methods=['POST'])
 def delete_group(id):
@@ -184,11 +247,16 @@ def delete_group(id):
         flash('Cannot delete this group because it is related to other data.', 'danger')
     return redirect(url_for('academic.manage_groups'))
 
+
 # ==================== SUBJECTS ROUTES ====================
 @academic_bp.route('/subjects', methods=['GET', 'POST'])
 def manage_subjects():
     form = SubjectForm()
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
+
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
 
     if form.validate_on_submit():
         subject = Subject(
@@ -201,12 +269,21 @@ def manage_subjects():
         flash('Subject added successfully!', 'success')
         return redirect(url_for('academic.manage_subjects'))
 
-    subjects = (
+    query = (
         db.session.query(Subject, Group.Name.label('GroupName'))
         .join(Group, Subject.GroupID == Group.GroupID)
-        .all()
     )
-    return render_template('academic/subjects.html', form=form, subjects=subjects)
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    subjects = pagination.items
+
+    prev_url = url_for('academic.manage_subjects', page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('academic.manage_subjects', page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
+
+    return render_template('academic/subjects.html', form=form, subjects=subjects, per_page=per_page, prev_url=prev_url,
+                           next_url=next_url)
+
 
 @academic_bp.route('/subjects/edit/<int:id>', methods=['POST'])
 def edit_subject(id):
@@ -224,12 +301,17 @@ def edit_subject(id):
         return redirect(url_for('academic.manage_subjects'))
 
     flash('Please correct the errors in the form.', 'danger')
-    subjects = (
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    query = (
         db.session.query(Subject, Group.Name.label('GroupName'))
         .join(Group, Subject.GroupID == Group.GroupID)
-        .all()
     )
-    return render_template('academic/subjects.html', form=form, subjects=subjects, edit_error_id=id)
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    subjects = pagination.items
+
+    return render_template('academic/subjects.html', form=form, subjects=subjects, per_page=per_page, edit_error_id=id)
 
 
 @academic_bp.route('/subjects/delete/<int:id>', methods=['POST'])

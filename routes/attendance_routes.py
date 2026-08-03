@@ -154,7 +154,7 @@ def delete_qrcode(id):
     return redirect(url_for('attendance.manage_qrcodes'))
 
 
-# 3. Attendance Records Management Route
+# 3. Attendance Records Management Route (With Pagination)
 @attendance_bp.route('/records', methods=['GET', 'POST'])
 def manage_attendances():
     form = AttendanceForm()
@@ -162,6 +162,10 @@ def manage_attendances():
     form.UserID.choices = [(u.ProfileID, u.Name) for u in UserProfile.query.all()]
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
     form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
+
+    # ទទួលយកតម្លៃ page និង per_page ពី query string (defaults: page=1, per_page=10)
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
 
     if form.validate_on_submit():
         latest_qr = QrCode.query.order_by(QrCode.QrCodeID.desc()).first()
@@ -187,11 +191,15 @@ def manage_attendances():
             for error in errors:
                 flash(f'Validation Error [{field}]: {error}', 'danger')
 
-    attendances = Attendance.query.all()
+    # ប្រើប្រាស់ Flask-SQLAlchemy paginate ជំនួសឱ្យ query.all()
+    pagination = Attendance.query.paginate(page=page, per_page=per_page, error_out=False)
+    attendances = pagination.items
+
     return render_template(
         'attendance/attendances.html',
         form=form,
-        attendances=attendances
+        attendances=attendances,
+        pagination=pagination
     )
 
 

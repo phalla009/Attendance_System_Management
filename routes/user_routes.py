@@ -15,6 +15,7 @@ from models.user import ContactNo, Login, UserProfile, UserType
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
+
 # 👉 Route for Login
 @user_bp.route('/', methods=['GET', 'POST'])
 def login():
@@ -44,12 +45,14 @@ def login():
 
     return render_template('users/login.html')
 
+
 # 👉 Route for Logout
 @user_bp.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('user.login'))
+
 
 # ----------------- PROFILES -----------------
 @user_bp.route('/profiles', methods=['GET', 'POST'])
@@ -106,6 +109,7 @@ def manage_profiles():
     profiles = UserProfile.query.all()
     return render_template('users/profiles.html', form=form, profiles=profiles)
 
+
 @user_bp.route('/profiles/edit/<int:id>', methods=['POST'])
 def edit_profile(id):
     if session.get('user_type') != 'Teacher':
@@ -156,6 +160,7 @@ def edit_profile(id):
     flash('Failed to update profile. Please check your inputs.', 'danger')
     return render_template('users/profiles.html', form=form, profiles=profiles, edit_error_id=id)
 
+
 @user_bp.route('/profiles/delete/<int:id>', methods=['POST'])
 def delete_profile(id):
     if session.get('user_type') != 'Teacher':
@@ -173,10 +178,16 @@ def delete_profile(id):
 
     return redirect(url_for('user.manage_profiles'))
 
+
 # ----------------- USER TYPES -----------------
 @user_bp.route('/usertypes', methods=['GET', 'POST'])
 def manage_usertypes():
     form = UserTypeForm()
+
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
     if request.method == 'POST':
         if session.get('user_type') != 'Admin':
             flash('Access Denied! Only Admin can add user types.', 'danger')
@@ -189,8 +200,17 @@ def manage_usertypes():
             flash('User Type added successfully!', 'success')
             return redirect(url_for('user.manage_usertypes'))
 
-    usertypes = UserType.query.all()
-    return render_template('users/usertypes.html', form=form, usertypes=usertypes)
+    pagination = UserType.query.paginate(page=page, per_page=per_page, error_out=False)
+    usertypes = pagination.items
+
+    prev_url = url_for('user.manage_usertypes', page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('user.manage_usertypes', page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
+
+    return render_template('users/usertypes.html', form=form, usertypes=usertypes, per_page=per_page, prev_url=prev_url,
+                           next_url=next_url)
+
 
 @user_bp.route('/usertypes/edit/<int:id>', methods=['POST'])
 def edit_usertype(id):
@@ -208,9 +228,14 @@ def edit_usertype(id):
         flash('User Type updated successfully!', 'success')
         return redirect(url_for('user.manage_usertypes'))
 
-    usertypes = UserType.query.all()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    pagination = UserType.query.paginate(page=page, per_page=per_page, error_out=False)
+    usertypes = pagination.items
+
     flash('Failed to update user type. Please check your inputs.', 'danger')
-    return render_template('users/usertypes.html', form=form, usertypes=usertypes, edit_error_id=id)
+    return render_template('users/usertypes.html', form=form, usertypes=usertypes, per_page=per_page, edit_error_id=id)
+
 
 @user_bp.route('/usertypes/delete/<int:id>', methods=['POST'])
 def delete_usertype(id):
@@ -228,10 +253,17 @@ def delete_usertype(id):
         flash('Cannot delete this user type because it is linked to other records!', 'danger')
 
     return redirect(url_for('user.manage_usertypes'))
+
+
 # ----------------- CONTACTS -----------------
 @user_bp.route('/contacts', methods=['GET', 'POST'])
 def manage_contacts():
     form = ContactNoForm()
+
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
     if request.method == 'POST':
         if session.get('user_type') != 'Teacher':
             flash('Access Denied! Only Teacher can add contacts.', 'danger')
@@ -244,8 +276,17 @@ def manage_contacts():
             flash('Contact Number added successfully!', 'success')
             return redirect(url_for('user.manage_contacts'))
 
-    contacts = ContactNo.query.all()
-    return render_template('users/contacts.html', form=form, contacts=contacts)
+    pagination = ContactNo.query.paginate(page=page, per_page=per_page, error_out=False)
+    contacts = pagination.items
+
+    prev_url = url_for('user.manage_contacts', page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('user.manage_contacts', page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
+
+    return render_template('users/contacts.html', form=form, contacts=contacts, per_page=per_page, prev_url=prev_url,
+                           next_url=next_url)
+
 
 @user_bp.route('/contacts/edit/<int:id>', methods=['POST'])
 def edit_contact(id):
@@ -262,9 +303,14 @@ def edit_contact(id):
         flash('Contact Number updated successfully!', 'success')
         return redirect(url_for('user.manage_contacts'))
 
-    contacts = ContactNo.query.all()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    pagination = ContactNo.query.paginate(page=page, per_page=per_page, error_out=False)
+    contacts = pagination.items
+
     flash('Failed to update contact. Please check your inputs.', 'danger')
-    return render_template('users/contacts.html', form=form, contacts=contacts, edit_error_id=id)
+    return render_template('users/contacts.html', form=form, contacts=contacts, per_page=per_page, edit_error_id=id)
+
 
 @user_bp.route('/contacts/delete/<int:id>', methods=['POST'])
 def delete_contact(id):
@@ -283,6 +329,7 @@ def delete_contact(id):
 
     return redirect(url_for('user.manage_contacts'))
 
+
 # ----------------- ADDRESSES -----------------
 @user_bp.route('/addresses', methods=['GET', 'POST'])
 def manage_addresses():
@@ -291,6 +338,10 @@ def manage_addresses():
     form.DistrictID.choices = [(d.DistrictID, d.Name) for d in District.query.all()]
     form.CommuneID.choices = [(c.CommuneID, c.Name) for c in Commune.query.all()]
     form.VillageID.choices = [(v.VillageID, v.Name) for v in Village.query.all()]
+
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
 
     if request.method == 'POST':
         if session.get('user_type') != 'Teacher':
@@ -311,8 +362,17 @@ def manage_addresses():
             flash('Address added successfully!', 'success')
             return redirect(url_for('user.manage_addresses'))
 
-    addresses = Address.query.all()
-    return render_template('users/addresses.html', form=form, addresses=addresses)
+    pagination = Address.query.paginate(page=page, per_page=per_page, error_out=False)
+    addresses = pagination.items
+
+    prev_url = url_for('user.manage_addresses', page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('user.manage_addresses', page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
+
+    return render_template('users/addresses.html', form=form, addresses=addresses, per_page=per_page, prev_url=prev_url,
+                           next_url=next_url)
+
 
 @user_bp.route('/addresses/edit/<int:id>', methods=['POST'])
 def edit_address(id):
@@ -340,9 +400,14 @@ def edit_address(id):
         flash('Address updated successfully!', 'success')
         return redirect(url_for('user.manage_addresses'))
 
-    addresses = Address.query.all()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    pagination = Address.query.paginate(page=page, per_page=per_page, error_out=False)
+    addresses = pagination.items
+
     flash('Failed to update address. Please check your inputs.', 'danger')
-    return render_template('users/addresses.html', form=form, addresses=addresses, edit_error_id=id)
+    return render_template('users/addresses.html', form=form, addresses=addresses, per_page=per_page, edit_error_id=id)
+
 
 @user_bp.route('/addresses/delete/<int:id>', methods=['POST'])
 def delete_address(id):

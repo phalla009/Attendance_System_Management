@@ -361,3 +361,21 @@
             .sidebar { display: none; }
             .wrapper { margin-left: 0; padding: 15px; }
         }
+/* Sticky Header Style */
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 0 5px; /* បន្ថែម padding ក្នុងបន្តិច */
+        margin-bottom: 15px; /* កាត់បន្ថយគលលហחלក្រោម */
+    }
+    .dashboard-header {
+        position: sticky;
+        top: 30px;
+        z-index: 99;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+    @media (max-width: 992px) {
+        .dashboard-header { top: 15px; }
+    }
