@@ -6,7 +6,8 @@ from extensions import db
 from forms.user_form import (
     AddressForm,
     ContactNoForm,
-    UserProfileForm,
+    StudentProfileForm,
+    TeacherProfileForm,
     UserTypeForm,
 )
 from models.academic import Class, Group, Subject
@@ -14,6 +15,21 @@ from models.location import Address, Province, District, Commune, Village
 from models.user import ContactNo, Login, UserProfile, UserType
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
+
+# 👉 Helper function សម្រាប់ Student Choices
+def populate_student_form_choices(form):
+    form.TypeID.choices = [(t.TypeID, t.TypeName) for t in UserType.query.all()]
+    form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
+    form.ClassID.choices = [(c.ClassID, c.Name) for c in Class.query.all()]
+    form.AddressID.choices = [(a.AddressID, f"ផ្ទះលេខ {a.Home or ''}, ផ្លូវ {a.Street or ''}") for a in Address.query.all()]
+    form.ContactNoID.choices = [(c.ContactID, c.ContactNumber) for c in ContactNo.query.all()]
+
+# 👉 Helper function សម្រាប់ Teacher Choices
+def populate_teacher_form_choices(form):
+    form.TypeID.choices = [(t.TypeID, t.TypeName) for t in UserType.query.all()]
+    form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
+    form.AddressID.choices = [(a.AddressID, f"ផ្ទះលេខ {a.Home or ''}, ផ្លូវ {a.Street or ''}") for a in Address.query.all()]
+    form.ContactNoID.choices = [(c.ContactID, c.ContactNumber) for c in ContactNo.query.all()]
 
 
 # 👉 Route for Login
@@ -54,60 +70,126 @@ def logout():
     return redirect(url_for('user.login'))
 
 
-# ----------------- PROFILES -----------------
-@user_bp.route('/profiles', methods=['GET', 'POST'])
+# ----------------- PROFILES (STUDENTS & TEACHERS) -----------------
+@user_bp.route('/profiles', methods=['GET'])
 def manage_profiles():
-    form = UserProfileForm()
-    form.TypeID.choices = [(t.TypeID, t.TypeName) for t in UserType.query.all()]
-    form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
-    form.ClassID.choices = [(c.ClassID, c.Name) for c in Class.query.all()]
-    form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
+    student_form = StudentProfileForm()
+    teacher_form = TeacherProfileForm()
 
-    form.AddressID.choices = [
-        (a.AddressID, f"ផ្ទះលេខ {a.Home or ''}, ផ្លូវ {a.Street or ''}")
-        for a in Address.query.all()
-    ]
-    form.ContactNoID.choices = [
-        (c.ContactID, c.ContactNumber) for c in ContactNo.query.all()
-    ]
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
 
-    if request.method == 'POST':
-        if session.get('user_type') != 'Teacher':
-            flash('Access Denied! Only Teacher can add user profiles.', 'danger')
-            return redirect(url_for('user.manage_profiles'))
+    # Populate Choices
+    populate_student_form_choices(student_form)
+    populate_teacher_form_choices(teacher_form)
 
-        if form.validate_on_submit():
-            photo_filename = None
-            if form.Photo.data:
-                photo_file = form.Photo.data
-                filename = secure_filename(photo_file.filename)
-                if filename:
-                    upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'profiles')
-                    os.makedirs(upload_folder, exist_ok=True)
+    pagination = UserProfile.query.paginate(page=page, per_page=per_page, error_out=False)
+    profiles = pagination.items
 
-                    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
-                    photo_filename = f"{uuid.uuid4().hex}.{ext}"
-                    photo_file.save(os.path.join(upload_folder, photo_filename))
+    prev_url = url_for('user.manage_profiles', page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('user.manage_profiles', page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
 
-            user = UserProfile(
-                Code=form.Code.data,
-                Name=form.Name.data,
-                DOB=form.DOB.data,
-                Photo=photo_filename,
-                TypeID=form.TypeID.data,
-                GroupID=form.GroupID.data,
-                ClassID=form.ClassID.data,
-                SubjectID=form.SubjectID.data,
-                AddressID=form.AddressID.data,
-                ContactNoID=form.ContactNoID.data,
-            )
-            db.session.add(user)
-            db.session.commit()
-            flash('User Profile added successfully!', 'success')
-            return redirect(url_for('user.manage_profiles'))
+    return render_template('users/profiles.html',
+                           student_form=student_form,
+                           teacher_form=teacher_form,
+                           profiles=profiles,
+                           per_page=per_page,
+                           prev_url=prev_url,
+                           next_url=next_url)
 
-    profiles = UserProfile.query.all()
-    return render_template('users/profiles.html', form=form, profiles=profiles)
+
+@user_bp.route('/profiles/add-student', methods=['POST'])
+def manage_students():
+    if session.get('user_type') != 'Teacher':
+        flash('Access Denied! Only Teacher can add student profiles.', 'danger')
+        return redirect(url_for('user.manage_profiles'))
+
+    student_form = StudentProfileForm()
+    populate_student_form_choices(student_form)
+
+    student_type = UserType.query.filter_by(TypeName='Student').first()
+    if student_type:
+        student_form.TypeID.data = student_type.TypeID
+
+    if student_form.validate_on_submit():
+        photo_filename = None
+        if student_form.Photo.data:
+            photo_file = student_form.Photo.data
+            filename = secure_filename(photo_file.filename)
+            if filename:
+                upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'profiles')
+                os.makedirs(upload_folder, exist_ok=True)
+                ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+                photo_filename = f"{uuid.uuid4().hex}.{ext}"
+                photo_file.save(os.path.join(upload_folder, photo_filename))
+
+        user = UserProfile(
+            Code=student_form.Code.data,
+            Name=student_form.Name.data,
+            Gender=student_form.Gender.data,
+            DOB=student_form.DOB.data,
+            Photo=photo_filename,
+            TypeID=student_form.TypeID.data,
+            GroupID=student_form.GroupID.data,
+            ClassID=student_form.ClassID.data,
+            AddressID=student_form.AddressID.data,
+            ContactNoID=student_form.ContactNoID.data,
+        )
+        db.session.add(user)
+        db.session.commit()
+        flash('Student Profile added successfully!', 'success')
+        return redirect(url_for('user.manage_profiles'))
+
+    flash(f'Failed to add student profile: {student_form.errors}', 'danger')
+    return redirect(url_for('user.manage_profiles'))
+
+
+@user_bp.route('/profiles/add-teacher', methods=['POST'])
+def manage_teachers():
+    if session.get('user_type') != 'Teacher':
+        flash('Access Denied! Only Teacher can add teacher profiles.', 'danger')
+        return redirect(url_for('user.manage_profiles'))
+
+    teacher_form = TeacherProfileForm()
+    populate_teacher_form_choices(teacher_form)
+
+    teacher_type = UserType.query.filter_by(TypeName='Teacher').first()
+    if teacher_type:
+        teacher_form.TypeID.data = teacher_type.TypeID
+
+    if teacher_form.validate_on_submit():
+        photo_filename = None
+        if teacher_form.Photo.data:
+            photo_file = teacher_form.Photo.data
+            filename = secure_filename(photo_file.filename)
+            if filename:
+                upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'profiles')
+                os.makedirs(upload_folder, exist_ok=True)
+                ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+                photo_filename = f"{uuid.uuid4().hex}.{ext}"
+                photo_file.save(os.path.join(upload_folder, photo_filename))
+
+        user = UserProfile(
+            Code=teacher_form.Code.data,
+            Name=teacher_form.Name.data,
+            Gender=teacher_form.Gender.data,
+            DOB=teacher_form.DOB.data,
+            Photo=photo_filename,
+            TypeID=teacher_form.TypeID.data,
+            SubjectID=teacher_form.SubjectID.data,
+            AddressID=teacher_form.AddressID.data,
+            ContactNoID=teacher_form.ContactNoID.data,
+        )
+        db.session.add(user)
+        db.session.commit()
+        flash('Teacher Profile added successfully!', 'success')
+        return redirect(url_for('user.manage_profiles'))
+
+    flash(f'Failed to add teacher profile: {teacher_form.errors}', 'danger')
+    return redirect(url_for('user.manage_profiles'))
 
 
 @user_bp.route('/profiles/edit/<int:id>', methods=['POST'])
@@ -117,29 +199,37 @@ def edit_profile(id):
         return redirect(url_for('user.manage_profiles'))
 
     user = UserProfile.query.get_or_404(id)
-    form = UserProfileForm()
+    is_teacher = user.user_type and user.user_type.TypeName == 'Teacher'
 
-    form.TypeID.choices = [(t.TypeID, t.TypeName) for t in UserType.query.all()]
-    form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
-    form.ClassID.choices = [(c.ClassID, c.Name) for c in Class.query.all()]
-    form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
-    form.AddressID.choices = [
-        (a.AddressID, f"ផ្ទះលេខ {a.Home or ''}, ផ្លូវ {a.Street or ''}")
-        for a in Address.query.all()
-    ]
-    form.ContactNoID.choices = [
-        (c.ContactID, c.ContactNumber) for c in ContactNo.query.all()
-    ]
+    if is_teacher:
+        form = TeacherProfileForm()
+        populate_teacher_form_choices(form)
+        teacher_type = UserType.query.filter_by(TypeName='Teacher').first()
+        if teacher_type:
+            form.TypeID.data = teacher_type.TypeID
+    else:
+        form = StudentProfileForm()
+        populate_student_form_choices(form)
+        student_type = UserType.query.filter_by(TypeName='Student').first()
+        if student_type:
+            form.TypeID.data = student_type.TypeID
 
     if form.validate_on_submit():
         user.Name = form.Name.data
+        user.Gender = form.Gender.data
         user.DOB = form.DOB.data
         user.TypeID = form.TypeID.data
-        user.GroupID = form.GroupID.data
-        user.ClassID = form.ClassID.data
-        user.SubjectID = form.SubjectID.data
         user.AddressID = form.AddressID.data
         user.ContactNoID = form.ContactNoID.data
+
+        if is_teacher:
+            user.SubjectID = form.SubjectID.data
+            user.GroupID = None
+            user.ClassID = None
+        else:
+            user.GroupID = form.GroupID.data
+            user.ClassID = form.ClassID.data
+            user.SubjectID = None
 
         if form.Photo.data:
             photo_file = form.Photo.data
@@ -156,9 +246,8 @@ def edit_profile(id):
         flash('User Profile updated successfully!', 'success')
         return redirect(url_for('user.manage_profiles'))
 
-    profiles = UserProfile.query.all()
-    flash('Failed to update profile. Please check your inputs.', 'danger')
-    return render_template('users/profiles.html', form=form, profiles=profiles, edit_error_id=id)
+    flash(f'Failed to update profile: {form.errors}', 'danger')
+    return redirect(url_for('user.manage_profiles'))
 
 
 @user_bp.route('/profiles/delete/<int:id>', methods=['POST'])
@@ -184,7 +273,6 @@ def delete_profile(id):
 def manage_usertypes():
     form = UserTypeForm()
 
-    # Pagination parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
@@ -228,13 +316,8 @@ def edit_usertype(id):
         flash('User Type updated successfully!', 'success')
         return redirect(url_for('user.manage_usertypes'))
 
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    pagination = UserType.query.paginate(page=page, per_page=per_page, error_out=False)
-    usertypes = pagination.items
-
     flash('Failed to update user type. Please check your inputs.', 'danger')
-    return render_template('users/usertypes.html', form=form, usertypes=usertypes, per_page=per_page, edit_error_id=id)
+    return redirect(url_for('user.manage_usertypes'))
 
 
 @user_bp.route('/usertypes/delete/<int:id>', methods=['POST'])
@@ -260,7 +343,6 @@ def delete_usertype(id):
 def manage_contacts():
     form = ContactNoForm()
 
-    # Pagination parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
@@ -303,13 +385,8 @@ def edit_contact(id):
         flash('Contact Number updated successfully!', 'success')
         return redirect(url_for('user.manage_contacts'))
 
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    pagination = ContactNo.query.paginate(page=page, per_page=per_page, error_out=False)
-    contacts = pagination.items
-
     flash('Failed to update contact. Please check your inputs.', 'danger')
-    return render_template('users/contacts.html', form=form, contacts=contacts, per_page=per_page, edit_error_id=id)
+    return redirect(url_for('user.manage_contacts'))
 
 
 @user_bp.route('/contacts/delete/<int:id>', methods=['POST'])
@@ -339,7 +416,6 @@ def manage_addresses():
     form.CommuneID.choices = [(c.CommuneID, c.Name) for c in Commune.query.all()]
     form.VillageID.choices = [(v.VillageID, v.Name) for v in Village.query.all()]
 
-    # Pagination parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
@@ -400,13 +476,8 @@ def edit_address(id):
         flash('Address updated successfully!', 'success')
         return redirect(url_for('user.manage_addresses'))
 
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    pagination = Address.query.paginate(page=page, per_page=per_page, error_out=False)
-    addresses = pagination.items
-
     flash('Failed to update address. Please check your inputs.', 'danger')
-    return render_template('users/addresses.html', form=form, addresses=addresses, per_page=per_page, edit_error_id=id)
+    return redirect(url_for('user.manage_addresses'))
 
 
 @user_bp.route('/addresses/delete/<int:id>', methods=['POST'])

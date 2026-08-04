@@ -51,8 +51,8 @@
                 <p>គ្រប់គ្រងទិន្នន័យប្រូហ្វាល និងព័ត៌មានលម្អិតរបស់អ្នកប្រើប្រាស់ក្នុងប្រព័ន្ធ</p>
             </div>
            <div>
-                <a href="{{ url_for('user_index') }}" class="btn-custom-secondary">
-                    <i class="bi bi-house-door"></i> Back to User Dashboard
+                <a href="{{ url_for('dashboard') if url_for('dashboard') else '#' }}" class="btn-custom-secondary">
+                    <i class="bi bi-house-door me-1"></i> Back to Dashboard
                 </a>
             </div>
         </div>
@@ -61,9 +61,14 @@
         <div class="panel">
             <div class="panel-title">
                 <span><i class="bi bi-table text-white"></i> User Profile List</span>
-                <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                    <i class="bi bi-plus-circle-fill"></i> Add New Profile
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                        <i class="bi bi-person-plus-fill me-1"></i> Add Student
+                    </button>
+                    <button type="button" class="btn-custom-secondary" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
+                        <i class="bi bi-mortarboard-fill me-1"></i> Add Teacher
+                    </button>
+                </div>
             </div>
 
             <div class="table-responsive">
@@ -73,9 +78,10 @@
                             <th>ID</th>
                             <th>Code</th>
                             <th>Name</th>
+                            <th>Gender</th>
                             <th>DOB</th>
                             <th>User Type</th>
-                            <th>Class / Group</th>
+                            <th>Class / Group / Subject</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -86,26 +92,42 @@
                                 <td><span class="id-badge">{{ u.ProfileID }}</span></td>
                                 <td><span class="code-pill">{{ u.Code }}</span></td>
                                 <td>{{ u.Name }}</td>
+                                <td>
+                                    {% if u.Gender == 'M' %}
+                                        Male
+                                    {% elif u.Gender == 'F' %}
+                                        Female
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
                                 <td>{{ u.DOB.strftime('%Y-%m-%d') if u.DOB else '-' }}</td>
                                 <td>{{ u.user_type.TypeName if u.user_type else '-' }}</td>
-                                <td>{{ u.class_rel.Name if u.class_rel else '-' }} / {{ u.group_rel.Name if u.group_rel else '-' }}</td>
+                                <td>
+                                    {% if u.user_type and u.user_type.TypeName == 'Teacher' %}
+                                        <span class="text-info"><i class="bi bi-book me-1"></i> {{ u.subject_rel.Name if u.subject_rel else '-' }}</span>
+                                    {% else %}
+                                        {{ u.class_rel.Name if u.class_rel else '-' }} / {{ u.group_rel.Name if u.group_rel else '-' }}
+                                    {% endif %}
+                                </td>
                                 <td class="text-center">
                                     <div class="d-inline-flex gap-2">
-                                        <!-- Edit Trigger Button -->
+                                        <!-- Edit Trigger Button with Full Data Attributes -->
                                         <button type="button" class="btn-action btn-edit" title="Edit"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#editUserModal"
                                                 data-id="{{ u.ProfileID }}"
                                                 data-code="{{ u.Code }}"
                                                 data-name="{{ u.Name }}"
+                                                data-gender="{{ u.Gender or '' }}"
                                                 data-dob="{{ u.DOB.strftime('%Y-%m-%d') if u.DOB else '' }}"
                                                 data-photo="{{ u.Photo or '' }}"
                                                 data-typeid="{{ u.TypeID }}"
-                                                data-groupid="{{ u.GroupID }}"
-                                                data-classid="{{ u.ClassID }}"
-                                                data-subjectid="{{ u.SubjectID }}"
-                                                data-addressid="{{ u.AddressID }}"
-                                                data-contactid="{{ u.ContactNoID }}">
+                                                data-groupid="{{ u.GroupID or '' }}"
+                                                data-classid="{{ u.ClassID or '' }}"
+                                                data-subjectid="{{ u.SubjectID or '' }}"
+                                                data-addressid="{{ u.AddressID or '' }}"
+                                                data-contactid="{{ u.ContactNoID or '' }}">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
 
@@ -123,7 +145,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="empty-state">
                                         <i class="bi bi-inbox"></i>
                                         No user profiles found in the system.
@@ -137,7 +159,6 @@
 
             <!-- Pagination & Per Page Selector Footer -->
             <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25 px-2 gap-3">
-                <!-- Per Page Dropdown Form -->
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-white-50" style="font-size: 13px;">Show</span>
                     <select id="perPageSelect" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: 75px; font-size: 13px;" onchange="changePerPage(this.value)">
@@ -149,7 +170,6 @@
                     <span class="text-white-50" style="font-size: 13px;">entries</span>
                 </div>
 
-                <!-- Previous & Next Buttons -->
                 <div class="d-flex gap-2">
                     <a href="{{ prev_url if prev_url else '#' }}" class="btn btn-sm btn-custom-secondary {% if not prev_url %}disabled{% endif %}" style="padding: 6px 14px;">
                         <i class="bi bi-chevron-left me-1"></i> Previous
@@ -165,325 +185,330 @@
 
     <!-- ================= MODALS ================= -->
 
-    <!-- 1. Add User Profile Modal -->
-    <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <!-- 1. Add Student Profile Modal -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title text-white"><i class="bi bi-plus-circle-fill text-white"></i> Add New User Profile</h5>
+                    <h5 class="modal-title text-white"><i class="bi bi-person-plus-fill text-white"></i> Add New Student Profile</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" enctype="multipart/form-data" novalidate>
-                    {{ form.hidden_tag() }}
+                <form method="POST" action="{{ url_for('user.manage_students') }}" enctype="multipart/form-data" novalidate>
+                    {{ student_form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.Code.label(class="form-label") }}
-                                {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else "")) }}
-                                {% for error in form.Code.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ student_form.Code.label.text }}</label>
+                                {{ student_form.Code(class="form-control") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.Name.label(class="form-label") }}
-                                {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else "")) }}
-                                {% for error in form.Name.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-person me-1"></i> {{ student_form.Name.label.text }}</label>
+                                {{ student_form.Name(class="form-control") }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.DOB.label(class="form-label") }}
-                                {{ form.DOB(class="form-control " + ("is-invalid" if form.DOB.errors else ""), type="date") }}
-                                {% for error in form.DOB.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-gender-ambiguous me-1"></i> {{ student_form.Gender.label.text }}</label>
+                                {{ student_form.Gender(class="form-select") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.Photo.label(class="form-label") }}
-                                {{ form.Photo(class="form-control " + ("is-invalid" if form.Photo.errors else ""), type="file") }}
-                                {% for error in form.Photo.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ student_form.DOB.label.text }}</label>
+                                {{ student_form.DOB(class="form-control", type="date") }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.TypeID.label(class="form-label") }}
-                                {{ form.TypeID(class="form-select " + ("is-invalid" if form.TypeID.errors else "")) }}
-                                {% for error in form.TypeID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-image me-1"></i> {{ student_form.Photo.label.text }}</label>
+                                {{ student_form.Photo(class="form-control", type="file") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.GroupID.label(class="form-label") }}
-                                {{ form.GroupID(class="form-select " + ("is-invalid" if form.GroupID.errors else "")) }}
-                                {% for error in form.GroupID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-people me-1"></i> {{ student_form.GroupID.label.text }}</label>
+                                {{ student_form.GroupID(class="form-select") }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.ClassID.label(class="form-label") }}
-                                {{ form.ClassID(class="form-select " + ("is-invalid" if form.ClassID.errors else "")) }}
-                                {% for error in form.ClassID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-book me-1"></i> {{ student_form.ClassID.label.text }}</label>
+                                {{ student_form.ClassID(class="form-select") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.SubjectID.label(class="form-label") }}
-                                {{ form.SubjectID(class="form-select " + ("is-invalid" if form.SubjectID.errors else "")) }}
-                                {% for error in form.SubjectID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ student_form.AddressID.label.text }}</label>
+                                {{ student_form.AddressID(class="form-select") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ student_form.ContactNoID.label.text }}</label>
+                                {{ student_form.ContactNoID(class="form-select") }}
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.AddressID.label(class="form-label") }}
-                                {{ form.AddressID(class="form-select " + ("is-invalid" if form.AddressID.errors else "")) }}
-                                {% for error in form.AddressID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                {{ form.ContactNoID.label(class="form-label") }}
-                                {{ form.ContactNoID(class="form-select " + ("is-invalid" if form.ContactNoID.errors else "")) }}
-                                {% for error in form.ContactNoID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                        </div>
+
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-save btn-sm" style="width: auto; padding: 6px 16px;">
-                            <i class="bi bi-check-lg me-1"></i> Save Profile
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                        <button type="submit" class="btn-custom-primary"><i class="bi bi-check-circle me-1"></i> Save Student</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- 2. Edit User Profile Modal -->
+    <!-- 2. Add Teacher Profile Modal -->
+    <div class="modal fade" id="addTeacherModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white"><i class="bi bi-mortarboard-fill text-white"></i> Add New Teacher Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ url_for('user.manage_teachers') }}" enctype="multipart/form-data" novalidate>
+                    {{ teacher_form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ teacher_form.Code.label.text }}</label>
+                                {{ teacher_form.Code(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-person me-1"></i> {{ teacher_form.Name.label.text }}</label>
+                                {{ teacher_form.Name(class="form-control") }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-gender-ambiguous me-1"></i> {{ teacher_form.Gender.label.text }}</label>
+                                {{ teacher_form.Gender(class="form-select") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ teacher_form.DOB.label.text }}</label>
+                                {{ teacher_form.DOB(class="form-control", type="date") }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-image me-1"></i> {{ teacher_form.Photo.label.text }}</label>
+                                {{ teacher_form.Photo(class="form-control", type="file") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ teacher_form.SubjectID.label.text }}</label>
+                                {{ teacher_form.SubjectID(class="form-select") }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ teacher_form.AddressID.label.text }}</label>
+                                {{ teacher_form.AddressID(class="form-select") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ teacher_form.ContactNoID.label.text }}</label>
+                                {{ teacher_form.ContactNoID(class="form-select") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                        <button type="submit" class="btn-custom-primary"><i class="bi bi-check-circle me-1"></i> Save Teacher</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Edit User Profile Modal (Dynamic Student/Teacher Toggle with Icons) -->
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title text-white"><i class="bi bi-pencil-square text-white"></i> Edit User Profile</h5>
+                    <h5 class="modal-title text-white"><i class="bi bi-pencil-fill text-white"></i> Edit User Profile</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="editForm" method="POST" enctype="multipart/form-data" novalidate>
-                    {{ form.hidden_tag() }}
+                <form id="editUserForm" method="POST" enctype="multipart/form-data" novalidate>
+                    {{ student_form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.Code.label(class="form-label") }}
-                                {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
-                                <div class="form-text text-white" style="font-size: 11px;">User code cannot be changed.</div>
-                                {% for error in form.Code.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ student_form.Code.label.text }}</label>
+                                {{ student_form.Code(class="form-control", id="edit_code", readonly=true) }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.Name.label(class="form-label") }}
-                                {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
-                                {% for error in form.Name.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-person me-1"></i> {{ student_form.Name.label.text }}</label>
+                                {{ student_form.Name(class="form-control", id="edit_name") }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.DOB.label(class="form-label") }}
-                                {{ form.DOB(class="form-control " + ("is-invalid" if form.DOB.errors else ""), id="edit_dob", type="date") }}
-                                {% for error in form.DOB.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-gender-ambiguous me-1"></i> {{ student_form.Gender.label.text }}</label>
+                                {{ student_form.Gender(class="form-select", id="edit_gender") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.Photo.label(class="form-label") }}
-                                {{ form.Photo(class="form-control " + ("is-invalid" if form.Photo.errors else ""), id="edit_photo", type="file") }}
-                                {% for error in form.Photo.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ student_form.DOB.label.text }}</label>
+                                {{ student_form.DOB(class="form-control", id="edit_dob", type="date") }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.TypeID.label(class="form-label") }}
-                                {{ form.TypeID(class="form-select " + ("is-invalid" if form.TypeID.errors else ""), id="edit_typeid") }}
-                                {% for error in form.TypeID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-image me-1"></i> {{ student_form.Photo.label.text }}</label>
+                                {{ student_form.Photo(class="form-control", id="edit_photo", type="file") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.GroupID.label(class="form-label") }}
-                                {{ form.GroupID(class="form-select " + ("is-invalid" if form.GroupID.errors else ""), id="edit_groupid") }}
-                                {% for error in form.GroupID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                                <label class="form-label"><i class="bi bi-person-badge me-1"></i> {{ student_form.TypeID.label.text }}</label>
+                                {{ student_form.TypeID(class="form-select", id="edit_typeid") }}
                             </div>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.ClassID.label(class="form-label") }}
-                                {{ form.ClassID(class="form-select " + ("is-invalid" if form.ClassID.errors else ""), id="edit_classid") }}
-                                {% for error in form.ClassID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                            <!-- Student Group Field -->
+                            <div class="col-md-6 mb-3" id="edit_group_wrapper">
+                                <label class="form-label"><i class="bi bi-people me-1"></i> {{ student_form.GroupID.label.text }}</label>
+                                {{ student_form.GroupID(class="form-select", id="edit_groupid") }}
                             </div>
-                            <div class="col-md-6 mb-3">
-                                {{ form.SubjectID.label(class="form-label") }}
-                                {{ form.SubjectID(class="form-select " + ("is-invalid" if form.SubjectID.errors else ""), id="edit_subjectid") }}
-                                {% for error in form.SubjectID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
+                            <!-- Student Class Field -->
+                            <div class="col-md-6 mb-3" id="edit_class_wrapper">
+                                <label class="form-label"><i class="bi bi-book me-1"></i> {{ student_form.ClassID.label.text }}</label>
+                                {{ student_form.ClassID(class="form-select", id="edit_classid") }}
                             </div>
+                            <!-- Teacher Subject Field -->
+                            <div class="col-md-6 mb-3" id="edit_subject_wrapper" style="display: none;">
+                                <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ teacher_form.SubjectID.label.text }}</label>
+                                {{ teacher_form.SubjectID(class="form-select", id="edit_subjectid") }}
+                            </div>
+                            <!-- Address Field -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ student_form.AddressID.label.text }}</label>
+                                {{ student_form.AddressID(class="form-select", id="edit_addressid") }}
+                            </div>
+                             <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ student_form.ContactNoID.label.text }}</label>
+                                    {{ student_form.ContactNoID(class="form-select", id="edit_contactid") }}
+                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.AddressID.label(class="form-label") }}
-                                {{ form.AddressID(class="form-select " + ("is-invalid" if form.AddressID.errors else ""), id="edit_addressid") }}
-                                {% for error in form.AddressID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                {{ form.ContactNoID.label(class="form-label") }}
-                                {{ form.ContactNoID(class="form-select " + ("is-invalid" if form.ContactNoID.errors else ""), id="edit_contactid") }}
-                                {% for error in form.ContactNoID.errors %}
-                                    <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                        </div>
+
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-warning btn-sm text-white" style="width: auto; padding: 6px 16px;">
-                            <i class="bi bi-arrow-repeat me-1"></i> Update Profile
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                        <button type="submit" class="btn-custom-primary"><i class="bi bi-arrow-repeat me-1"></i> Update Profile</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- 3. Delete Confirmation Modal -->
+    <!-- 4. Delete User Profile Modal -->
     <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-white"><i class="bi bi-exclamation-triangle-fill text-white"></i> Confirm Deletion</h5>
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill"></i> Confirm Deletion</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete profile <strong id="delete_user_name" class="text-warning"></strong>?</p>
-                    <p class="text-white small mb-0">This action cannot be undone.</p>
+                    <p class="mb-0">Are you sure you want to delete profile <strong id="deleteUserName" class="text-warning"></strong>? This action cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i> Cancel
-                    </button>
-                    <form id="deleteForm" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">
-                            <i class="bi bi-trash3-fill me-1"></i> Delete Profile
-                        </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                    <form id="deleteUserForm" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger"><i class="bi bi-trash3-fill me-1"></i> Delete</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
+    <!-- JavaScript Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- JavaScript សម្រាប់គ្រប់គ្រង Modal, Toast, Per Page Change និង Data Population -->
     <script>
-        // Function to handle changing items per page dynamically via URL query parameter
-        function changePerPage(perPageValue) {
+        // Pagination per-page change function
+        function changePerPage(val) {
             const url = new URL(window.location.href);
-            url.searchParams.set('per_page', perPageValue);
-            url.searchParams.set('page', 1); // Reset to page 1 on limit change
+            url.searchParams.set('per_page', val);
+            url.searchParams.set('page', 1);
             window.location.href = url.toString();
         }
 
-        // Populate Edit Modal Data
-        const editUserModal = document.getElementById('editUserModal');
-        editUserModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            if (button) {
-                const profileId = button.getAttribute('data-id');
-                document.getElementById('edit_code').value = button.getAttribute('data-code');
-                document.getElementById('edit_name').value = button.getAttribute('data-name');
-                document.getElementById('edit_dob').value = button.getAttribute('data-dob');
-                document.getElementById('edit_typeid').value = button.getAttribute('data-typeid');
-                document.getElementById('edit_groupid').value = button.getAttribute('data-groupid');
-                document.getElementById('edit_classid').value = button.getAttribute('data-classid');
-                document.getElementById('edit_subjectid').value = button.getAttribute('data-subjectid');
-                document.getElementById('edit_addressid').value = button.getAttribute('data-addressid');
-                document.getElementById('edit_contactid').value = button.getAttribute('data-contactid');
+        // Toggle Field Visibility Function based on User Type
+        function toggleEditFields() {
+            const typeSelect = document.getElementById('edit_typeid');
+            const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+            const typeName = selectedOption ? selectedOption.text.trim() : '';
 
-                const editForm = document.getElementById('editForm');
-                editForm.action = `/users/profiles/edit/${profileId}`;
+            const groupFieldWrapper = document.getElementById('edit_group_wrapper');
+            const classFieldWrapper = document.getElementById('edit_class_wrapper');
+            const subjectFieldWrapper = document.getElementById('edit_subject_wrapper');
+
+            if (typeName === 'Teacher') {
+                if (subjectFieldWrapper) subjectFieldWrapper.style.display = 'block';
+                if (groupFieldWrapper) groupFieldWrapper.style.display = 'none';
+                if (classFieldWrapper) classFieldWrapper.style.display = 'none';
+            } else {
+                if (subjectFieldWrapper) subjectFieldWrapper.style.display = 'none';
+                if (groupFieldWrapper) groupFieldWrapper.style.display = 'block';
+                if (classFieldWrapper) classFieldWrapper.style.display = 'block';
             }
+        }
+
+        // Event listener when user changes User Type dropdown manually inside Edit Modal
+        document.getElementById('edit_typeid').addEventListener('change', function() {
+            toggleEditFields();
         });
 
-        // Populate Delete Modal Data
-        const deleteUserModal = document.getElementById('deleteUserModal');
-        deleteUserModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const profileId = button.getAttribute('data-id');
-            const profileName = button.getAttribute('data-name');
+        // Populate Edit Modal Data via Event Listener
+        const editUserModal = document.getElementById('editUserModal');
+        if (editUserModal) {
+            editUserModal.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget;
+                const id = button.getAttribute('data-id');
+                const code = button.getAttribute('data-code');
+                const name = button.getAttribute('data-name');
+                const gender = button.getAttribute('data-gender');
+                const dob = button.getAttribute('data-dob');
+                const typeid = button.getAttribute('data-typeid');
+                const groupid = button.getAttribute('data-groupid');
+                const classid = button.getAttribute('data-classid');
+                const subjectid = button.getAttribute('data-subjectid');
+                const addressid = button.getAttribute('data-addressid');
+                const contactid = button.getAttribute('data-contactid');
 
-            document.getElementById('delete_user_name').textContent = profileName;
+                // Set Form Action URL
+                document.getElementById('editUserForm').action = `/users/profiles/edit/${id}`;
 
-            const deleteForm = document.getElementById('deleteForm');
-            deleteForm.action = `/users/profiles/delete/${profileId}`;
-        });
+                // Set Form Field Values
+                document.getElementById('edit_code').value = code;
+                document.getElementById('edit_name').value = name;
+                document.getElementById('edit_gender').value = gender;
+                document.getElementById('edit_dob').value = dob;
+                document.getElementById('edit_typeid').value = typeid;
+                document.getElementById('edit_groupid').value = groupid;
+                document.getElementById('edit_classid').value = classid;
+                document.getElementById('edit_subjectid').value = subjectid;
+                document.getElementById('edit_addressid').value = addressid;
+                document.getElementById('edit_contactid').value = contactid;
 
-        // Auto-hide Toast Notifications
-        document.addEventListener("DOMContentLoaded", function() {
-            const toasts = document.querySelectorAll('.custom-toast');
-            toasts.forEach(toast => {
-                setTimeout(() => {
-                    toast.classList.add('hide');
-                    setTimeout(() => { toast.remove(); }, 500);
-                }, 4000);
+                // Trigger field show/hide based on loaded User Type
+                toggleEditFields();
             });
-        });
-    </script>
+        }
 
-    <!-- Script សម្រាប់បើក Modal ឡើងវិញស្វ័យប្រវត្តិប្រសិនបើ Form មាន Error -->
-    {% if form.errors %}
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            {% if edit_error_id %}
-                const editForm = document.getElementById('editForm');
-                editForm.action = `/users/profiles/edit/{{ edit_error_id }}`;
-                var editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
-                editModal.show();
-            {% else %}
-                var addModal = new bootstrap.Modal(document.getElementById('addUserModal'));
-                addModal.show();
-            {% endif %}
-        });
+        // Populate Delete Modal Data via Event Listener
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        if (deleteUserModal) {
+            deleteUserModal.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget;
+                const id = button.getAttribute('data-id');
+                const name = button.getAttribute('data-name');
+
+                // Set Delete Form Action URL & Username Display
+                document.getElementById('deleteUserForm').action = `/users/profiles/delete/${id}`;
+                document.getElementById('deleteUserName').textContent = name;
+            });
+        }
     </script>
-    {% endif %}
 </body>
 </html>

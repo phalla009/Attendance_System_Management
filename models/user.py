@@ -23,6 +23,7 @@ class UserProfile(db.Model):
   SubjectID = db.Column(db.Integer, db.ForeignKey('subjects.SubjectID'))
   Code = db.Column(db.String(50), unique=True, nullable=False)
   Name = db.Column(db.String(150), nullable=False)
+  Gender = db.Column(db.String(10), nullable=True)
   DOB = db.Column(db.Date)
   Photo = db.Column(db.String(255))
 
