@@ -52,7 +52,7 @@
             </div>
             <div>
                 <a href="{{ url_for('user_index') }}" class="btn-custom-secondary">
-                    <i class="bi bi-house-door"></i> Back to User Dashboard
+                    <i class="bi bi-house-door me-1"></i> Back to User Dashboard
                 </a>
             </div>
         </div>
@@ -62,7 +62,7 @@
             <div class="panel-title">
                 <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> User Type List</span>
                 <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addUserTypeModal">
-                    <i class="bi bi-plus-circle-fill"></i> Add New User Type
+                    <i class="bi bi-plus-circle-fill me-1"></i> Add New User Type
                 </button>
             </div>
 
@@ -163,14 +163,14 @@
                     {{ form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="mb-3">
-                            {{ form.Code.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.Code.label.text }}</label>
                             {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else "")) }}
                             {% for error in form.Code.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.TypeName.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-tag me-1"></i> {{ form.TypeName.label.text }}</label>
                             {{ form.TypeName(class="form-control " + ("is-invalid" if form.TypeName.errors else "")) }}
                             {% for error in form.TypeName.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
@@ -202,7 +202,7 @@
                     {{ form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="mb-3">
-                            {{ form.Code.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.Code.label.text }}</label>
                             {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
                             <div class="form-text text-white" style="font-size: 11px;">User type code cannot be changed.</div>
                             {% for error in form.Code.errors %}
@@ -210,7 +210,7 @@
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.TypeName.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-tag me-1"></i> {{ form.TypeName.label.text }}</label>
                             {{ form.TypeName(class="form-control " + ("is-invalid" if form.TypeName.errors else ""), id="edit_typename") }}
                             {% for error in form.TypeName.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>

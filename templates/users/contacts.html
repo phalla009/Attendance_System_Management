@@ -52,7 +52,7 @@
             </div>
             <div>
                 <a href="{{ url_for('user_index') }}" class="btn-custom-secondary">
-                    <i class="bi bi-house-door"></i> Back to User Dashboard
+                    <i class="bi bi-house-door me-1"></i> Back to User Dashboard
                 </a>
             </div>
         </div>
@@ -62,7 +62,7 @@
             <div class="panel-title">
                 <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> Contact List</span>
                 <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
-                    <i class="bi bi-plus-circle-fill"></i> Add New Contact
+                    <i class="bi bi-plus-circle-fill me-1"></i> Add New Contact
                 </button>
             </div>
 
@@ -160,7 +160,7 @@
                     {{ form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="mb-3">
-                            {{ form.ContactNumber.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ form.ContactNumber.label.text }}</label>
                             {{ form.ContactNumber(class="form-control " + ("is-invalid" if form.ContactNumber.errors else "")) }}
                             {% for error in form.ContactNumber.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
@@ -192,7 +192,7 @@
                     {{ form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="mb-3">
-                            {{ form.ContactNumber.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ form.ContactNumber.label.text }}</label>
                             {{ form.ContactNumber(class="form-control " + ("is-invalid" if form.ContactNumber.errors else ""), id="edit_contact_number") }}
                             {% for error in form.ContactNumber.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>

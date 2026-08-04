@@ -52,7 +52,7 @@
             </div>
             <div>
                 <a href="{{ url_for('index') }}" class="btn-custom-secondary">
-                    <i class="bi bi-house-door"></i> Back to Academic Dashboard
+                    <i class="bi bi-house-door me-1"></i> Back to Academic Dashboard
                 </a>
             </div>
         </div>
@@ -62,7 +62,7 @@
             <div class="panel-title">
                 <span><i class="bi bi-list-task" style="color: var(--accent-green);"></i> Group List</span>
                 <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
-                    <i class="bi bi-plus-circle-fill"></i> Add New Group
+                    <i class="bi bi-plus-circle-fill me-1"></i> Add New Group
                 </button>
             </div>
 
@@ -167,28 +167,28 @@
                     {{ form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="mb-3">
-                            {{ form.Code.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.Code.label.text }}</label>
                             {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else "")) }}
                             {% for error in form.Code.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.Name.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-people-fill me-1"></i> {{ form.Name.label.text }}</label>
                             {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else "")) }}
                             {% for error in form.Name.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.SessionID.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-clock-history me-1"></i> {{ form.SessionID.label.text }}</label>
                             {{ form.SessionID(class="form-select " + ("is-invalid" if form.SessionID.errors else "")) }}
                             {% for error in form.SessionID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.ScheduleID.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ form.ScheduleID.label.text }}</label>
                             {{ form.ScheduleID(class="form-control " + ("is-invalid" if form.ScheduleID.errors else "")) }}
                             {% for error in form.ScheduleID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
@@ -220,28 +220,28 @@
                     {{ form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="mb-3">
-                            {{ form.Code.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.Code.label.text }}</label>
                             {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
                             {% for error in form.Code.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.Name.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-people-fill me-1"></i> {{ form.Name.label.text }}</label>
                             {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
                             {% for error in form.Name.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.SessionID.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-clock-history me-1"></i> {{ form.SessionID.label.text }}</label>
                             {{ form.SessionID(class="form-select " + ("is-invalid" if form.SessionID.errors else ""), id="edit_session") }}
                             {% for error in form.SessionID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.ScheduleID.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ form.ScheduleID.label.text }}</label>
                             {{ form.ScheduleID(class="form-control " + ("is-invalid" if form.ScheduleID.errors else ""), id="edit_schedule") }}
                             {% for error in form.ScheduleID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>

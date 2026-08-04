@@ -227,10 +227,10 @@
             <div class="d-flex gap-2">
                 <!-- Add New Button Trigger Modal -->
                 <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addAttendanceModal">
-                    <i class="bi bi-plus-lg"></i> Add New Attendance
+                    <i class="bi bi-plus-lg me-1"></i> Add New Attendance
                 </button>
                 <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-secondary text-white border-secondary px-3" style="border-radius: 8px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="bi bi-speedometer2"></i> Dashboard
+                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
                 </a>
             </div>
         </div>
@@ -340,11 +340,11 @@
                                                     <div class="modal-body text-start">
                                                         <div class="row">
                                                             <div class="col-md-6 mb-3">
-                                                                <label class="form-label">Code</label>
+                                                                <label class="form-label"><i class="bi bi-upc-scan me-1"></i> Code</label>
                                                                 <input type="text" name="Code" class="form-control" value="{{ att.ScanNumber }}" required>
                                                             </div>
                                                             <div class="col-md-6 mb-3">
-                                                                <label class="form-label">Group</label>
+                                                                <label class="form-label"><i class="bi bi-people-fill me-1"></i> Group</label>
                                                                 <select name="GroupID" class="form-select">
                                                                     {% for g_id, g_name in form.GroupID.choices %}
                                                                         <option value="{{ g_id }}" {% if g_id == att.GroupID %}selected{% endif %}>{{ g_name }}</option>
@@ -355,7 +355,7 @@
 
                                                         <div class="row">
                                                             <div class="col-md-6 mb-3">
-                                                                <label class="form-label">User / Student</label>
+                                                                <label class="form-label"><i class="bi bi-person-fill me-1"></i> User / Student</label>
                                                                 <select name="UserID" class="form-select">
                                                                     {% for u_id, u_name in form.UserID.choices %}
                                                                         <option value="{{ u_id }}" {% if u_id == att.ProfileID %}selected{% endif %}>{{ u_name }}</option>
@@ -363,7 +363,7 @@
                                                                 </select>
                                                             </div>
                                                             <div class="col-md-6 mb-3">
-                                                                <label class="form-label">Subject</label>
+                                                                <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> Subject</label>
                                                                 <select name="SubjectID" class="form-select">
                                                                     {% for s_id, s_name in form.SubjectID.choices %}
                                                                         <option value="{{ s_id }}" {% if s_id == att.SubjectID %}selected{% endif %}>{{ s_name }}</option>
@@ -374,18 +374,18 @@
 
                                                         <div class="row">
                                                             <div class="col-md-6 mb-3">
-                                                                <label class="form-label">Date</label>
+                                                                <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Date</label>
                                                                 <input type="date" name="Date" class="form-control" value="{{ att.Date.strftime('%Y-%m-%d') if att.Date else '' }}" required>
                                                             </div>
                                                             <div class="col-md-6 mb-3">
-                                                                <label class="form-label">Time</label>
+                                                                <label class="form-label"><i class="bi bi-clock me-1"></i> Time</label>
                                                                 <input type="time" name="Time" class="form-control" value="{{ att.Date.strftime('%H:%M') if att.Date else '' }}" required>
                                                             </div>
                                                         </div>
 
                                                         <div class="row">
                                                             <div class="col-md-6 mb-3">
-                                                                <label class="form-label">Status</label>
+                                                                <label class="form-label"><i class="bi bi-check-circle me-1"></i> Status</label>
                                                                 <select name="Status" class="form-select">
                                                                     <option value="Present" {% if att.Status == 'Present' %}selected{% endif %}>Present</option>
                                                                     <option value="Late" {% if att.Status == 'Late' %}selected{% endif %}>Late</option>
@@ -394,14 +394,14 @@
                                                                 </select>
                                                             </div>
                                                             <div class="col-md-6 mb-3">
-                                                                <label class="form-label">Remarks</label>
+                                                                <label class="form-label"><i class="bi bi-chat-left-text me-1"></i> Remarks</label>
                                                                 <input type="text" name="Remarks" class="form-control" value="{{ att.Remarks or '' }}">
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" class="btn btn-custom-primary btn-sm">Save Changes</button>
+                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                                                        <button type="submit" class="btn btn-custom-primary btn-sm"><i class="bi bi-check-lg me-1"></i> Save Changes</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -419,8 +419,8 @@
                                                     <form action="{{ url_for('attendance.delete_attendance', id=att.AttendanceID) }}" method="POST">
                                                         {{ form.hidden_tag() }}
                                                         <div class="d-flex justify-content-center gap-2">
-                                                            <button type="button" class="btn btn-secondary btn-sm w-50" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="submit" class="btn btn-danger btn-sm w-50">Delete</button>
+                                                            <button type="button" class="btn btn-secondary btn-sm w-50" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                                                            <button type="submit" class="btn btn-danger btn-sm w-50"><i class="bi bi-trash3-fill me-1"></i> Delete</button>
                                                         </div>
                                                     </form>
                                                 </div>
@@ -450,7 +450,7 @@
                                 <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
                                     <a class="page-link bg-dark text-white border-secondary {% if not pagination.has_prev %}opacity-50{% endif %}"
                                        href="{{ url_for('attendance.manage_attendances', page=pagination.prev_num, per_page=pagination.per_page) if pagination.has_prev else '#' }}">
-                                        <i class="bi bi-chevron-left"></i> Previous
+                                        <i class="bi bi-chevron-left me-1"></i> Previous
                                     </a>
                                 </li>
 
@@ -465,7 +465,7 @@
                                 <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
                                     <a class="page-link bg-dark text-white border-secondary {% if not pagination.has_next %}opacity-50{% endif %}"
                                        href="{{ url_for('attendance.manage_attendances', page=pagination.next_num, per_page=pagination.per_page) if pagination.has_next else '#' }}">
-                                        Next <i class="bi bi-chevron-right"></i>
+                                        Next <i class="bi bi-chevron-right ms-1"></i>
                                     </a>
                                 </li>
                             </ul>
@@ -492,50 +492,50 @@
                     <div class="modal-body text-start">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.Code.label(class="form-label") }}
+                                <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.Code.label.text }}</label>
                                 {{ form.Code(class="form-control", placeholder="Enter scan/code number") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.GroupID.label(class="form-label") }}
+                                <label class="form-label"><i class="bi bi-people-fill me-1"></i> {{ form.GroupID.label.text }}</label>
                                 {{ form.GroupID(class="form-select") }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.UserID.label(class="form-label") }}
+                                <label class="form-label"><i class="bi bi-person-fill me-1"></i> {{ form.UserID.label.text }}</label>
                                 {{ form.UserID(class="form-select") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.SubjectID.label(class="form-label") }}
+                                <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> {{ form.SubjectID.label.text }}</label>
                                 {{ form.SubjectID(class="form-select") }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.Date.label(class="form-label") }}
+                                <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ form.Date.label.text }}</label>
                                 {{ form.Date(class="form-control", type="date") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.Time.label(class="form-label") }}
+                                <label class="form-label"><i class="bi bi-clock me-1"></i> {{ form.Time.label.text }}</label>
                                 {{ form.Time(class="form-control", type="time") }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.Status.label(class="form-label") }}
+                                <label class="form-label"><i class="bi bi-check-circle me-1"></i> {{ form.Status.label.text }}</label>
                                 {{ form.Status(class="form-select") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.Remarks.label(class="form-label") }}
+                                <label class="form-label"><i class="bi bi-chat-left-text me-1"></i> {{ form.Remarks.label.text }}</label>
                                 {{ form.Remarks(class="form-control", placeholder="Optional remarks...") }}
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
                         <button type="submit" class="btn btn-custom-primary btn-sm">
                             <i class="fas fa-save me-1"></i> Save Attendance
                         </button>

@@ -52,7 +52,7 @@
             </div>
             <div>
                 <a href="{{ url_for('location_index') }}" class="btn-custom-secondary">
-                    <i class="bi bi-house-door"></i> Back to Location Dashboard
+                    <i class="bi bi-house-door me-1"></i> Back to Location Dashboard
                 </a>
             </div>
         </div>
@@ -62,7 +62,7 @@
             <div class="panel-title">
                 <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> District List</span>
                 <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addDistrictModal">
-                    <i class="bi bi-plus-circle-fill"></i> Add New District
+                    <i class="bi bi-plus-circle-fill me-1"></i> Add New District
                 </button>
             </div>
 
@@ -166,21 +166,21 @@
                     {{ form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="mb-3">
-                            {{ form.Code.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.Code.label.text }}</label>
                             {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else "")) }}
                             {% for error in form.Code.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.Name.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ form.Name.label.text }}</label>
                             {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else "")) }}
                             {% for error in form.Name.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.ProvinceID.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-map me-1"></i> {{ form.ProvinceID.label.text }}</label>
                             {{ form.ProvinceID(class="form-select " + ("is-invalid" if form.ProvinceID.errors else "")) }}
                             {% for error in form.ProvinceID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
@@ -212,21 +212,21 @@
                     {{ form.hidden_tag() }}
                     <div class="modal-body">
                         <div class="mb-3">
-                            {{ form.Code.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.Code.label.text }}</label>
                             {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
                             {% for error in form.Code.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.Name.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ form.Name.label.text }}</label>
                             {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
                             {% for error in form.Name.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.ProvinceID.label(class="form-label") }}
+                            <label class="form-label"><i class="bi bi-map me-1"></i> {{ form.ProvinceID.label.text }}</label>
                             {{ form.ProvinceID(class="form-select " + ("is-invalid" if form.ProvinceID.errors else ""), id="edit_province") }}
                             {% for error in form.ProvinceID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>

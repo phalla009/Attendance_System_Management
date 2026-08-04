@@ -205,7 +205,7 @@
             flex-shrink: 0;
         }
         .stat-info h6 {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--text-muted);
             margin-bottom: 4px;
@@ -213,7 +213,7 @@
             letter-spacing: 0.05em;
         }
         .stat-info h3 {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             color: var(--text-main);
             margin: 0;
@@ -318,24 +318,24 @@
             </div>
         </div>
 
-        <!-- Stat Cards Section (Total counts for Profiles, User Types, Contacts, Addresses) -->
+        <!-- Stat Cards Section (Total counts including 6 stat items) -->
         <div>
             <div class="row g-3">
                 <!-- Total Profiles -->
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4 col-xxl-2">
                     <div class="stat-card">
                         <div class="stat-icon-box bg-indigo-soft">
                             <i class="bi bi-person-badge-fill"></i>
                         </div>
                         <div class="stat-info">
-                            <h6>Total Profiles</h6>
+                            <h6>Profiles</h6>
                             <h3>{{ total_profiles|default(0) }}</h3>
                         </div>
                     </div>
                 </div>
 
                 <!-- Total User Types -->
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4 col-xxl-2">
                     <div class="stat-card">
                         <div class="stat-icon-box bg-green-soft">
                             <i class="bi bi-shield-lock-fill"></i>
@@ -347,23 +347,49 @@
                     </div>
                 </div>
 
-                <!-- Total Contact Numbers -->
-                <div class="col-sm-6 col-xl-3">
+                <!-- Total Teachers -->
+                <div class="col-sm-6 col-xl-4 col-xxl-2">
                     <div class="stat-card">
                         <div class="stat-icon-box bg-amber-soft">
+                            <i class="bi bi-person-video3"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h6>Teachers</h6>
+                            <h3>{{ total_teachers|default(0) }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Students -->
+                <div class="col-sm-6 col-xl-4 col-xxl-2">
+                    <div class="stat-card">
+                        <div class="stat-icon-box bg-rose-soft">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h6>Students</h6>
+                            <h3>{{ total_students|default(0) }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Contact Numbers -->
+                <div class="col-sm-6 col-xl-4 col-xxl-2">
+                    <div class="stat-card">
+                        <div class="stat-icon-box bg-indigo-soft">
                             <i class="bi bi-telephone-fill"></i>
                         </div>
                         <div class="stat-info">
-                            <h6>Contact Numbers</h6>
+                            <h6>Contacts</h6>
                             <h3>{{ total_contacts|default(0) }}</h3>
                         </div>
                     </div>
                 </div>
 
                 <!-- Total Addresses -->
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4 col-xxl-2">
                     <div class="stat-card">
-                        <div class="stat-icon-box bg-rose-soft">
+                        <div class="stat-icon-box bg-green-soft">
                             <i class="bi bi-geo-alt-fill"></i>
                         </div>
                         <div class="stat-info">

@@ -95,6 +95,18 @@ def user_index():
         else 0
     )
 
+    # ➕ បន្ថែមការរាប់ចំនួន Teacher (TypeID = 1) និង Student (TypeID = 2)
+    total_teachers = (
+        user_models.UserProfile.query.filter_by(TypeID=1).count()
+        if hasattr(user_models, 'UserProfile')
+        else 0
+    )
+    total_students = (
+        user_models.UserProfile.query.filter_by(TypeID=2).count()
+        if hasattr(user_models, 'UserProfile')
+        else 0
+    )
+
     total_addresses = 0
     if hasattr(user_models, 'Address'):
         total_addresses = user_models.Address.query.count()
@@ -108,8 +120,9 @@ def user_index():
         total_usertypes=total_usertypes,
         total_contacts=total_contacts,
         total_addresses=total_addresses,
+        total_teachers=total_teachers,
+        total_students=total_students,
     )
-
 
 # Location Management Home Dashboard
 @app.route('/location/index')

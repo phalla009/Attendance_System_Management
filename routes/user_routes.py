@@ -16,19 +16,23 @@ from models.user import ContactNo, Login, UserProfile, UserType
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
+
 # 👉 Helper function សម្រាប់ Student Choices
 def populate_student_form_choices(form):
     form.TypeID.choices = [(t.TypeID, t.TypeName) for t in UserType.query.all()]
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
     form.ClassID.choices = [(c.ClassID, c.Name) for c in Class.query.all()]
-    form.AddressID.choices = [(a.AddressID, f"ផ្ទះលេខ {a.Home or ''}, ផ្លូវ {a.Street or ''}") for a in Address.query.all()]
+    form.AddressID.choices = [(a.AddressID, f"ផ្ទះលេខ {a.Home or ''}, ផ្លូវ {a.Street or ''}") for a in
+                              Address.query.all()]
     form.ContactNoID.choices = [(c.ContactID, c.ContactNumber) for c in ContactNo.query.all()]
+
 
 # 👉 Helper function សម្រាប់ Teacher Choices
 def populate_teacher_form_choices(form):
     form.TypeID.choices = [(t.TypeID, t.TypeName) for t in UserType.query.all()]
     form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
-    form.AddressID.choices = [(a.AddressID, f"ផ្ទះលេខ {a.Home or ''}, ផ្លូវ {a.Street or ''}") for a in Address.query.all()]
+    form.AddressID.choices = [(a.AddressID, f"ផ្ទះលេខ {a.Home or ''}, ផ្លូវ {a.Street or ''}") for a in
+                              Address.query.all()]
     form.ContactNoID.choices = [(c.ContactID, c.ContactNumber) for c in ContactNo.query.all()]
 
 
@@ -68,6 +72,29 @@ def logout():
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('user.login'))
+
+# ----------------- USERS DASHBOARD / INDEX -----------------
+@user_bp.route('/dashboard', methods=['GET'])
+def users_dashboard():
+    total_profiles = UserProfile.query.count()
+    total_usertypes = UserType.query.count()
+    total_contacts = ContactNo.query.count()
+    total_addresses = Address.query.count()
+
+    # ➕ រាប់ចំនួន Teacher និង Student ផ្ទាល់ពី TypeID
+    total_teachers = UserProfile.query.filter_by(TypeID=1).count()
+    print(f">>>> TOTAL TEACHERS FOUND: {total_teachers}")  # បង្ហាញក្នុង Terminal ដើម្បី טេស
+
+    total_students = UserProfile.query.filter_by(TypeID=2).count()
+    print(f">>>> TOTAL STUDENTS FOUND: {total_students}")  # បង្ហាញក្នុង Terminal ដើម្បី טេស
+
+    return render_template('users/dashboard.html',
+                           total_profiles=total_profiles,
+                           total_usertypes=total_usertypes,
+                           total_contacts=total_contacts,
+                           total_addresses=total_addresses,
+                           total_teachers=total_teachers,
+                           total_students=total_students)
 
 
 # ----------------- PROFILES (STUDENTS & TEACHERS) -----------------
