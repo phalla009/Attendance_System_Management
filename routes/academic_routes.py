@@ -325,3 +325,71 @@ def delete_subject(id):
         db.session.rollback()
         flash('Cannot delete this subject because it is related to other data.', 'danger')
     return redirect(url_for('academic.manage_subjects'))
+
+
+@academic_bp.route('/groups/cards', methods=['GET'])
+def groups_cards():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 12, type=int)
+
+    from models.user import UserProfile
+    from sqlalchemy import func
+
+    # ធ្វើ Subquery រាប់ចំនួនសិស្សតាម GroupID
+    subq = db.session.query(
+        UserProfile.GroupID,
+        func.count(UserProfile.ProfileID).label('total_students')
+    ).group_by(UserProfile.GroupID).subquery()
+
+    # Join Group ជាមួយ Session និង Subquery រាប់សិស្ស
+    query = db.session.query(
+        Group,
+        Session.Session_name.label('session_name'),
+        func.coalesce(subq.c.total_students, 0).label('total_students')
+    ) \
+    .outerjoin(Session, Group.SessionID == Session.SessionID) \
+    .outerjoin(subq, Group.GroupID == subq.c.GroupID)
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    groups = pagination.items
+
+    prev_url = url_for('academic.groups_cards', page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('academic.groups_cards', page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
+
+    return render_template('academic/groups_cards.html',
+                           groups=groups,
+                           per_page=per_page,
+                           prev_url=prev_url,
+                           next_url=next_url)
+
+
+@academic_bp.route('/groups/<int:group_id>/students', methods=['GET'])
+def group_students(group_id):
+    group = Group.query.get_or_404(group_id)
+
+    from models.user import UserProfile
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
+    # គណនាចំនួនសិស្សសរុបក្នុងក្រុមនេះ
+    total_students = UserProfile.query.filter_by(GroupID=group_id).count()
+
+    pagination = UserProfile.query.filter_by(GroupID=group_id).paginate(page=page, per_page=per_page, error_out=False)
+    students = pagination.items
+
+    prev_url = url_for('academic.group_students', group_id=group_id, page=pagination.prev_num,
+                       per_page=per_page) if pagination.has_prev else None
+    next_url = url_for('academic.group_students', group_id=group_id, page=pagination.next_num,
+                       per_page=per_page) if pagination.has_next else None
+
+    return render_template('academic/group_students.html',
+                           group=group,
+                           students=students,
+                           total_students=total_students,
+                           pagination=pagination,
+                           per_page=per_page,
+                           prev_url=prev_url,
+                           next_url=next_url)

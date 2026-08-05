@@ -11,16 +11,19 @@
         <a href="{{ url_for('dashboard') }}" class="nav-item-custom {% if request.endpoint == 'dashboard' %}active{% endif %}">
             <i class="bi bi-bar-chart-fill"></i> Analytics
         </a>
+        <a href="{{ url_for('academic.groups_cards') }}" class="nav-item-custom {% if 'groups_cards' in request.endpoint %}active{% endif %}">
+            <i class="bi bi-grid-3x3-gap-fill"></i> Groups List
+        </a>
 
         <div class="nav-label">Academic Management</div>
-        <!-- Academic Modules & Dashboards Dropdown -->
-        <button class="nav-item-custom dropdown-toggle-custom {% if 'academic' not in request.endpoint and request.endpoint != 'index' %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#academicDropdown" aria-expanded="{% if 'academic' in request.endpoint or request.endpoint == 'index' %}true{% else %}false{% endif %}" aria-controls="academicDropdown">
+        <!-- Academic Modules & Dashboards Dropdown (Fixed condition for groups_cards) -->
+        <button class="nav-item-custom dropdown-toggle-custom {% if ('academic' not in request.endpoint or 'groups_cards' in request.endpoint) and request.endpoint != 'index' %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#academicDropdown" aria-expanded="{% if 'academic' in request.endpoint and 'groups_cards' not in request.endpoint or request.endpoint == 'index' %}true{% else %}false{% endif %}" aria-controls="academicDropdown">
             <span class="d-flex align-items-center gap-2"><i class="bi bi-journal-album"></i> Academic Model</span>
             <i class="bi bi-chevron-down"></i>
         </button>
 
         <!-- Dropdown Collapse Menu -->
-        <div class="collapse {% if 'academic' in request.endpoint or request.endpoint == 'index' %}show{% endif %}" id="academicDropdown" data-bs-parent="#sidebar">
+        <div class="collapse {% if 'academic' in request.endpoint and 'groups_cards' not in request.endpoint or request.endpoint == 'index' %}show{% endif %}" id="academicDropdown" data-bs-parent="#sidebar">
             <div class="dropdown-container">
                 <a href="{{ url_for('index') }}" class="nav-item-custom {% if request.endpoint == 'index' %}active{% endif %}">
                     <i class="bi bi-grid-1x2-fill"></i> Dashboard
@@ -31,7 +34,7 @@
                 <a href="{{ url_for('academic.manage_classes') }}" class="nav-item-custom {% if 'manage_classes' in request.endpoint %}active{% endif %}">
                     <i class="bi bi-easel"></i> Classes
                 </a>
-                <a href="{{ url_for('academic.manage_groups') }}" class="nav-item-custom {% if 'manage_groups' in request.endpoint %}active{% endif %}">
+                <a href="{{ url_for('academic.manage_groups') }}" class="nav-item-custom {% if 'manage_groups' in request.endpoint and 'groups_cards' not in request.endpoint %}active{% endif %}">
                     <i class="bi bi-people"></i> Groups
                 </a>
                 <a href="{{ url_for('academic.manage_subjects') }}" class="nav-item-custom {% if 'manage_subjects' in request.endpoint %}active{% endif %}">
@@ -41,7 +44,7 @@
         </div>
     {% endif %}
 
-    <!-- Users Management (បង្ហាញទាំង Teacher និង User ធម្មតា) -->
+    <!-- Users Management -->
     <div class="nav-label">Users Management</div>
     <!-- User Management Dropdown Menu -->
     <button class="nav-item-custom dropdown-toggle-custom {% if 'user' not in request.endpoint %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#userDropdown" aria-expanded="{% if 'user' in request.endpoint %}true{% else %}false{% endif %}" aria-controls="userDropdown">
@@ -109,7 +112,35 @@
     {% endif %}
 
     <div class="nav-label">System</div>
-    <a href="{{ url_for('user.logout') }}" class="nav-item-custom text-danger" style="color: #f87171 !important;">
+    <a href="{{ url_for('user.logout') }}" class="nav-item-custom text-danger" id="logoutBtn" style="color: #f87171 !important;">
         <i class="bi bi-box-arrow-right"></i> Logout
     </a>
 </aside>
+
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Logout Confirmation Script -->
+<script>
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        const logoutUrl = this.href;
+
+        Swal.fire({
+            title: 'Are you sure you want to log out?',
+            text: 'You will need to log in again to access the system.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6366f1',
+            cancelButtonColor: '#f43f5e',
+            confirmButtonText: 'Yes, Logout',
+            cancelButtonText: 'Cancel',
+            background: '#111827',
+            color: '#f9fafb'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = logoutUrl;
+            }
+        });
+    });
+</script>

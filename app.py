@@ -12,8 +12,13 @@ from models.location import Commune, District, Province, Village
 # Import User models from models.user
 import models.user as user_models
 
+# Import Attendance models for dashboard metrics query if needed
+from models.attendance import Attendance
+
 # Import Flask-Login
 from flask_login import LoginManager, login_required
+from datetime import date, datetime
+from sqlalchemy import extract
 
 app = Flask(__name__)
 
@@ -30,11 +35,13 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'  # Name of the login route function
 app.login_manager = login_manager  # Explicitly attach login_manager attribute to the Flask app instance
 
+
 @login_manager.user_loader
 def load_user(user_id):
     if hasattr(user_models, 'User'):
         return user_models.User.query.get(int(user_id))
     return user_models.UserProfile.query.get(int(user_id))
+
 
 # Register all Blueprints
 app.register_blueprint(academic_bp)
@@ -124,6 +131,7 @@ def user_index():
         total_students=total_students,
     )
 
+
 # Location Management Home Dashboard
 @app.route('/location/index')
 def location_index():
@@ -142,17 +150,58 @@ def location_index():
     )
 
 
-# Analytics / Dashboard Route
+# Analytics / Main Root Dashboard Route with Real Data
 @app.route('/dashboard')
 def dashboard():
+    today = date.today()
+
+    total_users = user_models.UserProfile.query.count() if hasattr(user_models.UserProfile, 'query') else 0
+
+    present_count = Attendance.query.filter(
+        Attendance.Status == 'Present',
+        db.func.date(Attendance.Date) == today
+    ).count() if hasattr(Attendance, 'query') else 0
+
+    late_count = Attendance.query.filter(
+        Attendance.Status == 'Late',
+        db.func.date(Attendance.Date) == today
+    ).count() if hasattr(Attendance, 'Status') else 0
+
+    absent_count = Attendance.query.filter(
+        Attendance.Status == 'Absent',
+        db.func.date(Attendance.Date) == today
+    ).count() if hasattr(Attendance, 'Status') else 0
+
+    present_rate = round((present_count / total_users * 100) if total_users > 0 else 0, 1)
+
+    current_year = datetime.now().year
+    monthly_counts = []
+    for month in range(1, 13):
+        count = Attendance.query.filter(
+            extract('year', Attendance.Date) == current_year,
+            extract('month', Attendance.Date) == month,
+            Attendance.Status == 'Present'
+        ).count() if hasattr(Attendance, 'query') else 0
+        monthly_counts.append(count)
+
+    time_slots = [8, 10, 12, 14, 16]
+    hourly_counts = []
+    for hour in time_slots:
+        count = Attendance.query.filter(
+            extract('hour', Attendance.Date) == hour
+        ).count() if hasattr(Attendance, 'query') else 0
+        hourly_counts.append(count)
+
     return render_template(
         'attendance/dashboard.html',
         active_page='dashboard',
-        total_users=120,
-        present_count=105,
-        present_rate=87.5,
-        late_count=10,
-        absent_count=5,
+        total_users=total_users or 0,
+        present_count=present_count or 0,
+        present_rate=present_rate or 0.0,
+        late_count=late_count or 0,
+        absent_count=absent_count or 0,
+        monthly_counts=monthly_counts if monthly_counts else [0] * 12,
+        hourly_counts=hourly_counts if hourly_counts else [0] * 5,
     )
 
 

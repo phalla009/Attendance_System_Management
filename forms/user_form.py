@@ -27,7 +27,7 @@ class AddressForm(FlaskForm):
     VillageID = SelectField('Village', coerce=int, validators=[DataRequired()])
 
 
-# 👉 សម្រាប់ Student Form (មាន Group និង Class)
+# 👉 សម្រាប់ Student Form (មានតែ Group ដោយដក ClassID ចោល)
 class StudentProfileForm(FlaskForm):
     Code = StringField('Code', validators=[DataRequired(), Length(max=50)])
     Name = StringField('Name', validators=[DataRequired(), Length(max=100)])
@@ -41,7 +41,7 @@ class StudentProfileForm(FlaskForm):
 
     TypeID = SelectField('User Type', coerce=int, validators=[DataRequired()])
     GroupID = SelectField('Group', coerce=int, validators=[DataRequired()])
-    ClassID = SelectField('Class', coerce=int, validators=[DataRequired()])
+    # ❌ បានលុប ClassID ចោលទីនេះ
 
     AddressID = SelectField('Address', coerce=int, validators=[DataRequired()])
     ContactNoID = SelectField('Contact No', coerce=int, validators=[DataRequired()])

@@ -62,6 +62,12 @@
             <div class="panel-title">
                 <span><i class="bi bi-table text-white"></i> User Profile List</span>
                 <div class="d-flex gap-2">
+                    <button type="button" class="btn-custom-secondary" style="background-color: #2563eb; border-color: #2563eb;" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                        <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import Excel
+                    </button>
+                    <a href="{{ url_for('user.export_students_excel') }}" class="btn-custom-secondary" style="background-color: #047857; border-color: #047857;">
+                        <i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel
+                    </a>
                     <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
                         <i class="bi bi-person-plus-fill me-1"></i> Add Student
                     </button>
@@ -81,7 +87,7 @@
                             <th>Gender</th>
                             <th>DOB</th>
                             <th>User Type</th>
-                            <th>Class / Group / Subject</th>
+                            <th>Group / Subject</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -107,7 +113,7 @@
                                     {% if u.user_type and u.user_type.TypeName == 'Teacher' %}
                                         <span class="text-info"><i class="bi bi-book me-1"></i> {{ u.subject_rel.Name if u.subject_rel else '-' }}</span>
                                     {% else %}
-                                        {{ u.class_rel.Name if u.class_rel else '-' }} / {{ u.group_rel.Name if u.group_rel else '-' }}
+                                        {{ u.group_rel.Name if u.group_rel else '-' }}
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
@@ -124,7 +130,6 @@
                                                 data-photo="{{ u.Photo or '' }}"
                                                 data-typeid="{{ u.TypeID }}"
                                                 data-groupid="{{ u.GroupID or '' }}"
-                                                data-classid="{{ u.ClassID or '' }}"
                                                 data-subjectid="{{ u.SubjectID or '' }}"
                                                 data-addressid="{{ u.AddressID or '' }}"
                                                 data-contactid="{{ u.ContactNoID or '' }}">
@@ -231,10 +236,6 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-book me-1"></i> {{ student_form.ClassID.label.text }}</label>
-                                {{ student_form.ClassID(class="form-select") }}
-                            </div>
-                            <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ student_form.AddressID.label.text }}</label>
                                 {{ student_form.AddressID(class="form-select") }}
                             </div>
@@ -243,8 +244,6 @@
                                 {{ student_form.ContactNoID(class="form-select") }}
                             </div>
                         </div>
-
-
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
@@ -369,11 +368,6 @@
                                 <label class="form-label"><i class="bi bi-people me-1"></i> {{ student_form.GroupID.label.text }}</label>
                                 {{ student_form.GroupID(class="form-select", id="edit_groupid") }}
                             </div>
-                            <!-- Student Class Field -->
-                            <div class="col-md-6 mb-3" id="edit_class_wrapper">
-                                <label class="form-label"><i class="bi bi-book me-1"></i> {{ student_form.ClassID.label.text }}</label>
-                                {{ student_form.ClassID(class="form-select", id="edit_classid") }}
-                            </div>
                             <!-- Teacher Subject Field -->
                             <div class="col-md-6 mb-3" id="edit_subject_wrapper" style="display: none;">
                                 <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ teacher_form.SubjectID.label.text }}</label>
@@ -386,11 +380,9 @@
                             </div>
                              <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ student_form.ContactNoID.label.text }}</label>
-                                    {{ student_form.ContactNoID(class="form-select", id="edit_contactid") }}
+                                {{ student_form.ContactNoID(class="form-select", id="edit_contactid") }}
                              </div>
                         </div>
-
-
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
@@ -422,6 +414,33 @@
         </div>
     </div>
 
+    <!-- 5. Import Excel Modal -->
+    <div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white"><i class="bi bi-file-earmark-arrow-up-fill text-white"></i> Import User Profiles from Excel</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ url_for('user.import_students_excel') if url_for('user.import_students_excel') else '#' }}" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-file-earmark-excel me-1"></i> Choose Excel File (.xlsx, .xls)</label>
+                            <input type="file" name="excel_file" class="form-control" accept=".xlsx, .xls" required>
+                        </div>
+                        <div class="form-text text-white-50" style="font-size: 12px;">
+                            <i class="bi bi-info-circle me-1"></i> Make sure your Excel file matches the required column format before importing.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                        <button type="submit" class="btn-custom-primary" style="background-color: #2563eb; border-color: #2563eb;"><i class="bi bi-upload me-1"></i> Upload & Import</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -440,17 +459,14 @@
             const typeName = selectedOption ? selectedOption.text.trim() : '';
 
             const groupFieldWrapper = document.getElementById('edit_group_wrapper');
-            const classFieldWrapper = document.getElementById('edit_class_wrapper');
             const subjectFieldWrapper = document.getElementById('edit_subject_wrapper');
 
             if (typeName === 'Teacher') {
                 if (subjectFieldWrapper) subjectFieldWrapper.style.display = 'block';
                 if (groupFieldWrapper) groupFieldWrapper.style.display = 'none';
-                if (classFieldWrapper) classFieldWrapper.style.display = 'none';
             } else {
                 if (subjectFieldWrapper) subjectFieldWrapper.style.display = 'none';
                 if (groupFieldWrapper) groupFieldWrapper.style.display = 'block';
-                if (classFieldWrapper) classFieldWrapper.style.display = 'block';
             }
         }
 
@@ -471,7 +487,6 @@
                 const dob = button.getAttribute('data-dob');
                 const typeid = button.getAttribute('data-typeid');
                 const groupid = button.getAttribute('data-groupid');
-                const classid = button.getAttribute('data-classid');
                 const subjectid = button.getAttribute('data-subjectid');
                 const addressid = button.getAttribute('data-addressid');
                 const contactid = button.getAttribute('data-contactid');
@@ -486,7 +501,6 @@
                 document.getElementById('edit_dob').value = dob;
                 document.getElementById('edit_typeid').value = typeid;
                 document.getElementById('edit_groupid').value = groupid;
-                document.getElementById('edit_classid').value = classid;
                 document.getElementById('edit_subjectid').value = subjectid;
                 document.getElementById('edit_addressid').value = addressid;
                 document.getElementById('edit_contactid').value = contactid;
@@ -504,9 +518,8 @@
                 const id = button.getAttribute('data-id');
                 const name = button.getAttribute('data-name');
 
-                // Set Delete Form Action URL & Username Display
-                document.getElementById('deleteUserForm').action = `/users/profiles/delete/${id}`;
                 document.getElementById('deleteUserName').textContent = name;
+                document.getElementById('deleteUserForm').action = `/users/profiles/delete/${id}`;
             });
         }
     </script>

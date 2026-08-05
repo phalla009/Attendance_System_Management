@@ -1,6 +1,9 @@
+import io
 import os
 import uuid
-from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
+import pandas as pd
+
+from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for, send_file
 from werkzeug.utils import secure_filename
 from extensions import db
 from forms.user_form import (
@@ -10,18 +13,17 @@ from forms.user_form import (
     TeacherProfileForm,
     UserTypeForm,
 )
-from models.academic import Class, Group, Subject
+from models.academic import Group, Subject  # ដក Class ចចេញពី Model Imports
 from models.location import Address, Province, District, Commune, Village
 from models.user import ContactNo, Login, UserProfile, UserType
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
 
-# 👉 Helper function សម្រាប់ Student Choices
+# 👉 Helper function សម្រាប់ Student Choices (ដក Class ចោល រក្សាទុក Group ធម្មតា)
 def populate_student_form_choices(form):
     form.TypeID.choices = [(t.TypeID, t.TypeName) for t in UserType.query.all()]
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
-    form.ClassID.choices = [(c.ClassID, c.Name) for c in Class.query.all()]
     form.AddressID.choices = [(a.AddressID, f"ផ្ទះលេខ {a.Home or ''}, ផ្លូវ {a.Street or ''}") for a in
                               Address.query.all()]
     form.ContactNoID.choices = [(c.ContactID, c.ContactNumber) for c in ContactNo.query.all()]
@@ -81,12 +83,8 @@ def users_dashboard():
     total_contacts = ContactNo.query.count()
     total_addresses = Address.query.count()
 
-    # ➕ រាប់ចំនួន Teacher និង Student ផ្ទាល់ពី TypeID
     total_teachers = UserProfile.query.filter_by(TypeID=1).count()
-    print(f">>>> TOTAL TEACHERS FOUND: {total_teachers}")  # បង្ហាញក្នុង Terminal ដើម្បី טេស
-
     total_students = UserProfile.query.filter_by(TypeID=2).count()
-    print(f">>>> TOTAL STUDENTS FOUND: {total_students}")  # បង្ហាញក្នុង Terminal ដើម្បី טេស
 
     return render_template('users/dashboard.html',
                            total_profiles=total_profiles,
@@ -103,11 +101,9 @@ def manage_profiles():
     student_form = StudentProfileForm()
     teacher_form = TeacherProfileForm()
 
-    # Pagination parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
-    # Populate Choices
     populate_student_form_choices(student_form)
     populate_teacher_form_choices(teacher_form)
 
@@ -161,7 +157,6 @@ def manage_students():
             Photo=photo_filename,
             TypeID=student_form.TypeID.data,
             GroupID=student_form.GroupID.data,
-            ClassID=student_form.ClassID.data,
             AddressID=student_form.AddressID.data,
             ContactNoID=student_form.ContactNoID.data,
         )
@@ -252,10 +247,8 @@ def edit_profile(id):
         if is_teacher:
             user.SubjectID = form.SubjectID.data
             user.GroupID = None
-            user.ClassID = None
         else:
             user.GroupID = form.GroupID.data
-            user.ClassID = form.ClassID.data
             user.SubjectID = None
 
         if form.Photo.data:
@@ -523,3 +516,134 @@ def delete_address(id):
         flash('Cannot delete this address because it is linked to user profiles!', 'danger')
 
     return redirect(url_for('user.manage_addresses'))
+
+
+@user_bp.route('/profiles/export-excel', methods=['GET'])
+def export_students_excel():
+    student_type = UserType.query.filter_by(TypeName='Student').first()
+    type_id = student_type.TypeID if student_type else None
+
+    if type_id:
+        students = UserProfile.query.filter_by(TypeID=type_id).all()
+    else:
+        students = UserProfile.query.all()
+
+    data = []
+    for index, u in enumerate(students, start=1):
+        gender_str = 'Male' if u.Gender == 'M' else ('Female' if u.Gender == 'F' else '-')
+        dob_str = u.DOB.strftime('%Y-%m-%d') if u.DOB else '-'
+        user_type_name = u.user_type.TypeName if u.user_type else '-'
+        group_name = u.group_rel.Name if u.group_rel else '-'
+
+        address_str = f"ផ្ទះលេខ {u.address_rel.Home or ''}, ផ្លូវ {u.address_rel.Street or ''}" if u.address_rel else '-'
+        contact_str = u.contact_rel.ContactNumber if u.contact_rel else '-'
+
+        data.append({
+            'No.': index,
+            'Code': u.Code,
+            'Full Name': u.Name,
+            'Gender': gender_str,
+            'Date of Birth': dob_str,
+            'User Type': user_type_name,
+            'Group': group_name,
+            'Contact Number': contact_str,
+            'Address': address_str
+        })
+
+    df = pd.DataFrame(data)
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Students List')
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='Students_List.xlsx'
+    )
+
+
+@user_bp.route('/profiles/import-excel', methods=['POST'])
+def import_students_excel():
+    if session.get('user_type') != 'Teacher':
+        flash('Access Denied! Only Teachers can import student profiles.', 'danger')
+        return redirect(url_for('user.manage_profiles'))
+
+    if 'excel_file' not in request.files:
+        flash('No file part uploaded!', 'danger')
+        return redirect(url_for('user.manage_profiles'))
+
+    file = request.files['excel_file']
+    if file.filename == '':
+        flash('No selected file!', 'danger')
+        return redirect(url_for('user.manage_profiles'))
+
+    if file and (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
+        try:
+            df = pd.read_excel(file)
+
+            student_type = UserType.query.filter_by(TypeName='Student').first()
+            student_type_id = student_type.TypeID if student_type else 2
+
+            imported_count = 0
+            updated_count = 0
+
+            with db.session.no_autoflush:
+                for _, row in df.iterrows():
+                    code = str(row.get('Code', '')).strip()
+                    name = str(row.get('Full Name', '')).strip()
+
+                    if not code or not name or code.lower() == 'nan' or name.lower() == 'nan':
+                        continue
+
+                    raw_gender = str(row.get('Gender', 'M')).strip().upper()
+                    gender = 'M' if raw_gender in ['M', 'MALE'] else 'F'
+
+                    raw_dob = row.get('Date of Birth')
+                    dob = None
+                    if pd.notna(raw_dob) and str(raw_dob).strip() not in ['', '-', 'nan', 'NaT']:
+                        try:
+                            dob = pd.to_datetime(raw_dob).date()
+                        except:
+                            dob = None
+
+                    group_id = None
+                    group_name = str(row.get('Group', '')).strip()
+                    if group_name and group_name.lower() not in ['nan', '-']:
+                        group_obj = Group.query.filter_by(Name=group_name).first()
+                        if group_obj:
+                            group_id = group_obj.GroupID
+
+                    existing_user = UserProfile.query.filter_by(Code=code).first()
+
+                    if existing_user:
+                        existing_user.Name = name
+                        existing_user.Gender = gender
+                        existing_user.DOB = dob
+                        existing_user.TypeID = student_type_id
+                        existing_user.GroupID = group_id
+                        updated_count += 1
+                    else:
+                        user = UserProfile(
+                            Code=code,
+                            Name=name,
+                            Gender=gender,
+                            DOB=dob,
+                            TypeID=student_type_id,
+                            GroupID=group_id
+                        )
+                        db.session.add(user)
+                        imported_count += 1
+
+            db.session.commit()
+            flash(f'Successfully imported {imported_count} new and updated {updated_count} student profiles!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error processing Excel file: {str(e)}', 'danger')
+    else:
+        flash('Invalid file format! Please upload a valid .xlsx or .xls file.', 'danger')
+
+    return redirect(url_for('user.manage_profiles'))
