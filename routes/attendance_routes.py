@@ -1,10 +1,10 @@
 from datetime import datetime, date
 from extensions import db
-from flask import Blueprint, flash, redirect, render_template, url_for, request
+from flask import Blueprint, flash, redirect, render_template, url_for, request, jsonify
 from sqlalchemy import extract
 from models.academic import Session, Class, Group, Subject
 from models.attendance import Attendance, QrCode
-from models.user import UserProfile
+from models.user import UserProfile, UserType
 from forms.attendance_form import AttendanceForm
 from wtforms import SelectField, StringField
 from flask_wtf import FlaskForm
@@ -154,16 +154,31 @@ def delete_qrcode(id):
     return redirect(url_for('attendance.manage_qrcodes'))
 
 
+# API Route to get students filtered by group ID
+@attendance_bp.route('/api/students/<int:group_id>', methods=['GET'])
+def get_students_by_group(group_id):
+    # កែសម្រួល .filter(...) ទៅតាម Column ជាក់ស្តែងក្នុង Model របស់អ្នកដែលផ្ទុក GroupID របស់ UserProfile
+    students = UserProfile.query.join(UserType).filter(
+        UserType.TypeName == 'Student',
+        UserProfile.GroupID == group_id
+    ).all()
+
+    result = [{'ProfileID': u.ProfileID, 'Name': u.Name} for u in students]
+    return jsonify(result)
+
+
 # 3. Attendance Records Management Route (With Pagination)
 @attendance_bp.route('/records', methods=['GET', 'POST'])
 def manage_attendances():
     form = AttendanceForm()
 
-    form.UserID.choices = [(u.ProfileID, u.Name) for u in UserProfile.query.all()]
+    # Initial load (អាចទុករว่าง ឬទាញយកទាំងអស់សិន មុនពេល User ជ្រើសរើស Group)
+    students = UserProfile.query.join(UserType).filter(UserType.TypeName == 'Student').all()
+    form.UserID.choices = [(u.ProfileID, u.Name) for u in students]
+
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
     form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
 
-    # ទទួលយកតម្លៃ page និង per_page ពី query string (defaults: page=1, per_page=10)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
@@ -191,7 +206,6 @@ def manage_attendances():
             for error in errors:
                 flash(f'Validation Error [{field}]: {error}', 'danger')
 
-    # ប្រើប្រាស់ Flask-SQLAlchemy paginate ជំនួសឱ្យ query.all()
     pagination = Attendance.query.paginate(page=page, per_page=per_page, error_out=False)
     attendances = pagination.items
 
@@ -209,7 +223,9 @@ def edit_attendance(id):
     attendance = Attendance.query.get_or_404(id)
     form = AttendanceForm()
 
-    form.UserID.choices = [(u.ProfileID, u.Name) for u in UserProfile.query.all()]
+    students = UserProfile.query.join(UserType).filter(UserType.TypeName == 'Student').all()
+    form.UserID.choices = [(u.ProfileID, u.Name) for u in students]
+
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
     form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
 
@@ -242,6 +258,7 @@ def delete_attendance(id):
     flash('Attendance deleted successfully!', 'success')
     return redirect(url_for('attendance.manage_attendances'))
 
+
 # 6. Active QR Code Sessions Listing Route for Scanning
 @attendance_bp.route('/scan/active', methods=['GET'])
 @login_required
@@ -250,6 +267,7 @@ def active_scan_sessions():
     active_qrs = QrCode.query.filter(QrCode.StartDate <= now, QrCode.EndDate >= now).all()
     return render_template('attendance/active_scans.html', active_qrs=active_qrs)
 
+
 # 7. QR Code Scanning Route (Requires Login & uses specific qrid)
 @attendance_bp.route('/scan/<int:qrid>', methods=['GET', 'POST'])
 @login_required
@@ -257,15 +275,12 @@ def scan_attendance(qrid):
     qr = QrCode.query.get_or_404(qrid)
     now = datetime.now()
 
-    # ១. ពិនិត្យមើលថាតើ QR Code ផុតកំណត់ឬនៅ
     if not (qr.StartDate <= now <= qr.EndDate):
         flash('This QR code session has expired or is not yet active for scanning.', 'danger')
         return render_template('attendance/scan.html', qr=qr, status='expired')
 
-    # ២. យក Profile ID របស់ User ដែលកំពុង Login
     user_profile_id = getattr(current_user, 'ProfileID', getattr(current_user, 'id', None))
 
-    # ៣. ពិនិត្យមើលថាតើធ្លាប់បានកត់ត្រាវត្តមានរួចហើយឬនៅ
     existing_attendance = Attendance.query.filter_by(
         ProfileID=user_profile_id,
         QrCodeID=qr.QrCodeID
@@ -275,7 +290,6 @@ def scan_attendance(qrid):
         flash('You have already recorded your attendance for this session!', 'warning')
         return render_template('attendance/scan.html', qr=qr, status='already_recorded')
 
-    # ៤. រក្សាទុកចូល Database ដោយស្វ័យប្រវត្តិភ្លាមៗ ពេលចូលមកដល់ (មិនបាច់រង់ចាំចុច Submit)
     try:
         attendance = Attendance(
             ProfileID=user_profile_id,

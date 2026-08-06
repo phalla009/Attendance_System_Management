@@ -9,7 +9,7 @@ class AttendanceForm(FlaskForm):
     Code = StringField('Code', validators=[DataRequired(), Length(max=50)])
     Name = StringField('Name',validators=[Length(max=100)])
     GroupID = SelectField('Group', coerce=int)
-    UserID = SelectField('User / Student', coerce=int, validators=[DataRequired()])
+    UserID = SelectField('Students', coerce=int, validators=[DataRequired()])
     SubjectID = SelectField('Subject', coerce=int, validators=[DataRequired()])
     Date = DateField('Attendance Date', validators=[DataRequired()])
     Time = TimeField('Attendance Time', validators=[DataRequired()])

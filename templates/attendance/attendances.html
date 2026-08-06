@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -107,9 +107,10 @@
             box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25) !important;
             color: var(--text-main) !important;
         }
+        /* Fix dropdown option visibility by using explicit hex values instead of CSS vars */
         .form-select option {
-            background-color: var(--bg-card);
-            color: var(--text-main);
+            background-color: #111827 !important;
+            color: #f9fafb !important;
         }
 
         /* ---------- Buttons ---------- */
@@ -222,7 +223,7 @@
         <div class="dashboard-header">
             <div>
                 <h1>Attendance Management</h1>
-                <p>គ្រប់គ្រង និងតាមដានបញ្ជីវត្តមានរបស់សិស្ស ឬអ្នកប្រើប្រាស់ក្នុងប្រព័ន្ធ។</p>
+                <p>Manage and track student and user attendance records within the system.</p>
             </div>
             <div class="d-flex gap-2">
                 <!-- Add New Button Trigger Modal -->
@@ -262,7 +263,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Scan Code</th>
-                                        <th>User / Student Name</th>
+                                        <th>Students Name</th>
                                         <th>Group / Class</th>
                                         <th>Subject</th>
                                         <th>Date & Time</th>
@@ -345,7 +346,7 @@
                                                             </div>
                                                             <div class="col-md-6 mb-3">
                                                                 <label class="form-label"><i class="bi bi-people-fill me-1"></i> Group</label>
-                                                                <select name="GroupID" class="form-select">
+                                                                <select name="GroupID" class="form-select group-select-field">
                                                                     {% for g_id, g_name in form.GroupID.choices %}
                                                                         <option value="{{ g_id }}" {% if g_id == att.GroupID %}selected{% endif %}>{{ g_name }}</option>
                                                                     {% endfor %}
@@ -355,8 +356,8 @@
 
                                                         <div class="row">
                                                             <div class="col-md-6 mb-3">
-                                                                <label class="form-label"><i class="bi bi-person-fill me-1"></i> User / Student</label>
-                                                                <select name="UserID" class="form-select">
+                                                                <label class="form-label"><i class="bi bi-person-fill me-1"></i> Students</label>
+                                                                <select name="UserID" class="form-select user-select-field">
                                                                     {% for u_id, u_name in form.UserID.choices %}
                                                                         <option value="{{ u_id }}" {% if u_id == att.ProfileID %}selected{% endif %}>{{ u_name }}</option>
                                                                     {% endfor %}
@@ -415,7 +416,7 @@
                                                 <div class="modal-body">
                                                     <i class="bi bi-exclamation-circle text-danger fs-1 mb-2"></i>
                                                     <h5 class="modal-title fs-6 fw-bold mb-1" id="deleteModalLabel{{ att.AttendanceID }}">Confirm Delete</h5>
-                                                    <p class="text-white small mb-3">តើអ្នកពិតជាចង់លុបវត្តមាននេះមែនទេ?</p>
+                                                    <p class="text-white small mb-3">Are you sure you want to delete this attendance record?</p>
                                                     <form action="{{ url_for('attendance.delete_attendance', id=att.AttendanceID) }}" method="POST">
                                                         {{ form.hidden_tag() }}
                                                         <div class="d-flex justify-content-center gap-2">
@@ -497,14 +498,14 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-people-fill me-1"></i> {{ form.GroupID.label.text }}</label>
-                                {{ form.GroupID(class="form-select") }}
+                                {{ form.GroupID(class="form-select group-select-field") }}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-person-fill me-1"></i> {{ form.UserID.label.text }}</label>
-                                {{ form.UserID(class="form-select") }}
+                                {{ form.UserID(class="form-select user-select-field") }}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> {{ form.SubjectID.label.text }}</label>
@@ -529,22 +530,69 @@
                                 {{ form.Status(class="form-select") }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-chat-left-text me-1"></i> {{ form.Remarks.label.text }}</label>
-                                {{ form.Remarks(class="form-control", placeholder="Optional remarks...") }}
+                                <label class="form-label"><i class="bi bi-chat-left-text me-1"></i> {{ form.Remarks.label.text if form.Remarks else 'Remarks' }}</label>
+                                {% if form.Remarks %}
+                                    {{ form.Remarks(class="form-control", placeholder="Optional remarks") }}
+                                {% else %}
+                                    <input type="text" name="Remarks" class="form-control" placeholder="Optional remarks">
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
-                        <button type="submit" class="btn btn-custom-primary btn-sm">
-                            <i class="fas fa-save me-1"></i> Save Attendance
-                        </button>
+                        <button type="submit" class="btn btn-custom-primary btn-sm"><i class="bi bi-check-lg me-1"></i> Submit Attendance</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- Bootstrap 5 JS Bundle CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Dynamic Group-Student Filtering Script -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function setupGroupStudentFiltering(modalElement) {
+            const groupSelect = modalElement.querySelector('.group-select-field');
+            const userSelect = modalElement.querySelector('.user-select-field');
+
+            if (!groupSelect || !userSelect) return;
+
+            groupSelect.addEventListener("change", function () {
+                const groupId = this.value;
+                userSelect.innerHTML = '<option value="">-- Select Student --</option>';
+
+                if (groupId) {
+                    fetch(`/attendance/api/students/${groupId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(student => {
+                                const option = document.createElement("option");
+                                option.value = student.ProfileID;
+                                option.textContent = student.Name;
+                                userSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error("Error fetching students:", error));
+                }
+            });
+        }
+
+        // ១. សម្រាប់ Modal "Add New Attendance"
+        const addModal = document.querySelector('#addAttendanceModal');
+        if (addModal) {
+            setupGroupStudentFiltering(addModal);
+        }
+
+        // ២. សម្រាប់រាល់ Modal "Edit Attendance" ទាំងអស់
+        document.querySelectorAll('.modal.fade').forEach(modal => {
+            if (modal.id.startsWith('editModal')) {
+                setupGroupStudentFiltering(modal);
+            }
+        });
+    });
+    </script>
 </body>
 </html>

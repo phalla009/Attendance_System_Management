@@ -4,16 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="/static/images/logo/logo.png">
-    <title>Login - System Portal</title>
+    <title>Attendance Portal - Check-In</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-slate-950 text-slate-100 flex items-center justify-center min-h-screen relative overflow-hidden">
 
-    <div class="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700">
+    <!-- Background Decorative Glow Effects -->
+    <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-72 h-72 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-slate-800 relative z-10">
+
+        <!-- Header Branding -->
         <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold tracking-wide">Portal Login</h2>
-            <p class="text-sm text-gray-400 mt-1">Sign in as Teacher or Student</p>
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 mb-3 shadow-inner">
+                <i class="fa-solid fa-clipboard-user text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold tracking-tight text-white">Attendance Portal</h2>
+            <p class="text-sm text-slate-400 mt-1">Check-in for Class & Daily Sessions</p>
+        </div>
+
+        <!-- Live Digital Clock / Status Banner -->
+        <div class="mb-6 bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex items-center justify-between text-xs text-slate-300">
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-medium text-emerald-400">System Active</span>
+            </div>
+            <div id="live-time" class="font-mono text-slate-400">--:--:-- --</div>
         </div>
 
         <!-- Flash Messages Display -->
@@ -21,35 +41,60 @@
             {% if messages %}
                 <div class="mb-4 space-y-2">
                     {% for category, message in messages %}
-                        <div class="p-3 text-sm rounded-lg {% if category == 'success' %}bg-emerald-900/50 text-emerald-300 border border-emerald-700{% else %}bg-rose-900/50 text-rose-300 border border-rose-700{% endif %}">
-                            {{ message }}
+                        <div class="p-3 text-sm rounded-lg flex items-start space-x-2 {% if category == 'success' %}bg-emerald-950/60 text-emerald-300 border border-emerald-800/80{% else %}bg-rose-950/60 text-rose-300 border border-rose-800/80{% endif %}">
+                            <i class="fa-solid {% if category == 'success' %}fa-circle-check text-emerald-400{% else %}fa-circle-exclamation text-rose-400{% endif %} mt-0.5"></i>
+                            <span class="flex-1">{{ message }}</span>
                         </div>
                     {% endfor %}
                 </div>
             {% endif %}
         {% endwith %}
 
-        <!-- Login Form -->
-        <!-- Login Form -->
+        <!-- Attendance Check-In Form -->
         <form method="POST" action="{{ url_for('user.login') }}" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Student Name</label>
-                <input type="text" name="username" required placeholder="Enter your full name"
-                    class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-gray-100">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Student Name</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" name="username" required placeholder="Enter your full name"
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-100 text-sm transition">
+                </div>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Contact Number</label>
-                <input type="text" name="password" required placeholder="Enter your phone number"
-                    class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-gray-100">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Contact Number</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                        <i class="fa-solid fa-phone"></i>
+                    </span>
+                    <input type="text" name="password" required placeholder="Enter your phone number"
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-100 text-sm transition">
+                </div>
             </div>
 
             <button type="submit"
-                class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition duration-200 shadow-md">
-                Sign In
+                class="w-full mt-2 py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-medium rounded-xl transition duration-200 shadow-lg shadow-blue-600/20 flex items-center justify-center space-x-2 text-sm">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Submit Attendance</span>
             </button>
         </form>
+
+        <!-- Footer Copyright -->
+        <div class="mt-6 text-center border-t border-slate-800/80 pt-4">
+            <p class="text-xs text-slate-500">&copy; 2026 HEANG Phalla. All rights reserved.</p>
+        </div>
     </div>
 
+    <!-- Optional Quick Script for Live Clock -->
+    <script>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-time').innerText = now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
 </body>
 </html>
