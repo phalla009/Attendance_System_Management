@@ -59,8 +59,52 @@
 
         <!-- Profiles List Panel Table -->
         <div class="panel">
-            <div class="panel-title">
+            <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-table text-white"></i> User Profile List</span>
+
+                <!-- Search & Filter Form Toolbar -->
+                <form method="GET" action="{{ url_for('user.manage_profiles') }}" class="d-flex flex-nowrap align-items-center gap-2">
+                    <input type="hidden" name="per_page" value="{{ per_page }}">
+
+                    <!-- User Type Filter Dropdown -->
+                    <select name="type_id" class="form-select form-select-sm text-white border-secondary" style="width: 140px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
+                        <option value="" class="bg-dark text-white">All Types</option>
+                        {% for t in user_types %}
+                            <option value="{{ t.TypeID }}" class="bg-dark text-white" {% if type_filter == t.TypeID %}selected{% endif %}>{{ t.TypeName }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Group Filter Dropdown -->
+                    <select name="group_id" class="form-select form-select-sm text-white border-secondary" style="width: 140px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
+                        <option value="" class="bg-dark text-white">All Groups</option>
+                        {% for g in groups %}
+                            <option value="{{ g.GroupID }}" class="bg-dark text-white" {% if group_filter == g.GroupID %}selected{% endif %}>{{ g.Name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Unified Search Input Bar -->
+                    <div class="input-group input-group-sm" style="max-width: 240px; width: 100%;">
+                        <span class="input-group-text text-white-50 border-secondary" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: rgba(255, 255, 255, 0.03);">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ search_query or '' }}"
+                            class="form-control text-white border-secondary shadow-none"
+                            placeholder="Search code or name..."
+                            style="font-size: 13px; background-color: rgba(255, 255, 255, 0.03);"
+                        >
+                        {% if search_query or type_filter or group_filter %}
+                        <a href="{{ url_for('user.manage_profiles', per_page=per_page) }}"
+                           class="btn btn-sm btn-outline-secondary text-white-50 border-secondary d-flex align-items-center" style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+
+                <!-- Action Buttons Group -->
                 <div class="d-flex gap-2">
                     <button type="button" class="btn-custom-secondary" style="background-color: #2563eb; border-color: #2563eb;" data-bs-toggle="modal" data-bs-target="#importExcelModal">
                         <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import Excel

@@ -29,9 +29,10 @@ def index():
 def manage_sessions():
     form = SessionForm()
 
-    # Pagination parameters
+    # Pagination & Filter parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    search_query = request.args.get('q', '', type=str)
 
     if form.validate_on_submit():
         session = Session(Code=form.Code.data, Session_name=form.Session_name.data)
@@ -40,16 +41,24 @@ def manage_sessions():
         flash('Session added successfully!', 'success')
         return redirect(url_for('academic.manage_sessions'))
 
-    pagination = Session.query.paginate(page=page, per_page=per_page, error_out=False)
+    # Query with Search Filter
+    query = Session.query
+    if search_query:
+        query = query.filter(
+            (Session.Code.ilike(f'%{search_query}%')) |
+            (Session.Session_name.ilike(f'%{search_query}%'))
+        )
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     sessions = pagination.items
 
-    prev_url = url_for('academic.manage_sessions', page=pagination.prev_num,
-                       per_page=per_page) if pagination.has_prev else None
-    next_url = url_for('academic.manage_sessions', page=pagination.next_num,
-                       per_page=per_page) if pagination.has_next else None
+    prev_url = url_for('academic.manage_sessions', page=pagination.prev_num, per_page=per_page,
+                       q=search_query) if pagination.has_prev else None
+    next_url = url_for('academic.manage_sessions', page=pagination.next_num, per_page=per_page,
+                       q=search_query) if pagination.has_next else None
 
     return render_template('academic/sessions.html', form=form, sessions=sessions, per_page=per_page, prev_url=prev_url,
-                           next_url=next_url)
+                           next_url=next_url, search_query=search_query)
 
 
 @academic_bp.route('/sessions/edit/<int:id>', methods=['POST'])
@@ -94,9 +103,11 @@ def manage_classes():
     form = ClassForm()
     form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
 
-    # Pagination parameters
+    # Pagination & Filter parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    search_query = request.args.get('q', '', type=str)
+    session_filter = request.args.get('session_id', '', type=int)
 
     if form.validate_on_submit():
         new_class = Class(
@@ -113,16 +124,29 @@ def manage_classes():
         db.session.query(Class, Session.Session_name.label('SessionName'))
         .join(Session, Class.SessionID == Session.SessionID)
     )
+
+    if search_query:
+        query = query.filter(
+            (Class.Code.ilike(f'%{search_query}%')) |
+            (Class.Name.ilike(f'%{search_query}%'))
+        )
+
+    if session_filter:
+        query = query.filter(Class.SessionID == session_filter)
+
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     classes = pagination.items
 
-    prev_url = url_for('academic.manage_classes', page=pagination.prev_num,
-                       per_page=per_page) if pagination.has_prev else None
-    next_url = url_for('academic.manage_classes', page=pagination.next_num,
-                       per_page=per_page) if pagination.has_next else None
+    prev_url = url_for('academic.manage_classes', page=pagination.prev_num, per_page=per_page, q=search_query,
+                       session_id=session_filter) if pagination.has_prev else None
+    next_url = url_for('academic.manage_classes', page=pagination.next_num, per_page=per_page, q=search_query,
+                       session_id=session_filter) if pagination.has_next else None
 
-    return render_template('academic/classes.html', form=form, classes=classes, per_page=per_page, prev_url=prev_url,
-                           next_url=next_url)
+    sessions = Session.query.all()
+
+    return render_template('academic/classes.html', form=form, classes=classes, sessions=sessions, per_page=per_page,
+                           prev_url=prev_url, next_url=next_url, search_query=search_query,
+                           session_filter=session_filter)
 
 
 @academic_bp.route('/classes/edit/<int:id>', methods=['POST'])
@@ -173,9 +197,11 @@ def manage_groups():
     form = GroupForm()
     form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
 
-    # Pagination parameters
+    # Pagination & Filter parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    search_query = request.args.get('q', '', type=str)
+    session_filter = request.args.get('session_id', '', type=int)
 
     if form.validate_on_submit():
         group = Group(
@@ -193,16 +219,29 @@ def manage_groups():
         db.session.query(Group, Session.Session_name.label('SessionName'))
         .join(Session, Group.SessionID == Session.SessionID)
     )
+
+    if search_query:
+        query = query.filter(
+            (Group.Code.ilike(f'%{search_query}%')) |
+            (Group.Name.ilike(f'%{search_query}%'))
+        )
+
+    if session_filter:
+        query = query.filter(Group.SessionID == session_filter)
+
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     groups = pagination.items
 
-    prev_url = url_for('academic.manage_groups', page=pagination.prev_num,
-                       per_page=per_page) if pagination.has_prev else None
-    next_url = url_for('academic.manage_groups', page=pagination.next_num,
-                       per_page=per_page) if pagination.has_next else None
+    prev_url = url_for('academic.manage_groups', page=pagination.prev_num, per_page=per_page, q=search_query,
+                       session_id=session_filter) if pagination.has_prev else None
+    next_url = url_for('academic.manage_groups', page=pagination.next_num, per_page=per_page, q=search_query,
+                       session_id=session_filter) if pagination.has_next else None
 
-    return render_template('academic/groups.html', form=form, groups=groups, per_page=per_page, prev_url=prev_url,
-                           next_url=next_url)
+    sessions = Session.query.all()
+
+    return render_template('academic/groups.html', form=form, groups=groups, sessions=sessions, per_page=per_page,
+                           prev_url=prev_url, next_url=next_url, search_query=search_query,
+                           session_filter=session_filter)
 
 
 @academic_bp.route('/groups/edit/<int:id>', methods=['POST'])
@@ -254,9 +293,11 @@ def manage_subjects():
     form = SubjectForm()
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
 
-    # Pagination parameters
+    # Pagination & Filter parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    search_query = request.args.get('q', '', type=str)
+    group_filter = request.args.get('group_id', '', type=int)
 
     if form.validate_on_submit():
         subject = Subject(
@@ -273,16 +314,28 @@ def manage_subjects():
         db.session.query(Subject, Group.Name.label('GroupName'))
         .join(Group, Subject.GroupID == Group.GroupID)
     )
+
+    if search_query:
+        query = query.filter(
+            (Subject.Code.ilike(f'%{search_query}%')) |
+            (Subject.Name.ilike(f'%{search_query}%'))
+        )
+
+    if group_filter:
+        query = query.filter(Subject.GroupID == group_filter)
+
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     subjects = pagination.items
 
-    prev_url = url_for('academic.manage_subjects', page=pagination.prev_num,
-                       per_page=per_page) if pagination.has_prev else None
-    next_url = url_for('academic.manage_subjects', page=pagination.next_num,
-                       per_page=per_page) if pagination.has_next else None
+    prev_url = url_for('academic.manage_subjects', page=pagination.prev_num, per_page=per_page, q=search_query,
+                       group_id=group_filter) if pagination.has_prev else None
+    next_url = url_for('academic.manage_subjects', page=pagination.next_num, per_page=per_page, q=search_query,
+                       group_id=group_filter) if pagination.has_next else None
 
-    return render_template('academic/subjects.html', form=form, subjects=subjects, per_page=per_page, prev_url=prev_url,
-                           next_url=next_url)
+    groups = Group.query.all()
+
+    return render_template('academic/subjects.html', form=form, subjects=subjects, groups=groups, per_page=per_page,
+                           prev_url=prev_url, next_url=next_url, search_query=search_query, group_filter=group_filter)
 
 
 @academic_bp.route('/subjects/edit/<int:id>', methods=['POST'])
@@ -335,20 +388,18 @@ def groups_cards():
     from models.user import UserProfile
     from sqlalchemy import func
 
-    # ធ្វើ Subquery រាប់ចំនួនសិស្សតាម GroupID
     subq = db.session.query(
         UserProfile.GroupID,
         func.count(UserProfile.ProfileID).label('total_students')
     ).group_by(UserProfile.GroupID).subquery()
 
-    # Join Group ជាមួយ Session និង Subquery រាប់សិស្ស
     query = db.session.query(
         Group,
         Session.Session_name.label('session_name'),
         func.coalesce(subq.c.total_students, 0).label('total_students')
     ) \
-    .outerjoin(Session, Group.SessionID == Session.SessionID) \
-    .outerjoin(subq, Group.GroupID == subq.c.GroupID)
+        .outerjoin(Session, Group.SessionID == Session.SessionID) \
+        .outerjoin(subq, Group.GroupID == subq.c.GroupID)
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     groups = pagination.items
@@ -373,23 +424,33 @@ def group_students(group_id):
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    search_query = request.args.get('search', '', type=str)
 
-    # គណនាចំនួនសិស្សសរុបក្នុងក្រុមនេះ
-    total_students = UserProfile.query.filter_by(GroupID=group_id).count()
+    query = UserProfile.query.filter_by(GroupID=group_id)
+    total_students = query.count()
 
-    pagination = UserProfile.query.filter_by(GroupID=group_id).paginate(page=page, per_page=per_page, error_out=False)
+    if search_query:
+        query = query.filter(
+            (UserProfile.Name.ilike(f'%{search_query}%')) |
+            (UserProfile.Code.ilike(f'%{search_query}%'))
+        )
+
+    filtered_count = query.count()
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     students = pagination.items
 
     prev_url = url_for('academic.group_students', group_id=group_id, page=pagination.prev_num,
-                       per_page=per_page) if pagination.has_prev else None
+                       per_page=per_page, search=search_query) if pagination.has_prev else None
     next_url = url_for('academic.group_students', group_id=group_id, page=pagination.next_num,
-                       per_page=per_page) if pagination.has_next else None
+                       per_page=per_page, search=search_query) if pagination.has_next else None
 
     return render_template('academic/group_students.html',
                            group=group,
                            students=students,
                            total_students=total_students,
+                           filtered_count=filtered_count,
                            pagination=pagination,
                            per_page=per_page,
                            prev_url=prev_url,
-                           next_url=next_url)
+                           next_url=next_url,
+                           search_query=search_query)

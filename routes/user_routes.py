@@ -13,14 +13,14 @@ from forms.user_form import (
     TeacherProfileForm,
     UserTypeForm,
 )
-from models.academic import Group, Subject  # ដក Class ចចេញពី Model Imports
+from models.academic import Group, Subject
 from models.location import Address, Province, District, Commune, Village
 from models.user import ContactNo, Login, UserProfile, UserType
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
 
-# 👉 Helper function សម្រាប់ Student Choices (ដក Class ចោល រក្សាទុក Group ធម្មតា)
+# 👉 Helper function សម្រាប់ Student Choices
 def populate_student_form_choices(form):
     form.TypeID.choices = [(t.TypeID, t.TypeName) for t in UserType.query.all()]
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
@@ -103,17 +103,40 @@ def manage_profiles():
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    search_query = request.args.get('q', '', type=str)
+    type_filter = request.args.get('type_id', '', type=int)
+    group_filter = request.args.get('group_id', '', type=int)
 
     populate_student_form_choices(student_form)
     populate_teacher_form_choices(teacher_form)
 
-    pagination = UserProfile.query.paginate(page=page, per_page=per_page, error_out=False)
+    query = UserProfile.query
+
+    # Apply Search Filter (Code or Name)
+    if search_query:
+        query = query.filter(
+            (UserProfile.Code.ilike(f'%{search_query}%')) |
+            (UserProfile.Name.ilike(f'%{search_query}%'))
+        )
+
+    # Apply User Type Filter
+    if type_filter:
+        query = query.filter(UserProfile.TypeID == type_filter)
+
+    # Apply Group Filter
+    if group_filter:
+        query = query.filter(UserProfile.GroupID == group_filter)
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     profiles = pagination.items
 
     prev_url = url_for('user.manage_profiles', page=pagination.prev_num,
-                       per_page=per_page) if pagination.has_prev else None
+                       per_page=per_page, q=search_query, type_id=type_filter, group_id=group_filter) if pagination.has_prev else None
     next_url = url_for('user.manage_profiles', page=pagination.next_num,
-                       per_page=per_page) if pagination.has_next else None
+                       per_page=per_page, q=search_query, type_id=type_filter, group_id=group_filter) if pagination.has_next else None
+
+    user_types = UserType.query.all()
+    groups = Group.query.all()
 
     return render_template('users/profiles.html',
                            student_form=student_form,
@@ -121,7 +144,12 @@ def manage_profiles():
                            profiles=profiles,
                            per_page=per_page,
                            prev_url=prev_url,
-                           next_url=next_url)
+                           next_url=next_url,
+                           search_query=search_query,
+                           type_filter=type_filter,
+                           group_filter=group_filter,
+                           user_types=user_types,
+                           groups=groups)
 
 
 @user_bp.route('/profiles/add-student', methods=['POST'])

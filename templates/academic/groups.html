@@ -59,8 +59,43 @@
 
         <!-- Group List Table Panel -->
         <div class="panel">
-            <div class="panel-title">
+            <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-list-task" style="color: var(--accent-green);"></i> Group List</span>
+
+                <!-- Search & Filter Form -->
+                <form method="GET" action="{{ url_for('academic.manage_groups') }}" class="d-flex flex-nowrap align-items-center gap-2">
+                    <input type="hidden" name="per_page" value="{{ per_page }}">
+
+                    <!-- Session Filter Dropdown -->
+                    <select name="session_id" class="form-select form-select-sm text-white border-secondary" style="width: 160px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
+                        <option value="" class="bg-dark text-white">All Sessions</option>
+                        {% for s in sessions %}
+                            <option value="{{ s.SessionID }}" class="bg-dark text-white" {% if session_filter == s.SessionID %}selected{% endif %}>{{ s.Session_name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Unified Search Input Bar -->
+                    <div class="input-group input-group-sm" style="max-width: 260px; width: 100%;">
+                        <span class="input-group-text text-white-50 border-secondary" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: rgba(255, 255, 255, 0.03);">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ search_query or '' }}"
+                            class="form-control text-white border-secondary shadow-none"
+                            placeholder="Search code or name..."
+                            style="font-size: 13px; background-color: rgba(255, 255, 255, 0.03);"
+                        >
+                        {% if search_query or session_filter %}
+                        <a href="{{ url_for('academic.manage_groups', per_page=per_page) }}"
+                           class="btn btn-sm btn-outline-secondary text-white-50 border-secondary d-flex align-items-center" style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+
                 <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
                     <i class="bi bi-plus-circle-fill me-1"></i> Add New Group
                 </button>
@@ -115,8 +150,14 @@
                             <tr>
                                 <td colspan="5">
                                     <div class="empty-state">
-                                        <i class="bi bi-inbox"></i>
-                                        No groups found in the system.
+                                        <i class="bi bi-inbox" style="font-size: 40px;"></i>
+                                        <p class="mt-2 text-white-50">
+                                            {% if search_query or session_filter %}
+                                                No groups found matching your filters.
+                                            {% else %}
+                                                No groups found in the system.
+                                            {% endif %}
+                                        </p>
                                     </div>
                                 </td>
                             </tr>
@@ -130,11 +171,11 @@
                 <!-- Per Page Dropdown Form -->
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-white-50" style="font-size: 13px;">Show</span>
-                    <select id="perPageSelect" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: 75px; font-size: 13px;" onchange="changePerPage(this.value)">
-                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-                        <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
-                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
-                        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                    <select id="perPageSelect" class="form-select form-select-sm text-white border-secondary" style="width: 75px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="changePerPage(this.value)">
+                        <option value="10" class="bg-dark text-white" {% if per_page == 10 %}selected{% endif %}>10</option>
+                        <option value="25" class="bg-dark text-white" {% if per_page == 25 %}selected{% endif %}>25</option>
+                        <option value="50" class="bg-dark text-white" {% if per_page == 50 %}selected{% endif %}>50</option>
+                        <option value="100" class="bg-dark text-white" {% if per_page == 100 %}selected{% endif %}>100</option>
                     </select>
                     <span class="text-white-50" style="font-size: 13px;">entries</span>
                 </div>
@@ -292,15 +333,13 @@
 
     <!-- JavaScript សម្រាប់គ្រប់គ្រង Modal, Toast Auto-hide, Per Page Change និង Re-opening Modal on Error -->
     <script>
-        // Function to handle changing items per page dynamically via URL query parameter
         function changePerPage(perPageValue) {
             const url = new URL(window.location.href);
             url.searchParams.set('per_page', perPageValue);
-            url.searchParams.set('page', 1); // Reset to page 1 on limit change
+            url.searchParams.set('page', 1);
             window.location.href = url.toString();
         }
 
-        // Populate Edit Modal Data
         const editGroupModal = document.getElementById('editGroupModal');
         editGroupModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
@@ -321,7 +360,6 @@
             }
         });
 
-        // Populate Delete Modal Data
         const deleteGroupModal = document.getElementById('deleteGroupModal');
         deleteGroupModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
@@ -334,7 +372,6 @@
             deleteForm.action = `/academic/groups/delete/${groupId}`;
         });
 
-        // Auto-hide Toast Notifications after 4 seconds
         document.addEventListener("DOMContentLoaded", function() {
             const toasts = document.querySelectorAll('.custom-toast');
             toasts.forEach(toast => {
@@ -348,7 +385,6 @@
         });
     </script>
 
-    <!-- Script សម្រាប់បើក Modal ឡើងវិញស្វ័យប្រវត្តិប្រសិនបើ Form មាន Error -->
     {% if form.errors %}
     <script>
         document.addEventListener("DOMContentLoaded", function() {

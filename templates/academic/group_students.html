@@ -25,7 +25,15 @@
         <div class="dashboard-header">
             <div>
                 <h1>Students in Group: <span class="text-warning">{{ group.Name }}</span></h1>
-                <p class="mb-0">កូដក្រុម (Code): <strong class="text-info me-3">{{ group.Code }}</strong> សរុបសិស្ស: <strong class="text-success">{{ total_students }} នាក់</strong></p>
+                <p class="mb-0">
+                    កូដក្រុម (Code): <strong class="text-info me-3">{{ group.Code }}</strong>
+                    សរុបសិស្ស: <strong class="text-success">{{ total_students }} នាក់</strong>
+                    {% if search_query %}
+                        <span class="text-white-50 ms-2" style="font-size: 13px;">
+                            (បង្ហាញ {{ filtered_count }} លទ្ធផលសម្រាប់ "{{ search_query }}")
+                        </span>
+                    {% endif %}
+                </p>
             </div>
             <div>
                 <a href="{{ url_for('academic.groups_cards') }}" class="btn-custom-secondary">
@@ -36,8 +44,34 @@
 
         <!-- Student List Table Panel -->
         <div class="panel">
-            <div class="panel-title">
+            <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-people-fill" style="color: var(--accent-green);"></i> Student List</span>
+
+                <!-- Search / Filter Form -->
+                <form method="GET" action="{{ url_for('academic.group_students', group_id=group.GroupID) }}"
+                      class="d-flex flex-nowrap align-items-center gap-2" style="max-width: 320px; width: 100%;">
+                    <input type="hidden" name="per_page" value="{{ per_page }}">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text text-white-50 border-secondary" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: rgba(255, 255, 255, 0.03);">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ search_query or '' }}"
+                            class="form-control text-white border-secondary shadow-none"
+                            placeholder="Search by name or code..."
+                            style="font-size: 13px; background-color: rgba(255, 255, 255, 0.03);"
+                        >
+                        {% if search_query %}
+                        <a href="{{ url_for('academic.group_students', group_id=group.GroupID, per_page=per_page) }}"
+                           class="btn btn-sm btn-outline-secondary text-white-50 border-secondary d-flex align-items-center" style="background-color: rgba(255, 255, 255, 0.03);" title="Clear search">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-sm btn-custom-primary">Search</button>
+                    </div>
+                </form>
             </div>
 
             <div class="table-responsive">
@@ -73,7 +107,13 @@
                                 <td colspan="6">
                                     <div class="empty-state">
                                         <i class="bi bi-inbox" style="font-size: 40px;"></i>
-                                        <p class="mt-2 text-white-50">No students found in this group.</p>
+                                        <p class="mt-2 text-white-50">
+                                            {% if search_query %}
+                                                No students found matching "{{ search_query }}".
+                                            {% else %}
+                                                No students found in this group.
+                                            {% endif %}
+                                        </p>
                                     </div>
                                 </td>
                             </tr>

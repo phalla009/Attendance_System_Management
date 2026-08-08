@@ -54,7 +54,7 @@
                 <p>គ្រប់គ្រងមុខវិជ្ជាសិក្សា (Subjects) ក្នុងប្រព័ន្ធ</p>
             </div>
             <div>
-                <a href="{{ url_for('index') }}" class="btn-custom-secondary">
+                <a href="{{ url_for('academic.index') }}" class="btn-custom-secondary">
                     <i class="bi bi-house-door me-1"></i> Back to Academic Dashboard
                 </a>
             </div>
@@ -62,8 +62,43 @@
 
         <!-- Subject List Panel Table -->
         <div class="panel">
-            <div class="panel-title">
+            <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> Subject List</span>
+
+                <!-- Search & Filter Form (Side-by-side) -->
+                <form method="GET" action="{{ url_for('academic.manage_subjects') }}" class="d-flex flex-nowrap align-items-center gap-2">
+                    <input type="hidden" name="per_page" value="{{ per_page }}">
+
+                    <!-- Group Filter Dropdown -->
+                    <select name="group_id" class="form-select form-select-sm text-white border-secondary" style="width: 160px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
+                        <option value="" class="bg-dark text-white">All Groups</option>
+                        {% for g in groups %}
+                            <option value="{{ g.GroupID }}" class="bg-dark text-white" {% if group_filter == g.GroupID %}selected{% endif %}>{{ g.Name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Unified Search Input Bar -->
+                    <div class="input-group input-group-sm" style="max-width: 260px; width: 100%;">
+                        <span class="input-group-text text-white-50 border-secondary" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: rgba(255, 255, 255, 0.03);">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ search_query or '' }}"
+                            class="form-control text-white border-secondary shadow-none"
+                            placeholder="Search code or name..."
+                            style="font-size: 13px; background-color: rgba(255, 255, 255, 0.03);"
+                        >
+                        {% if search_query or group_filter %}
+                        <a href="{{ url_for('academic.manage_subjects', per_page=per_page) }}"
+                           class="btn btn-sm btn-outline-secondary text-white-50 border-secondary d-flex align-items-center" style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+
                 <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
                     <i class="bi bi-plus-circle-fill me-1"></i> Add New Subject
                 </button>
@@ -117,8 +152,14 @@
                             <tr>
                                 <td colspan="5">
                                     <div class="empty-state">
-                                        <i class="bi bi-inbox"></i>
-                                        No subjects found in the system.
+                                        <i class="bi bi-inbox" style="font-size: 40px;"></i>
+                                        <p class="mt-2 text-white-50">
+                                            {% if search_query or group_filter %}
+                                                No subjects found matching your filters.
+                                            {% else %}
+                                                No subjects found in the system.
+                                            {% endif %}
+                                        </p>
                                     </div>
                                 </td>
                             </tr>
@@ -216,7 +257,6 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.Code.label.text }}</label>
-                            <!-- ⚙️ បន្ថែម readonly និង background-color ឱ្យវាស្មัทស្រួលមើល -->
                             {{ form.Code(class="form-control " + ("is-invalid" if form.Code.errors else ""), id="edit_code", readonly=True, style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;") }}
                             <div class="form-text text-white" style="font-size: 11px;">Subject code cannot be changed.</div>
                             {% for error in form.Code.errors %}
@@ -282,15 +322,13 @@
 
     <!-- JavaScript សម្រាប់គ្រប់គ្រង Modal, Toast Auto-hide និង Per Page Change -->
     <script>
-        // Function to handle changing items per page dynamically via URL query parameter
         function changePerPage(perPageValue) {
             const url = new URL(window.location.href);
             url.searchParams.set('per_page', perPageValue);
-            url.searchParams.set('page', 1); // Reset to page 1 on limit change
+            url.searchParams.set('page', 1);
             window.location.href = url.toString();
         }
 
-        // Populate Edit Modal Data
         const editSubjectModal = document.getElementById('editSubjectModal');
         editSubjectModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
@@ -309,7 +347,6 @@
             }
         });
 
-        // Populate Delete Modal Data
         const deleteSubjectModal = document.getElementById('deleteSubjectModal');
         deleteSubjectModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
@@ -322,7 +359,6 @@
             deleteForm.action = `/academic/subjects/delete/${subjectId}`;
         });
 
-        // Auto-hide Toast Notifications after 4 seconds
         document.addEventListener("DOMContentLoaded", function() {
             const toasts = document.querySelectorAll('.custom-toast');
             toasts.forEach(toast => {
@@ -336,7 +372,6 @@
         });
     </script>
 
-    <!-- Script សម្រាប់បើក Modal ឡើងវិញស្វ័យប្រវត្តិប្រសិនបើ Form មាន Error -->
     {% if form.errors %}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
