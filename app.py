@@ -1,6 +1,9 @@
+from datetime import date, datetime
 from extensions import db
 from flask import Flask, render_template, redirect, url_for
 from flask_migrate import Migrate
+from flask_login import LoginManager, login_required  # យកមកប្រើប្រាស់
+from sqlalchemy import extract
 import models
 
 # Import all Blueprints from the routes package
@@ -15,11 +18,6 @@ import models.user as user_models
 # Import Attendance models for dashboard metrics query if needed
 from models.attendance import Attendance
 
-# Import Flask-Login
-from flask_login import LoginManager, login_required
-from datetime import date, datetime
-from sqlalchemy import extract
-
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///attendance_system.db'
@@ -33,7 +31,7 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  # Name of the login route function
-app.login_manager = login_manager  # Explicitly attach login_manager attribute to the Flask app instance
+app.login_manager = login_manager  # Explicitly attach login_manager attribute
 
 
 @login_manager.user_loader
@@ -57,6 +55,7 @@ def api():
 
 # Academic Home Dashboard
 @app.route('/academic/index')
+@login_required  # 🔒 ត្រូវ Login សិន
 def index():
     total_sessions = (
         models.SessionModel.query.count()
@@ -85,6 +84,7 @@ def index():
 
 # User Management Home Dashboard
 @app.route('/user/index')
+@login_required
 def user_index():
     total_profiles = (
         user_models.UserProfile.query.count()
@@ -102,7 +102,6 @@ def user_index():
         else 0
     )
 
-    # ➕ បន្ថែមការរាប់ចំនួន Teacher (TypeID = 1) និង Student (TypeID = 2)
     total_teachers = (
         user_models.UserProfile.query.filter_by(TypeID=1).count()
         if hasattr(user_models, 'UserProfile')
@@ -134,6 +133,7 @@ def user_index():
 
 # Location Management Home Dashboard
 @app.route('/location/index')
+@login_required
 def location_index():
     total_provinces = Province.query.count() if 'Province' in globals() else 0
     total_districts = District.query.count() if 'District' in globals() else 0
@@ -152,6 +152,7 @@ def location_index():
 
 # Analytics / Main Root Dashboard Route with Real Data
 @app.route('/dashboard')
+@login_required
 def dashboard():
     today = date.today()
 
@@ -207,11 +208,12 @@ def dashboard():
 
 # Direct Scan Route redirecting to active sessions
 @app.route('/scan')
-@login_required
+@login_required  # 🔒 ត្រូវ Login សិន
 def root_scan():
     return redirect(url_for('attendance.active_scan_sessions'))
 
 
+# Login Page (Route កំណត់ជាទំព័រដើម)
 @app.route('/')
 def login():
     return render_template(
