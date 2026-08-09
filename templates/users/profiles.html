@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,8 +12,322 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #111827;
+            --border-color: #1f2937;
+            --text-main: #f9fafb;
+            --text-white: #9ca3af;
+            --accent-indigo: #6366f1;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-cyan: #06b6d4;
+        }
+
+        * { font-family: 'Inter', 'Noto Sans Khmer', sans-serif; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        /* ---------- Main Wrapper ---------- */
+        .wrapper {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            width: calc(100% - 260px);
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* ---------- Header ---------- */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 24px 30px;
+            border-radius: 16px;
+            gap: 16px;
+        }
+        .dashboard-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+        }
+        .dashboard-header p {
+            color: var(--text-white);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* ---------- Panel / Table Container ---------- */
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ---------- Custom Dark Table ---------- */
+        .table-dark-custom {
+            color: var(--text-main);
+            margin-bottom: 0;
+            vertical-align: middle;
+        }
+        .table-dark-custom th {
+            background-color: #1a2234 !important;
+            color: var(--text-white);
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .table-dark-custom td {
+            background-color: transparent !important;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+        .table-dark-custom tbody tr {
+            transition: background-color 0.15s ease;
+        }
+        .table-dark-custom tbody tr:hover {
+            background-color: rgba(99, 102, 241, 0.04) !important;
+        }
+
+        /* ---------- ID Badge & Code Pill ---------- */
+        .id-badge {
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .code-pill {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        /* ---------- Empty State ---------- */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-white);
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .empty-state i {
+            font-size: 36px;
+            color: var(--border-color);
+        }
+
+        /* ---------- Modals (Dark Theme Overrides) ---------- */
+        .modal-content {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 16px;
+        }
+        .modal-header, .modal-footer {
+            border-color: var(--border-color);
+            padding: 20px 24px;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .form-control, .form-select {
+            background-color: var(--bg-main) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-indigo) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        .form-label {
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--text-white);
+            margin-bottom: 6px;
+        }
+
+        /* ---------- Toast Notifications Container ---------- */
+        .toast-container-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1090;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 360px;
+        }
+        .custom-toast {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 14px 18px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            animation: slideIn 0.3s ease forwards;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .custom-toast.hide {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        .custom-toast.alert-success { border-left: 4px solid #10b981; }
+        .custom-toast.alert-danger, .custom-toast.alert-error { border-left: 4px solid #f43f5e; }
+        .custom-toast.alert-warning { border-left: 4px solid #f59e0b; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ---------- Mobile Menu Overlay & Toggle Button ---------- */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 98;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .btn-menu-toggle {
+            margin-left: -280px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 20px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none;
+            transition: all 0.2s ease;
+        }
+        .btn-menu-toggle:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-indigo);
+        }
+
+        /* ---------- Responsive Media Queries ---------- */
+        @media (max-width: 992px) {
+            .btn-menu-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                z-index: 100;
+                box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5);
+                position: fixed;
+                height: 100vh;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .wrapper {
+                margin-left: 0;
+                padding: 15px;
+                width: 100%;
+            }
+            .dashboard-header {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 18px 20px;
+                gap: 16px;
+            }
+            .dashboard-header div:last-child {
+                width: 100%;
+            }
+            .dashboard-header .btn-custom-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+            .panel-title {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+            .panel-title form {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            .panel-title form select,
+            .panel-title form .input-group {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .panel-title .d-flex.gap-2 {
+                flex-wrap: wrap;
+                width: 100%;
+            }
+            .panel-title .d-flex.gap-2 > * {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Sidebar Navigation -->
     {% include 'components/sidebar.html' %}
@@ -46,11 +360,16 @@
 
         <!-- Header Section -->
         <div class="dashboard-header">
-            <div>
-                <h1>Manage User Profiles</h1>
-                <p>គ្រប់គ្រងទិន្នន័យប្រូហ្វាល និងព័ត៌មានលម្អិតរបស់អ្នកប្រើប្រាស់ក្នុងប្រព័ន្ធ</p>
+            <div class="d-flex align-items-center gap-3 w-100">
+                <button class="btn-menu-toggle d-lg-none" id="sidebarToggle" type="button" aria-label="Toggle Navigation">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div>
+                    <h1>Manage User Profiles</h1>
+                    <p>គ្រប់គ្រងទិន្នន័យប្រូហ្វាល និងព័ត៌មានលម្អិតរបស់អ្នកប្រើប្រាស់ក្នុងប្រព័ន្ធ</p>
+                </div>
             </div>
-           <div>
+            <div>
                 <a href="{{ url_for('dashboard') if url_for('dashboard') else '#' }}" class="btn-custom-secondary">
                     <i class="bi bi-house-door me-1"></i> Back to Dashboard
                 </a>
@@ -251,7 +570,6 @@
                         <h5 class="modal-title" id="profileModalLabel-{{ u.ProfileID }}">
                             <i class="bi bi-person-badge-fill text-warning me-2"></i> Profile Details: <span class="text-info">{{ u.Name }}</span>
                         </h5>
-
                     </div>
 
                     <!-- Modal Body -->
@@ -509,59 +827,54 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-image me-1"></i> {{ student_form.Photo.label.text }}</label>
-                                {{ student_form.Photo(class="form-control", id="edit_photo", type="file") }}
+                                {{ student_form.Photo(class="form-control", type="file") }}
+                                <small class="text-white-50" style="font-size: 11px;">Leave blank to keep existing photo.</small>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-person-badge me-1"></i> {{ student_form.TypeID.label.text }}</label>
-                                {{ student_form.TypeID(class="form-select", id="edit_typeid") }}
+                            <div class="col-md-6 mb-3" id="edit_group_container">
+                                <label class="form-label"><i class="bi bi-people me-1"></i> {{ student_form.GroupID.label.text }}</label>
+                                {{ student_form.GroupID(class="form-select", id="edit_group_id") }}
+                            </div>
+                            <div class="col-md-6 mb-3 d-none" id="edit_subject_container">
+                                <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ teacher_form.SubjectID.label.text }}</label>
+                                {{ teacher_form.SubjectID(class="form-select", id="edit_subject_id") }}
                             </div>
                         </div>
 
                         <div class="row">
-                            <!-- Student Group Field -->
-                            <div class="col-md-6 mb-3" id="edit_group_wrapper">
-                                <label class="form-label"><i class="bi bi-people me-1"></i> {{ student_form.GroupID.label.text }}</label>
-                                {{ student_form.GroupID(class="form-select", id="edit_groupid") }}
-                            </div>
-                            <!-- Teacher Subject Field -->
-                            <div class="col-md-6 mb-3" id="edit_subject_wrapper" style="display: none;">
-                                <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ teacher_form.SubjectID.label.text }}</label>
-                                {{ teacher_form.SubjectID(class="form-select", id="edit_subjectid") }}
-                            </div>
-                            <!-- Address Field -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ student_form.AddressID.label.text }}</label>
-                                {{ student_form.AddressID(class="form-select", id="edit_addressid") }}
+                                {{ student_form.AddressID(class="form-select", id="edit_address_id") }}
                             </div>
-                             <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ student_form.ContactNoID.label.text }}</label>
-                                {{ student_form.ContactNoID(class="form-select", id="edit_contactid") }}
-                             </div>
+                                {{ student_form.ContactNoID(class="form-select", id="edit_contact_id") }}
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
-                        <button type="submit" class="btn-custom-primary"><i class="bi bi-arrow-repeat me-1"></i> Update Profile</button>
+                        <button type="submit" class="btn btn-warning text-white" style="background-color: #d97706; border-color: #d97706;"><i class="bi bi-arrow-repeat me-1"></i> Update Profile</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- 4. Delete User Profile Modal -->
+    <!-- 4. Delete Confirmation Modal -->
     <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill"></i> Confirm Deletion</h5>
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Confirm Deletion</h5>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-0">Are you sure you want to delete profile <strong id="deleteUserName" class="text-warning"></strong>? This action cannot be undone.</p>
+                    <p>Are you sure you want to delete profile <strong id="delete_user_name" class="text-warning"></strong>?</p>
+                    <p class="text-white-50 small mb-0">This action cannot be undone and will remove associated data.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
                     <form id="deleteUserForm" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger"><i class="bi bi-trash3-fill me-1"></i> Delete</button>
+                        <button type="submit" class="btn btn-danger"><i class="bi bi-trash3-fill me-1"></i> Delete Profile</button>
                     </form>
                 </div>
             </div>
@@ -573,109 +886,139 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title text-white"><i class="bi bi-file-earmark-arrow-up-fill text-white"></i> Import User Profiles from Excel</h5>
+                    <h5 class="modal-title text-info"><i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import Students from Excel</h5>
                 </div>
-                <form method="POST" action="{{ url_for('user.import_students_excel') if url_for('user.import_students_excel') else '#' }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ url_for('user.import_students_excel') }}" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label"><i class="bi bi-file-earmark-excel me-1"></i> Choose Excel File (.xlsx, .xls)</label>
-                            <input type="file" name="excel_file" class="form-control" accept=".xlsx, .xls" required>
+                            <label class="form-label"><i class="bi bi-file-earmark-excel me-1"></i> Select Excel File (.xlsx, .xls)</label>
+                            <input type="file" name="file" class="form-control" accept=".xlsx, .xls" required>
                         </div>
-                        <div class="form-text text-white-50" style="font-size: 12px;">
-                            <i class="bi bi-info-circle me-1"></i> Make sure your Excel file matches the required column format before importing.
-                        </div>
+                        <p class="text-white-50 small mb-0">Please ensure the Excel columns match the required template format before uploading.</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
-                        <button type="submit" class="btn-custom-primary" style="background-color: #2563eb; border-color: #2563eb;"><i class="bi bi-upload me-1"></i> Upload & Import</button>
+                        <button type="submit" class="btn" style="background-color: #2563eb; color: white;"><i class="bi bi-upload me-1"></i> Upload & Import</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript Bundle -->
+    <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript សម្រាប់គ្រប់គ្រង Modal, Toast, Per Page Change, Sidebar Toggle និង Data Population -->
     <script>
-        // Pagination per-page change function
-        function changePerPage(val) {
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                if(sidebar) sidebar.classList.toggle('active');
+                if(sidebarOverlay) sidebarOverlay.classList.toggle('active');
+            }
+
+            function closeSidebar() {
+                if(sidebar) sidebar.classList.remove('active');
+                if(sidebarOverlay) sidebarOverlay.classList.remove('active');
+            }
+
+            if(sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+
+            if(sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
+
+            if(sidebar) {
+                const navLinks = sidebar.querySelectorAll('a.nav-item-custom');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        if(window.innerWidth <= 992) {
+                            closeSidebar();
+                        }
+                    });
+                });
+            }
+        });
+
+        // Function to handle changing items per page dynamically via URL query parameter
+        function changePerPage(perPageValue) {
             const url = new URL(window.location.href);
-            url.searchParams.set('per_page', val);
-            url.searchParams.set('page', 1);
+            url.searchParams.set('per_page', perPageValue);
+            url.searchParams.set('page', 1); // Reset to page 1 on limit change
             window.location.href = url.toString();
         }
 
-        // Toggle Field Visibility Function based on User Type
-        function toggleEditFields() {
-            const typeSelect = document.getElementById('edit_typeid');
-            const selectedOption = typeSelect.options[typeSelect.selectedIndex];
-            const typeName = selectedOption ? selectedOption.text.trim() : '';
-
-            const groupFieldWrapper = document.getElementById('edit_group_wrapper');
-            const subjectFieldWrapper = document.getElementById('edit_subject_wrapper');
-
-            if (typeName === 'Teacher') {
-                if (subjectFieldWrapper) subjectFieldWrapper.style.display = 'block';
-                if (groupFieldWrapper) groupFieldWrapper.style.display = 'none';
-            } else {
-                if (subjectFieldWrapper) subjectFieldWrapper.style.display = 'none';
-                if (groupFieldWrapper) groupFieldWrapper.style.display = 'block';
-            }
-        }
-
-        // Event listener when user changes User Type dropdown manually inside Edit Modal
-        document.getElementById('edit_typeid').addEventListener('change', function() {
-            toggleEditFields();
-        });
-
-        // Populate Edit Modal Data via Event Listener
+        // Populate Edit User Modal Data & Toggle Group/Subject fields based on User Type
         const editUserModal = document.getElementById('editUserModal');
-        if (editUserModal) {
-            editUserModal.addEventListener('show.bs.modal', event => {
-                const button = event.relatedTarget;
-                const id = button.getAttribute('data-id');
+        editUserModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (button) {
+                const profileId = button.getAttribute('data-id');
                 const code = button.getAttribute('data-code');
                 const name = button.getAttribute('data-name');
                 const gender = button.getAttribute('data-gender');
                 const dob = button.getAttribute('data-dob');
-                const typeid = button.getAttribute('data-typeid');
-                const groupid = button.getAttribute('data-groupid');
-                const subjectid = button.getAttribute('data-subjectid');
-                const addressid = button.getAttribute('data-addressid');
-                const contactid = button.getAttribute('data-contactid');
+                const typeId = button.getAttribute('data-typeid');
+                const groupId = button.getAttribute('data-groupid');
+                const subjectId = button.getAttribute('data-subjectid');
+                const addressId = button.getAttribute('data-addressid');
+                const contactId = button.getAttribute('data-contactid');
 
-                // Set form action URL dynamically
-                const form = document.getElementById('editUserForm');
-                form.action = `/user/profiles/edit/${id}`;
+                document.getElementById('edit_code').value = code;
+                document.getElementById('edit_name').value = name;
+                document.getElementById('edit_gender').value = gender;
+                document.getElementById('edit_dob').value = dob;
+                document.getElementById('edit_address_id').value = addressId;
+                document.getElementById('edit_contact_id').value = contactId;
 
-                // Populate form fields
-                document.getElementById('edit_code').value = code || '';
-                document.getElementById('edit_name').value = name || '';
-                document.getElementById('edit_gender').value = gender || '';
-                document.getElementById('edit_dob').value = dob || '';
-                document.getElementById('edit_typeid').value = typeid || '';
-                document.getElementById('edit_groupid').value = groupid || '';
-                document.getElementById('edit_subjectid').value = subjectid || '';
-                document.getElementById('edit_addressid').value = addressid || '';
-                document.getElementById('edit_contactid').value = contactid || '';
+                const groupContainer = document.getElementById('edit_group_container');
+                const subjectContainer = document.getElementById('edit_subject_container');
 
-                // Trigger visibility check for Group vs Subject fields on modal open
-                toggleEditFields();
-            });
-        }
+                if (code && code.startsWith('T')) {
+                    groupContainer.classList.add('d-none');
+                    subjectContainer.classList.remove('d-none');
+                    document.getElementById('edit_subject_id').value = subjectId;
+                } else {
+                    subjectContainer.classList.add('d-none');
+                    groupContainer.classList.remove('d-none');
+                    document.getElementById('edit_group_id').value = groupId;
+                }
 
-        // Populate Delete Modal Data via Event Listener
+                const editForm = document.getElementById('editUserForm');
+                editForm.action = `/users/profiles/edit/${profileId}`;
+            }
+        });
+
+        // Populate Delete Modal Data
         const deleteUserModal = document.getElementById('deleteUserModal');
-        if (deleteUserModal) {
-            deleteUserModal.addEventListener('show.bs.modal', event => {
-                const button = event.relatedTarget;
-                const id = button.getAttribute('data-id');
+        deleteUserModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (button) {
+                const profileId = button.getAttribute('data-id');
                 const name = button.getAttribute('data-name');
 
-                document.getElementById('deleteUserName').textContent = name;
-                document.getElementById('deleteUserForm').action = `/user/profiles/delete/${id}`;
+                document.getElementById('delete_user_name').textContent = name;
+
+                const deleteForm = document.getElementById('deleteUserForm');
+                deleteForm.action = `/users/profiles/delete/${profileId}`;
+            }
+        });
+
+        // Auto-hide Toast Notifications
+        document.addEventListener("DOMContentLoaded", function() {
+            const toasts = document.querySelectorAll('.custom-toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('hide');
+                    setTimeout(() => { toast.remove(); }, 500);
+                }, 4000);
             });
-        }
+        });
     </script>
 </body>
 </html>
