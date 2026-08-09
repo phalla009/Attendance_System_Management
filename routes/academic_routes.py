@@ -1,5 +1,6 @@
 from extensions import db
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import login_required  # 👈 នាំចូល login_required
 from forms.academic_form import ClassForm, GroupForm, SessionForm, SubjectForm
 from models.academic import Class, Group, Session, Subject
 
@@ -8,6 +9,7 @@ academic_bp = Blueprint('academic', __name__, url_prefix='/academic')
 
 # ==================== HOME / INDEX ROUTE ====================
 @academic_bp.route('/index')
+@login_required
 def index():
     total_sessions = Session.query.count()
     total_classes = Class.query.count()
@@ -26,6 +28,7 @@ def index():
 
 # ==================== SESSIONS ROUTES ====================
 @academic_bp.route('/sessions', methods=['GET', 'POST'])
+@login_required
 def manage_sessions():
     form = SessionForm()
 
@@ -62,6 +65,7 @@ def manage_sessions():
 
 
 @academic_bp.route('/sessions/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_session(id):
     session = Session.query.get_or_404(id)
     form = SessionForm()
@@ -85,6 +89,7 @@ def edit_session(id):
 
 
 @academic_bp.route('/sessions/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_session(id):
     session = Session.query.get_or_404(id)
     try:
@@ -99,6 +104,7 @@ def delete_session(id):
 
 # ==================== CLASSES ROUTES ====================
 @academic_bp.route('/classes', methods=['GET', 'POST'])
+@login_required
 def manage_classes():
     form = ClassForm()
     form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
@@ -150,6 +156,7 @@ def manage_classes():
 
 
 @academic_bp.route('/classes/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_class(id):
     class_obj = Class.query.get_or_404(id)
     form = ClassForm()
@@ -179,6 +186,7 @@ def edit_class(id):
 
 
 @academic_bp.route('/classes/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_class(id):
     class_obj = Class.query.get_or_404(id)
     try:
@@ -193,6 +201,7 @@ def delete_class(id):
 
 # ==================== GROUPS ROUTES ====================
 @academic_bp.route('/groups', methods=['GET', 'POST'])
+@login_required
 def manage_groups():
     form = GroupForm()
     form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
@@ -245,6 +254,7 @@ def manage_groups():
 
 
 @academic_bp.route('/groups/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_group(id):
     group = Group.query.get_or_404(id)
     form = GroupForm()
@@ -275,6 +285,7 @@ def edit_group(id):
 
 
 @academic_bp.route('/groups/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_group(id):
     group = Group.query.get_or_404(id)
     try:
@@ -289,6 +300,7 @@ def delete_group(id):
 
 # ==================== SUBJECTS ROUTES ====================
 @academic_bp.route('/subjects', methods=['GET', 'POST'])
+@login_required
 def manage_subjects():
     form = SubjectForm()
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
@@ -339,6 +351,7 @@ def manage_subjects():
 
 
 @academic_bp.route('/subjects/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_subject(id):
     subject = Subject.query.get_or_404(id)
     form = SubjectForm()
@@ -368,6 +381,7 @@ def edit_subject(id):
 
 
 @academic_bp.route('/subjects/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_subject(id):
     subject = Subject.query.get_or_404(id)
     try:
@@ -381,6 +395,7 @@ def delete_subject(id):
 
 
 @academic_bp.route('/groups/cards', methods=['GET'])
+@login_required
 def groups_cards():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 12, type=int)
@@ -417,6 +432,7 @@ def groups_cards():
 
 
 @academic_bp.route('/groups/<int:group_id>/students', methods=['GET'])
+@login_required
 def group_students(group_id):
     group = Group.query.get_or_404(group_id)
 

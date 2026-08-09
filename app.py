@@ -2,7 +2,7 @@ from datetime import date, datetime
 from extensions import db
 from flask import Flask, render_template, redirect, url_for
 from flask_migrate import Migrate
-from flask_login import LoginManager, login_required  # យកមកប្រើប្រាស់
+from flask_login import LoginManager, login_required
 from sqlalchemy import extract
 import models
 
@@ -152,6 +152,7 @@ def location_index():
 
 # Analytics / Main Root Dashboard Route with Real Data
 @app.route('/dashboard')
+@login_required
 def dashboard():
     today = date.today()
 
@@ -212,7 +213,7 @@ def root_scan():
     return redirect(url_for('attendance.active_scan_sessions'))
 
 
-# Login Page (Route កំណត់ជាទំព័រដើម)
+# Login Page (Route កំណត់ជាទំព័រដើម) - មិនបាច់ដាក់ @login_required ទេ
 @app.route('/')
 def login():
     return render_template(

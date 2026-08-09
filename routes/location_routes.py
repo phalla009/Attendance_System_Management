@@ -1,5 +1,6 @@
 from extensions import db
 from flask import Blueprint, flash, redirect, render_template, url_for, request
+from flask_login import login_required  # 👈 នាំចូល login_required
 from forms.location_form import (
     AddressForm,
     CommuneForm,
@@ -13,6 +14,7 @@ location_bp = Blueprint('location', __name__, url_prefix='/location')
 
 # ==================== PROVINCES ROUTES ====================
 @location_bp.route('/provinces', methods=['GET', 'POST'])
+@login_required
 def manage_provinces():
     form = ProvinceForm()
     if form.validate_on_submit():
@@ -41,6 +43,7 @@ def manage_provinces():
     )
 
 @location_bp.route('/provinces/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_province(id):
     province = Province.query.get_or_404(id)
     form = ProvinceForm()
@@ -68,6 +71,7 @@ def edit_province(id):
     )
 
 @location_bp.route('/provinces/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_province(id):
     province = Province.query.get_or_404(id)
     try:
@@ -82,6 +86,7 @@ def delete_province(id):
 
 # ==================== DISTRICTS ROUTES ====================
 @location_bp.route('/districts', methods=['GET', 'POST'])
+@login_required
 def manage_districts():
     form = DistrictForm()
     form.ProvinceID.choices = [
@@ -117,6 +122,7 @@ def manage_districts():
     )
 
 @location_bp.route('/districts/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_district(id):
     district = District.query.get_or_404(id)
     form = DistrictForm()
@@ -148,6 +154,7 @@ def edit_district(id):
     )
 
 @location_bp.route('/districts/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_district(id):
     district = District.query.get_or_404(id)
     try:
@@ -162,6 +169,7 @@ def delete_district(id):
 
 # ==================== COMMUNES ROUTES ====================
 @location_bp.route('/communes', methods=['GET', 'POST'])
+@login_required
 def manage_communes():
     form = CommuneForm()
     form.DistrictID.choices = [
@@ -197,6 +205,7 @@ def manage_communes():
     )
 
 @location_bp.route('/communes/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_commune(id):
     commune = Commune.query.get_or_404(id)
     form = CommuneForm()
@@ -228,6 +237,7 @@ def edit_commune(id):
     )
 
 @location_bp.route('/communes/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_commune(id):
     commune = Commune.query.get_or_404(id)
     try:
@@ -242,6 +252,7 @@ def delete_commune(id):
 
 # ==================== VILLAGES ROUTES ====================
 @location_bp.route('/villages', methods=['GET', 'POST'])
+@login_required
 def manage_villages():
     form = VillageForm()
     form.CommuneID.choices = [(c.CommuneID, c.Name) for c in Commune.query.all()]
@@ -273,6 +284,7 @@ def manage_villages():
     )
 
 @location_bp.route('/villages/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_village(id):
     village = Village.query.get_or_404(id)
     form = VillageForm()
@@ -302,6 +314,7 @@ def edit_village(id):
     )
 
 @location_bp.route('/villages/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_village(id):
     village = Village.query.get_or_404(id)
     try:
@@ -316,6 +329,7 @@ def delete_village(id):
 
 # ==================== ADDRESSES ROUTES ====================
 @location_bp.route('/addresses', methods=['GET', 'POST'])
+@login_required
 def manage_addresses():
     form = AddressForm()
     form.ProvinceID.choices = [(p.ProvinceID, p.Name) for p in Province.query.all()]
@@ -356,6 +370,7 @@ def manage_addresses():
     )
 
 @location_bp.route('/addresses/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_address(id):
     address = Address.query.get_or_404(id)
     form = AddressForm()
@@ -392,6 +407,7 @@ def edit_address(id):
     )
 
 @location_bp.route('/addresses/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_address(id):
     address = Address.query.get_or_404(id)
     try:

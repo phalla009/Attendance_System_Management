@@ -4,6 +4,7 @@ import uuid
 import pandas as pd
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for, send_file
+from flask_login import login_required, login_user  # 👈 នាំចូល login_user មកជាមួយ
 from werkzeug.utils import secure_filename
 from extensions import db
 from forms.user_form import (
@@ -54,6 +55,9 @@ def login():
                 is_valid = True
 
         if is_valid:
+            # 👇 ហៅ login_user ដើម្បីឱ្យ Flask-Login ចងចាំ Session របស់អ្នកប្រើប្រាស់
+            login_user(profile)
+
             user_type_name = profile.user_type.TypeName if profile.user_type else "Student"
 
             session['user_id'] = profile.ProfileID
@@ -70,6 +74,7 @@ def login():
 
 # 👉 Route for Logout
 @user_bp.route('/logout')
+@login_required
 def logout():
     session.clear()
     flash('You have been logged out.', 'info')
@@ -77,6 +82,7 @@ def logout():
 
 # ----------------- USERS DASHBOARD / INDEX -----------------
 @user_bp.route('/dashboard', methods=['GET'])
+@login_required
 def users_dashboard():
     total_profiles = UserProfile.query.count()
     total_usertypes = UserType.query.count()
@@ -97,6 +103,7 @@ def users_dashboard():
 
 # ----------------- PROFILES (STUDENTS & TEACHERS) -----------------
 @user_bp.route('/profiles', methods=['GET'])
+@login_required
 def manage_profiles():
     student_form = StudentProfileForm()
     teacher_form = TeacherProfileForm()
@@ -153,6 +160,7 @@ def manage_profiles():
 
 
 @user_bp.route('/profiles/add-student', methods=['POST'])
+@login_required
 def manage_students():
     if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Teacher can add student profiles.', 'danger')
@@ -198,6 +206,7 @@ def manage_students():
 
 
 @user_bp.route('/profiles/add-teacher', methods=['POST'])
+@login_required
 def manage_teachers():
     if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Teacher can add teacher profiles.', 'danger')
@@ -243,6 +252,7 @@ def manage_teachers():
 
 
 @user_bp.route('/profiles/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_profile(id):
     if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Teacher can edit user profiles.', 'danger')
@@ -299,6 +309,7 @@ def edit_profile(id):
 
 
 @user_bp.route('/profiles/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_profile(id):
     if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Teacher can delete user profiles.', 'danger')
@@ -318,6 +329,7 @@ def delete_profile(id):
 
 # ----------------- USER TYPES -----------------
 @user_bp.route('/usertypes', methods=['GET', 'POST'])
+@login_required
 def manage_usertypes():
     form = UserTypeForm()
 
@@ -349,6 +361,7 @@ def manage_usertypes():
 
 
 @user_bp.route('/usertypes/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_usertype(id):
     if session.get('user_type') != 'Admin':
         flash('Access Denied! Only Admin can edit user types.', 'danger')
@@ -369,6 +382,7 @@ def edit_usertype(id):
 
 
 @user_bp.route('/usertypes/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_usertype(id):
     if session.get('user_type') != 'Admin':
         flash('Access Denied! Only Admin can delete user types.', 'danger')
@@ -388,6 +402,7 @@ def delete_usertype(id):
 
 # ----------------- CONTACTS -----------------
 @user_bp.route('/contacts', methods=['GET', 'POST'])
+@login_required
 def manage_contacts():
     form = ContactNoForm()
 
@@ -419,6 +434,7 @@ def manage_contacts():
 
 
 @user_bp.route('/contacts/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_contact(id):
     if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Teacher can edit contacts.', 'danger')
@@ -438,6 +454,7 @@ def edit_contact(id):
 
 
 @user_bp.route('/contacts/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_contact(id):
     if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Teacher can delete contacts.', 'danger')
@@ -457,6 +474,7 @@ def delete_contact(id):
 
 # ----------------- ADDRESSES -----------------
 @user_bp.route('/addresses', methods=['GET', 'POST'])
+@login_required
 def manage_addresses():
     form = AddressForm()
     form.ProvinceID.choices = [(p.ProvinceID, p.Name) for p in Province.query.all()]
@@ -499,6 +517,7 @@ def manage_addresses():
 
 
 @user_bp.route('/addresses/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_address(id):
     if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Teacher can edit addresses.', 'danger')
@@ -529,6 +548,7 @@ def edit_address(id):
 
 
 @user_bp.route('/addresses/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_address(id):
     if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Teacher can delete addresses.', 'danger')
@@ -547,6 +567,7 @@ def delete_address(id):
 
 
 @user_bp.route('/profiles/export-excel', methods=['GET'])
+@login_required
 def export_students_excel():
     student_type = UserType.query.filter_by(TypeName='Student').first()
     type_id = student_type.TypeID if student_type else None
@@ -595,6 +616,7 @@ def export_students_excel():
 
 
 @user_bp.route('/profiles/import-excel', methods=['POST'])
+@login_required
 def import_students_excel():
     if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Teachers can import student profiles.', 'danger')

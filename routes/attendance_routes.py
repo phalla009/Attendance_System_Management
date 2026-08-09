@@ -25,6 +25,7 @@ class QrCodeForm(FlaskForm):
 
 # 1. New Dashboard Route matching the UI Layout
 @attendance_bp.route('/dashboard', methods=['GET'])
+@login_required
 def dashboard():
     today = date.today()
 
@@ -77,6 +78,7 @@ def dashboard():
 
 # 2. Existing QR Code Management Route
 @attendance_bp.route('/qrcodes', methods=['GET', 'POST'])
+@login_required
 def manage_qrcodes():
     form = QrCodeForm()
     form.SessionID.choices = [(s.SessionID, s.Session_name) for s in Session.query.all()]
@@ -113,6 +115,7 @@ def manage_qrcodes():
 
 # ----------------- QR CODES (EDIT & DELETE) -----------------
 @attendance_bp.route('/qrcodes/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_qrcode(id):
     qr = QrCode.query.get_or_404(id)
     form = QrCodeForm()
@@ -141,6 +144,7 @@ def edit_qrcode(id):
 
 
 @attendance_bp.route('/qrcodes/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_qrcode(id):
     qr = QrCode.query.get_or_404(id)
     try:
@@ -156,8 +160,8 @@ def delete_qrcode(id):
 
 # API Route to get students filtered by group ID
 @attendance_bp.route('/api/students/<int:group_id>', methods=['GET'])
+@login_required
 def get_students_by_group(group_id):
-    # កែសម្រួល .filter(...) ទៅតាម Column ជាក់ស្តែងក្នុង Model របស់អ្នកដែលផ្ទុក GroupID របស់ UserProfile
     students = UserProfile.query.join(UserType).filter(
         UserType.TypeName == 'Student',
         UserProfile.GroupID == group_id
@@ -169,10 +173,10 @@ def get_students_by_group(group_id):
 
 # 3. Attendance Records Management Route (With Pagination)
 @attendance_bp.route('/records', methods=['GET', 'POST'])
+@login_required
 def manage_attendances():
     form = AttendanceForm()
 
-    # Initial load (អាចទុករว่าง ឬទាញយកទាំងអស់សិន មុនពេល User ជ្រើសរើស Group)
     students = UserProfile.query.join(UserType).filter(UserType.TypeName == 'Student').all()
     form.UserID.choices = [(u.ProfileID, u.Name) for u in students]
 
@@ -219,6 +223,7 @@ def manage_attendances():
 
 # 4. Edit Attendance Route
 @attendance_bp.route('/records/edit/<int:id>', methods=['POST'])
+@login_required
 def edit_attendance(id):
     attendance = Attendance.query.get_or_404(id)
     form = AttendanceForm()
@@ -251,6 +256,7 @@ def edit_attendance(id):
 
 # 5. Delete Attendance Route
 @attendance_bp.route('/records/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_attendance(id):
     attendance = Attendance.query.get_or_404(id)
     db.session.delete(attendance)

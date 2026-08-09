@@ -1,16 +1,19 @@
 from extensions import db
 
+
 class ContactNo(db.Model):
   __tablename__ = 'contact_nos'
   ContactID = db.Column(db.Integer, primary_key=True)
   Email = db.Column(db.String(120))
   ContactNumber = db.Column(db.String(50))
 
+
 class UserType(db.Model):
   __tablename__ = 'user_types'
   TypeID = db.Column(db.Integer, primary_key=True)
   Code = db.Column(db.String(50), unique=True, nullable=False)
   TypeName = db.Column(db.String(100), nullable=False)
+
 
 class UserProfile(db.Model):
   __tablename__ = 'user_profiles'
@@ -33,6 +36,23 @@ class UserProfile(db.Model):
   subject_rel = db.relationship('Subject')
   address_rel = db.relationship('Address')
   contact_rel = db.relationship('ContactNo')
+
+  # 👉 បន្ថែម Properties ទាំងនេះសម្រាប់ Flask-Login
+  @property
+  def is_authenticated(self):
+    return True
+
+  @property
+  def is_active(self):
+    return True
+
+  @property
+  def is_anonymous(self):
+    return False
+
+  def get_id(self):
+    return str(self.ProfileID)
+
 
 class Login(db.Model):
   __tablename__ = 'logins'
