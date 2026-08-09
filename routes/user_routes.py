@@ -697,3 +697,10 @@ def import_students_excel():
         flash('Invalid file format! Please upload a valid .xlsx or .xls file.', 'danger')
 
     return redirect(url_for('user.manage_profiles'))
+
+# ----------------- VIEW PROFILE DETAILS -----------------
+@user_bp.route('/profiles/view/<int:id>', methods=['GET'])
+@login_required
+def view_profile(id):
+    profile = UserProfile.query.get_or_404(id)
+    return render_template('users/view_profile.html', profile=profile)

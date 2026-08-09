@@ -96,9 +96,9 @@
                                 <td>{{ s.Gender }}</td>
                                 <td>{{ s.DOB }}</td>
                                 <td class="text-center">
-                                    <a href="#" class="btn-action btn-edit" title="View Profile">
+                                    <button type="button" class="btn-action btn-edit border-0 bg-transparent" data-bs-toggle="modal" data-bs-target="#viewProfileModal-{{ s.ProfileID }}" title="View Profile">
                                         <i class="bi bi-eye-fill"></i>
-                                    </a>
+                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -146,6 +146,104 @@
         </div>
 
     </div>
+
+    <!-- Student Detail Modals Loop -->
+    {% if students %}
+        {% for s in students %}
+        <div class="modal fade" id="viewProfileModal-{{ s.ProfileID }}" tabindex="-1" aria-labelledby="profileModalLabel-{{ s.ProfileID }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
+
+                    <!-- Modal Header -->
+                    <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
+                        <h5 class="modal-title" id="profileModalLabel-{{ s.ProfileID }}">
+                            <i class="bi bi-person-badge-fill text-warning me-2"></i> Profile Details: <span class="text-info">{{ s.Name }}</span>
+                        </h5>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="modal-body p-4">
+                        <div class="row g-4 align-items-center">
+
+                            <!-- Avatar / Photo Column -->
+                            <div class="col-md-4 text-center border-end border-secondary border-opacity-25">
+                                <div class="mb-3">
+                                    {% if s.Photo %}
+                                        <img src="{{ url_for('static', filename='uploads/profiles/' + s.Photo) }}" alt="Profile Photo" class="rounded-circle img-thumbnail bg-dark border-secondary" style="width: 130px; height: 130px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center text-white" style="width: 130px; height: 130px; font-size: 50px;">
+                                            <i class="bi bi-person-fill"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <h5 class="text-white mb-1">{{ s.Name }}</h5>
+                                <span class="code-pill px-3 py-1">{{ s.Code }}</span>
+                            </div>
+
+                            <!-- Information Column -->
+                            <div class="col-md-8">
+                                <h6 class="text-info mb-3"><i class="bi bi-info-circle-fill me-2"></i> General Information</h6>
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <p class="mb-1 text-white-50" style="font-size: 12px;">Gender (ភេទ)</p>
+                                        <span class="text-white fw-semibold">
+                                            {% if s.Gender == 'M' %} Male (ប្រុស)
+                                            {% elif s.Gender == 'F' %} Female (ស្រី)
+                                            {% else %} - {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p class="mb-1 text-white-50" style="font-size: 12px;">Date of Birth (ថ្ងៃខែឆ្នាំកំណើត)</p>
+                                        <span class="text-white fw-semibold">{{ s.DOB if s.DOB else '-' }}</span>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p class="mb-1 text-white-50" style="font-size: 12px;">User Type (ប្រភេទ)</p>
+                                        <span class="text-white fw-semibold">{{ s.user_type.TypeName if s.user_type else 'Student' }}</span>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p class="mb-1 text-white-50" style="font-size: 12px;">Group (ក្រុម)</p>
+                                        <span class="text-white fw-semibold">{{ group.Name }}</span>
+                                    </div>
+                                </div>
+
+                                <hr class="border-secondary my-3 border-opacity-25">
+
+                                <h6 class="text-info mb-3"><i class="bi bi-geo-alt-fill me-2"></i> Contact & Address</h6>
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <p class="mb-1 text-white-50" style="font-size: 12px;">Contact Number (លេខទូរសព្ទ)</p>
+                                        <span class="text-white fw-semibold">{{ s.contact_rel.ContactNumber if s.contact_rel else '-' }}</span>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <p class="mb-1 text-white-50" style="font-size: 12px;">Address Details (អាសយដ្ឋាន)</p>
+                                        <span class="text-white fw-semibold" style="font-size: 13px;">
+                                            {% if s.address_rel %}
+                                                ផ្ទះលេខ {{ s.address_rel.Home or '-' }}, ផ្លូវ {{ s.address_rel.Street or '-' }}
+                                                {% if s.address_rel.village_rel %}, ភូមិ {{ s.address_rel.village_rel.Name }}{% endif %}
+                                                {% if s.address_rel.commune_rel %}, ឃុំ/សង្កាត់ {{ s.address_rel.commune_rel.Name }}{% endif %}
+                                                {% if s.address_rel.district_rel %}, ស្រុក/ខណ្ឌ {{ s.address_rel.district_rel.Name }}{% endif %}
+                                                {% if s.address_rel.province_rel %}, រាជធានី/ខេត្ត {{ s.address_rel.province_rel.Name }}{% endif %}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer border-top border-secondary border-opacity-25 px-4 py-2">
+                        <button type="button" class="btn btn-sm btn-custom-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
