@@ -55,7 +55,7 @@ def api():
 
 # Academic Home Dashboard
 @app.route('/academic/index')
-@login_required  # 🔒 ត្រូវ Login សិន
+@login_required
 def index():
     total_sessions = (
         models.SessionModel.query.count()
@@ -152,7 +152,6 @@ def location_index():
 
 # Analytics / Main Root Dashboard Route with Real Data
 @app.route('/dashboard')
-@login_required
 def dashboard():
     today = date.today()
 
@@ -208,7 +207,7 @@ def dashboard():
 
 # Direct Scan Route redirecting to active sessions
 @app.route('/scan')
-@login_required  # 🔒 ត្រូវ Login សិន
+@login_required
 def root_scan():
     return redirect(url_for('attendance.active_scan_sessions'))
 
