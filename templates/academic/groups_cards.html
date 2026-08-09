@@ -51,26 +51,25 @@
                 <p>បញ្ជីក្រុមសិក្សាទាំងអស់ក្នុងទម្រង់កាត (Card View)</p>
             </div>
             <div>
-                <a href="{{ url_for('academic.manage_groups') }}" class="btn-custom-secondary">
+                <a href="{{ url_for('academic.manage_groups') }}" class="btn-custom-secondary" style="border-radius: 24px;">
                     <i class="bi bi-table me-1"></i> Switch to Table View
                 </a>
             </div>
         </div>
 
         <!-- Group Cards Grid Section -->
-       <!-- Group Cards Grid Section -->
         <div class="row g-4">
             {% if groups %}
                 {% for g, session_name, total_students in groups %}
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-                    <div class="card border-secondary border-opacity-25 h-100 shadow-sm text-white position-relative overflow-hidden"
-                         style="background: linear-gradient(135deg, rgba(30, 34, 43, 0.95) 0%, rgba(20, 22, 28, 0.95) 100%); border-radius: 12px; transition: all 0.25s ease; cursor: pointer;"
+                    <div class="card h-100 shadow-sm text-white position-relative overflow-hidden"
+                         style="background: #171920; border: 1px solid #2d3748; border-radius: 12px; transition: all 0.25s ease; cursor: pointer;"
                          onclick="window.location.href='{{ url_for('academic.group_students', group_id=g.GroupID) }}'"
-                         onmouseover="this.style.borderColor='#10b981'; this.style.boxShadow='0 10px 25px -5px rgba(16, 185, 129, 0.15)'; this.style.transform='translateY(-4px)';"
-                         onmouseout="this.style.borderColor='rgba(108, 117, 125, 0.25)'; this.style.boxShadow='none'; this.style.transform='translateY(0)';">
+                         onmouseover="this.style.borderColor='#4a5568'; this.style.boxShadow='0 10px 25px -5px rgba(0, 0, 0, 0.3)'; this.style.transform='translateY(-4px)';"
+                         onmouseout="this.style.borderColor='#2d3748'; this.style.boxShadow='none'; this.style.transform='translateY(0)';">
 
                         <!-- Accent Top Line -->
-                        <div style="height: 4px; background: linear-gradient(90deg, var(--accent-indigo, #6366f1), var(--accent-green, #10b981));"></div>
+                        <div style="height: 4px; background: #4a5568;"></div>
 
                         <div class="card-body d-flex flex-column justify-content-between p-4">
                             <div>

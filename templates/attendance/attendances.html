@@ -119,7 +119,7 @@
             color: white;
             border: none;
             padding: 9px 18px;
-            border-radius: 8px;
+            border-radius: 24px;
             font-weight: 600;
             font-size: 14px;
             text-decoration: none;
@@ -230,7 +230,7 @@
                 <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addAttendanceModal">
                     <i class="bi bi-plus-lg me-1"></i> Add New Attendance
                 </button>
-                <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-secondary text-white border-secondary px-3" style="border-radius: 8px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
+                <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-secondary text-white border-secondary px-3" style="border-radius: 24px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="bi bi-speedometer2 me-1"></i> Dashboard
                 </a>
             </div>
@@ -336,7 +336,6 @@
                                                     {{ form.hidden_tag() }}
                                                     <div class="modal-header">
                                                         <h5 class="modal-title fs-6 fw-bold" id="editModalLabel{{ att.AttendanceID }}"><i class="bi bi-pencil-square text-indigo me-2"></i> Edit Attendance (#{{ att.AttendanceID }})</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body text-start">
                                                         <div class="row">
@@ -488,7 +487,6 @@
                         <h5 class="modal-title fs-6 fw-bold" id="addAttendanceModalLabel">
                             <i class="fas fa-user-check me-2 text-indigo"></i> Record Attendance
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body text-start">
                         <div class="row">
