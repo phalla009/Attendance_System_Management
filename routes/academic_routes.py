@@ -1,3 +1,5 @@
+from sqlalchemy import func
+
 from extensions import db
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required  # 👈 នាំចូល login_required
@@ -43,6 +45,8 @@ def manage_sessions():
         db.session.commit()
         flash('Session added successfully!', 'success')
         return redirect(url_for('academic.manage_sessions'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     # Query with Search Filter
     query = Session.query
@@ -95,7 +99,7 @@ def delete_session(id):
     try:
         db.session.delete(session)
         db.session.commit()
-        flash('Session deleted successfully!', 'danger')
+        flash('Session deleted successfully!', 'success')
     except Exception:
         db.session.rollback()
         flash('Cannot delete this session because it is related to other data.', 'danger')
@@ -125,6 +129,8 @@ def manage_classes():
         db.session.commit()
         flash('Class added successfully!', 'success')
         return redirect(url_for('academic.manage_classes'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     query = (
         db.session.query(Class, Session.Session_name.label('SessionName'))
@@ -192,7 +198,7 @@ def delete_class(id):
     try:
         db.session.delete(class_obj)
         db.session.commit()
-        flash('Class deleted successfully!', 'danger')
+        flash('Class deleted successfully!', 'success')
     except Exception:
         db.session.rollback()
         flash('Cannot delete this class because it is related to other data.', 'danger')
@@ -223,6 +229,8 @@ def manage_groups():
         db.session.commit()
         flash('Group added successfully!', 'success')
         return redirect(url_for('academic.manage_groups'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     query = (
         db.session.query(Group, Session.Session_name.label('SessionName'))
@@ -247,10 +255,22 @@ def manage_groups():
                        session_id=session_filter) if pagination.has_next else None
 
     sessions = Session.query.all()
+    session_stats = (
+        db.session.query(
+            Session.SessionID,
+            Session.Session_name,
+            func.count(Group.GroupID).label('group_count')
+        )
+        .outerjoin(Group, Group.SessionID == Session.SessionID)
+        .group_by(Session.SessionID, Session.Session_name)
+        .all()
+    )
+    total_groups = Group.query.count()
 
     return render_template('academic/groups.html', form=form, groups=groups, sessions=sessions, per_page=per_page,
                            prev_url=prev_url, next_url=next_url, search_query=search_query,
-                           session_filter=session_filter)
+                           session_filter=session_filter,
+                           session_stats=session_stats, total_groups=total_groups)
 
 
 @academic_bp.route('/groups/edit/<int:id>', methods=['POST'])
@@ -291,7 +311,7 @@ def delete_group(id):
     try:
         db.session.delete(group)
         db.session.commit()
-        flash('Group deleted successfully!', 'danger')
+        flash('Group deleted successfully!', 'success')
     except Exception:
         db.session.rollback()
         flash('Cannot delete this group because it is related to other data.', 'danger')
@@ -321,6 +341,8 @@ def manage_subjects():
         db.session.commit()
         flash('Subject added successfully!', 'success')
         return redirect(url_for('academic.manage_subjects'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     query = (
         db.session.query(Subject, Group.Name.label('GroupName'))
@@ -387,7 +409,7 @@ def delete_subject(id):
     try:
         db.session.delete(subject)
         db.session.commit()
-        flash('Subject deleted successfully!', 'danger')
+        flash('Subject deleted successfully!', 'success')
     except Exception:
         db.session.rollback()
         flash('Cannot delete this subject because it is related to other data.', 'danger')
@@ -444,6 +466,8 @@ def group_students(group_id):
 
     query = UserProfile.query.filter_by(GroupID=group_id)
     total_students = query.count()
+    male_count = query.filter(UserProfile.Gender == 'M').count()
+    female_count = query.filter(UserProfile.Gender == 'F').count()
 
     if search_query:
         query = query.filter(
@@ -464,6 +488,8 @@ def group_students(group_id):
                            group=group,
                            students=students,
                            total_students=total_students,
+                           male_count=male_count,
+                           female_count=female_count,
                            filtered_count=filtered_count,
                            pagination=pagination,
                            per_page=per_page,

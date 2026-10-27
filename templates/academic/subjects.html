@@ -356,7 +356,7 @@
                 </button>
                 <div>
                     <h1>Manage Subjects</h1>
-                    <p>គ្រប់គ្រងមុខវិជ្ជាសិក្សា (Subjects) ក្នុងប្រព័ន្ធ</p>
+                    <p>គ្រប់គ្រងមុខវិជ្ជាសិក្សា (Subjects)</p>
                 </div>
             </div>
             <div>
@@ -370,44 +370,46 @@
         <div class="panel">
             <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> Subject List</span>
+                <div class="d-flex align-items-center flex-wrap gap-3">
+                    <!-- Search / Filter Form -->
+                    <form method="GET" action="{{ url_for('academic.manage_subjects') }}"
+                          class="d-flex flex-nowrap align-items-center gap-2" style="width: 800px; max-width: 100%;">
+                        <input type="hidden" name="per_page" value="{{ per_page }}">
 
-                <!-- Search & Filter Form (Side-by-side) -->
-                <form method="GET" action="{{ url_for('academic.manage_subjects') }}" class="d-flex flex-nowrap align-items-center gap-2">
-                    <input type="hidden" name="per_page" value="{{ per_page }}">
+                        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 me-4 flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addSubjectModal" style="background-color: #6366f1; border-color: #6366f1; border-radius: 24px; font-weight: 500; font-size: 14px; white-space: nowrap;">
+                            <i class="bi bi-plus-circle-fill"></i> Add New Subject
+                        </button>
 
-                    <!-- Group Filter Dropdown -->
-                    <select name="group_id" class="form-select form-select-sm text-white border-secondary" style="width: 160px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
-                        <option value="" class="bg-dark text-white">All Groups</option>
-                        {% for g in groups %}
-                            <option value="{{ g.GroupID }}" class="bg-dark text-white" {% if group_filter == g.GroupID %}selected{% endif %}>{{ g.Name }}</option>
-                        {% endfor %}
-                    </select>
+                        <!-- Group Filter -->
+                        <select name="group_id" class="form-select form-select-lg text-white border-secondary shadow-none flex-shrink-0" style="width: 180px; font-size: 15px; border-radius: 24px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
+                            <option value="">All Groups</option>
+                            {% for g in groups %}
+                                <option value="{{ g.GroupID }}" {% if group_filter == g.GroupID %}selected{% endif %}>{{ g.Name }}</option>
+                            {% endfor %}
+                        </select>
 
-                    <!-- Unified Search Input Bar -->
-                    <div class="input-group input-group-sm" style="max-width: 260px; width: 100%;">
-                        <span class="input-group-text text-white-50 border-secondary" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: rgba(255, 255, 255, 0.03);">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input
-                            type="text"
-                            name="q"
-                            value="{{ search_query or '' }}"
-                            class="form-control text-white border-secondary shadow-none"
-                            placeholder="Search code or name..."
-                            style="font-size: 13px; background-color: rgba(255, 255, 255, 0.03);"
-                        >
-                        {% if search_query or group_filter %}
-                        <a href="{{ url_for('academic.manage_subjects', per_page=per_page) }}"
-                           class="btn btn-sm btn-outline-secondary text-white-50 border-secondary d-flex align-items-center" style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">
-                            <i class="bi bi-x-lg"></i>
-                        </a>
-                        {% endif %}
-                    </div>
-                </form>
-
-                <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
-                    <i class="bi bi-plus-circle-fill me-1"></i> Add New Subject
-                </button>
+                        <div class="input-group input-group-lg flex-grow-1">
+                            <input
+                                type="text"
+                                name="q"
+                                value="{{ search_query or '' }}"
+                                class="form-control text-white border-secondary shadow-none"
+                                placeholder="Search by name or code..."
+                                style="font-size: 15px; border-bottom-left-radius: 24px; border-top-left-radius: 24px; background-color: rgba(255, 255, 255, 0.03);"
+                            >
+{#                            {% if search_query or group_filter %}#}
+{#                            <a href="{{ url_for('academic.manage_subjects', per_page=per_page) }}"#}
+{#                               class="btn btn-outline-secondary text-white-50 border-secondary d-flex align-items-center"#}
+{#                               style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">#}
+{#                                <i class="bi bi-x-lg"></i>#}
+{#                            </a>#}
+{#                            {% endif %}#}
+                            <button type="submit" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: #6366f1; border-color: #6366f1; border-bottom-right-radius: 24px; border-top-right-radius: 24px; padding: 8px 24px; font-size: 15px; font-weight: 500;">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <div class="table-responsive">

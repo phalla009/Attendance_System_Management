@@ -333,7 +333,7 @@
                 </button>
                 <div>
                     <h1>Manage Sessions</h1>
-                    <p>គ្រប់គ្រងវគ្គសិក្សា (Sessions) ក្នុងប្រព័ន្ធ</p>
+                    <p>គ្រប់គ្រងវគ្គសិក្សា (Sessions)</p>
                 </div>
             </div>
             <div>
@@ -347,9 +347,31 @@
         <div class="panel">
             <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> Session List</span>
-                <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addSessionModal">
-                    <i class="bi bi-plus-circle-fill me-1"></i> Add New Session
-                </button>
+                <div class="d-flex align-items-center flex-wrap gap-3">
+                    <!-- Search / Filter Form -->
+                    <form method="GET" action="{{ url_for('academic.manage_sessions') }}"
+                          class="d-flex flex-nowrap align-items-center gap-2" style="width: 800px; max-width: 100%;">
+                        <input type="hidden" name="per_page" value="{{ per_page }}">
+
+                        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 me-4 flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addSessionModal" style="background-color: #6366f1; border-color: #6366f1; border-radius: 24px; font-weight: 500; font-size: 14px; white-space: nowrap;">
+                            <i class="bi bi-plus-circle-fill"></i> Add New Session
+                        </button>
+
+                        <div class="input-group input-group-lg flex-grow-1">
+                            <input
+                                type="text"
+                                name="q"
+                                value="{{ search_query or '' }}"
+                                class="form-control text-white border-secondary shadow-none"
+                                placeholder="Search by name or code..."
+                                style="font-size: 15px; border-bottom-left-radius: 24px; border-top-left-radius: 24px; background-color: rgba(255, 255, 255, 0.03);"
+                            >
+                            <button type="submit" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: #6366f1; border-color: #6366f1; border-bottom-right-radius: 24px; border-top-right-radius: 24px; padding: 8px 24px; font-size: 15px; font-weight: 500;">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <div class="table-responsive">
@@ -443,7 +465,7 @@
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-plus-circle-fill" style="color: var(--accent-indigo);"></i> Add New Session</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+{#                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>#}
                 </div>
                 <form method="POST" novalidate>
                     {{ form.hidden_tag() }}
@@ -482,7 +504,7 @@
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Session</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+{#                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>#}
                 </div>
                 <form id="editForm" method="POST" novalidate>
                     {{ form.hidden_tag() }}
@@ -521,7 +543,7 @@
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+{#                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>#}
                 </div>
                 <div class="modal-body p-4">
                     <p>Are you sure you want to delete session <strong id="delete_session_name" class="text-warning"></strong>?</p>

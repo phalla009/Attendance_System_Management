@@ -347,7 +347,13 @@
                 </button>
                 <div>
                     <h1>Manage Groups</h1>
-                    <p>គ្រប់គ្រងក្រុមសិក្សា និងកាលវិភាគក្នុងប្រព័ន្ធ</p>
+                    <p>គ្រប់គ្រងក្រុមសិក្សា និងកាលវិភាគ</p>
+                    <h6 class="mb-0 mt-2">
+                        ក្រុមសរុប: <strong class="text-success me-3">{{ total_groups }} ក្រុម</strong>
+                        {% for sid, sname, cnt in session_stats %}
+                            {{ sname }}: <strong class="text-success me-3">{{ cnt }} ក្រុម</strong>
+                        {% endfor %}
+                    </h6>
                 </div>
             </div>
             <div>
@@ -357,50 +363,50 @@
             </div>
         </div>
 
+
         <!-- Group List Table Panel -->
         <div class="panel">
             <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-list-task" style="color: var(--accent-green);"></i> Group List</span>
-
-                <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <!-- Search & Filter Form -->
-                    <form method="GET" action="{{ url_for('academic.manage_groups') }}" class="d-flex flex-nowrap align-items-center gap-2">
+                <div class="d-flex align-items-center flex-wrap gap-3">
+                    <!-- Search / Filter Form -->
+                    <form method="GET" action="{{ url_for('academic.manage_groups') }}"
+                          class="d-flex flex-nowrap align-items-center gap-2" style="width: 800px; max-width: 100%;">
                         <input type="hidden" name="per_page" value="{{ per_page }}">
 
-                        <!-- Session Filter Dropdown -->
-                        <select name="session_id" class="form-select form-select-sm text-white border-secondary" style="width: 160px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
-                            <option value="" class="bg-dark text-white">All Sessions</option>
+                        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 me-4 flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addGroupModal" style="background-color: #6366f1; border-color: #6366f1; border-radius: 24px; font-weight: 500; font-size: 14px; white-space: nowrap;">
+                            <i class="bi bi-plus-circle-fill"></i> Add New Group
+                        </button>
+
+                        <!-- Session Filter (same style as Class inputs) -->
+                        <select name="session_id" class="form-select form-select-lg text-white border-secondary shadow-none flex-shrink-0" style="width: 180px; font-size: 15px; border-radius: 24px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
+                            <option value="">All Sessions</option>
                             {% for s in sessions %}
-                                <option value="{{ s.SessionID }}" class="bg-dark text-white" {% if session_filter == s.SessionID %}selected{% endif %}>{{ s.Session_name }}</option>
+                                <option value="{{ s.SessionID }}" {% if session_filter == s.SessionID %}selected{% endif %}>{{ s.Session_name }}</option>
                             {% endfor %}
                         </select>
 
-                        <!-- Unified Search Input Bar -->
-                        <div class="input-group input-group-sm" style="max-width: 260px; width: 100%;">
-                            <span class="input-group-text text-white-50 border-secondary" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: rgba(255, 255, 255, 0.03);">
-                                <i class="bi bi-search"></i>
-                            </span>
+                        <div class="input-group input-group-lg flex-grow-1">
                             <input
                                 type="text"
                                 name="q"
                                 value="{{ search_query or '' }}"
                                 class="form-control text-white border-secondary shadow-none"
-                                placeholder="Search code or name..."
-                                style="font-size: 13px; background-color: rgba(255, 255, 255, 0.03);"
+                                placeholder="Search by name or code..."
+                                style="font-size: 15px; border-bottom-left-radius: 24px; border-top-left-radius: 24px; background-color: rgba(255, 255, 255, 0.03);"
                             >
-                            {% if search_query or session_filter %}
-                            <a href="{{ url_for('academic.manage_groups', per_page=per_page) }}"
-                               class="btn btn-sm btn-outline-secondary text-white-50 border-secondary d-flex align-items-center" style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">
-                                <i class="bi bi-x-lg"></i>
-                            </a>
-                            {% endif %}
-                            <button type="submit" class="btn btn-sm btn-custom-primary">Search</button>
+{#                            {% if search_query or session_filter %}#}
+{#                            <a href="{{ url_for('academic.manage_groups', per_page=per_page) }}"#}
+{#                               class="btn btn-outline-secondary text-white-50 border-secondary d-flex align-items-center"#}
+{#                               style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">#}
+{#                                <i class="bi bi-x-lg"></i>#}
+{#                            </a>#}
+{#                            {% endif %}#}
+                            <button type="submit" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: #6366f1; border-color: #6366f1; border-bottom-right-radius: 24px; border-top-right-radius: 24px; padding: 8px 24px; font-size: 15px; font-weight: 500;">
+                                <i class="bi bi-search"></i>
+                            </button>
                         </div>
                     </form>
-
-                    <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Add New Group
-                    </button>
                 </div>
             </div>
 
@@ -497,7 +503,7 @@
 
     </div>
 
-    <!-- ================= MODALS ================= -->
+{#    <!-- ================= MODALS ================= -->#}
 
     <!-- 1. Add Group Modal -->
     <div class="modal fade" id="addGroupModal" tabindex="-1" aria-hidden="true">
@@ -505,7 +511,7 @@
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-plus-circle-fill" style="color: var(--accent-indigo);"></i> Add New Group</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+{#                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>#}
                 </div>
                 <form method="POST" novalidate>
                     {{ form.hidden_tag() }}
@@ -552,13 +558,13 @@
         </div>
     </div>
 
-    <!-- 2. Edit Group Modal -->
+{#    <!-- 2. Edit Group Modal -->#}
     <div class="modal fade" id="editGroupModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Group</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+{#                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>#}
                 </div>
                 <form id="editForm" method="POST" novalidate>
                     {{ form.hidden_tag() }}
@@ -605,13 +611,13 @@
         </div>
     </div>
 
-    <!-- 3. Delete Confirmation Modal -->
+{#    <!-- 3. Delete Confirmation Modal -->#}
     <div class="modal fade" id="deleteGroupModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+{#                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>#}
                 </div>
                 <div class="modal-body p-4">
                     <p>Are you sure you want to delete group <strong id="delete_group_name" class="text-warning"></strong>?</p>

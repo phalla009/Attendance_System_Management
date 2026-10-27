@@ -38,10 +38,10 @@
         .wrapper {
             margin-left: 260px;
             flex: 1;
-            padding: 30px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 20px;
             width: calc(100% - 260px);
             transition: all 0.3s ease-in-out;
         }
@@ -339,15 +339,17 @@
                 </button>
                 <div>
                     <h1>Students in Group: <span class="text-warning">{{ group.Name }}</span></h1>
-                    <p class="mb-0">
-                        កូដក្រុម (Code): <strong class="text-info me-3">{{ group.Code }}</strong>
-                        សរុបសិស្ស: <strong class="text-success">{{ total_students }} នាក់</strong>
+                    <h6 class="mb-0">
+{#                        កូដក្រុម (Code): <strong class="text-info me-3">{{ group.Code }}</strong>#}
+                        សិស្សសរុប: <strong class="text-success me-3">{{ total_students }} នាក់</strong>
+                        <i class="bi bi-gender-male text-white"></i> ប្រុស: <strong class="text-success me-3">{{ male_count }} នាក់</strong>
+                        <i class="bi bi-gender-female text-white"></i> ស្រី: <strong class="text-success">{{ female_count }} នាក់</strong>
                         {% if search_query %}
                             <span class="text-white-50 ms-2" style="font-size: 13px;">
                                 (បង្ហាញ {{ filtered_count }} លទ្ធផលសម្រាប់ "{{ search_query }}")
                             </span>
                         {% endif %}
-                    </p>
+                    </h6>
                 </div>
             </div>
             <div>
@@ -364,27 +366,29 @@
 
                 <!-- Search / Filter Form -->
                 <form method="GET" action="{{ url_for('academic.group_students', group_id=group.GroupID) }}"
-                      class="d-flex flex-nowrap align-items-center gap-2" style="max-width: 320px; width: 100%;">
+                      class="d-flex flex-nowrap align-items-center gap-2" style="max-width: 100%; width: 800px;">
                     <input type="hidden" name="per_page" value="{{ per_page }}">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text text-white-50 border-secondary" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: rgba(255, 255, 255, 0.03);">
-                            <i class="bi bi-search"></i>
-                        </span>
+                    <div class="input-group input-group-lg">
+{#                        <span class="input-group-text text-white-50 border-0" style="border-top-left-radius: 10px; border-bottom-left-radius: 10px; background-color: rgba(255, 255, 255, 0.03);">#}
+{#                            <i class="bi bi-search"></i>#}
+{#                        </span>#}
                         <input
                             type="text"
                             name="search"
                             value="{{ search_query or '' }}"
                             class="form-control text-white border-secondary shadow-none"
                             placeholder="Search by name or code..."
-                            style="font-size: 13px; background-color: rgba(255, 255, 255, 0.03);"
+                            style="font-size: 16px;border-bottom-left-radius: 24px; border-top-left-radius: 24px;background-color: rgba(255, 255, 255, 0.03);"
                         >
-                        {% if search_query %}
-                        <a href="{{ url_for('academic.group_students', group_id=group.GroupID, per_page=per_page) }}"
-                           class="btn btn-sm btn-outline-secondary text-white-50 border-secondary d-flex align-items-center" style="background-color: rgba(255, 255, 255, 0.03);" title="Clear search">
-                            <i class="bi bi-x-lg"></i>
-                        </a>
-                        {% endif %}
-                        <button type="submit" class="btn btn-sm btn-custom-primary">Search</button>
+{#                        {% if search_query %}#}
+{#                        <a href="{{ url_for('academic.group_students', group_id=group.GroupID, per_page=per_page) }}"#}
+{#                           class="btn btn-outline-secondary text-white-50 border-secondary d-flex align-items-center" style="background-color: rgba(255, 255, 255, 0.03);" title="Clear search">#}
+{#                            <i class="bi bi-x-lg"></i>#}
+{#                        </a>#}
+{#                        {% endif %}#}
+                        <button type="submit" class="btn btn-custom-primary d-flex align-items-center gap-2" style="padding: 8px 24px; font-size: 15px; border-bottom-right-radius: 24px; border-top-right-radius: 24px;">
+                            <i class="bi bi-search"></i>
+                        </button>
                     </div>
                 </form>
             </div>
