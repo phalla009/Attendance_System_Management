@@ -16,303 +16,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
-    <style>
-        :root {
-            --bg-main: #0b0f19;
-            --bg-card: #111827;
-            --border-color: #1f2937;
-            --text-main: #f9fafb;
-            --text-white: #9ca3af;
-            --accent-indigo: #6366f1;
-            --accent-green: #10b981;
-            --accent-amber: #f59e0b;
-            --accent-rose: #f43f5e;
-        }
-
-        * { font-family: 'Inter', 'Noto Sans Khmer', sans-serif; box-sizing: border-box; }
-
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-            margin: 0;
-        }
-
-        /* ---------- Main Wrapper ---------- */
-        .wrapper {
-            margin-left: 260px;
-            flex: 1;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            width: calc(100% - 260px);
-            transition: all 0.3s ease-in-out;
-        }
-
-        /* ---------- Header ---------- */
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 24px 30px;
-            border-radius: 16px;
-            gap: 16px;
-        }
-        .dashboard-header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 4px;
-            letter-spacing: -0.02em;
-            color: var(--text-main);
-        }
-        .dashboard-header p {
-            color: var(--text-white);
-            font-size: 14px;
-            margin: 0;
-        }
-
-        /* ---------- Panels & Cards ---------- */
-        .panel {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            color: var(--text-main);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .panel-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-main);
-        }
-
-        /* ---------- Tables ---------- */
-        .table-dark-custom {
-            background-color: transparent !important;
-            color: var(--text-main) !important;
-            margin-bottom: 0;
-        }
-        .table-dark-custom th {
-            background-color: rgba(255, 255, 255, 0.02) !important;
-            color: var(--text-white) !important;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border-color) !important;
-            padding: 12px 16px;
-        }
-        .table-dark-custom td {
-            background-color: transparent !important;
-            color: var(--text-main) !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            padding: 14px 16px;
-            vertical-align: middle;
-            font-size: 14px;
-        }
-        .table-dark-custom tbody tr {
-            transition: background-color 0.15s ease;
-        }
-        .table-dark-custom tbody tr:hover {
-            background-color: rgba(255, 255, 255, 0.02) !important;
-        }
-
-        /* ---------- Form Elements ---------- */
-        .form-control, .form-select {
-            background-color: rgba(255, 255, 255, 0.03) !important;
-            border: 1px solid var(--border-color) !important;
-            color: var(--text-main) !important;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .form-control:focus, .form-select:focus {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border-color: var(--accent-indigo) !important;
-            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25) !important;
-            color: var(--text-main) !important;
-        }
-        .form-select option {
-            background-color: #111827 !important;
-            color: #f9fafb !important;
-        }
-        /* ---------- Badges & Pills ---------- */
-        .id-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-white);
-        }
-        .code-pill {
-            background: rgba(99, 102, 241, 0.1);
-            color: #818cf8;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .session-badge {
-            background: rgba(16, 185, 129, 0.1);
-            color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* Custom Toast Container */
-        .toast-container-custom {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1080;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .custom-toast {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 12px 16px;
-            border-radius: 10px;
-            min-width: 300px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            transition: opacity 0.5s ease;
-        }
-        .custom-toast.hide {
-            opacity: 0;
-        }
-
-        /* Empty State */
-        .empty-state {
-            padding: 40px 0;
-            text-align: center;
-            color: var(--text-white);
-        }
-
-        /* ---------- Mobile Menu Overlay & Toggle Button ---------- */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(3px);
-            z-index: 98;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
-        .btn-menu-toggle {
-            margin-left: -280px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            font-size: 20px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: none;
-            transition: all 0.2s ease;
-        }
-        .btn-menu-toggle:hover {
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--accent-indigo);
-        }
-
-        /* ---------- Responsive Media Queries ---------- */
-        @media (max-width: 992px) {
-            .btn-menu-toggle {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease-in-out;
-                z-index: 100;
-                box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5);
-                position: fixed;
-                height: 100vh;
-            }
-            .sidebar.active {
-                transform: translateX(0);
-            }
-            .wrapper {
-                margin-left: 0;
-                padding: 15px;
-                width: 100%;
-            }
-            .dashboard-header {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 18px 20px;
-                gap: 16px;
-            }
-            .dashboard-header div:last-child {
-                width: 100%;
-            }
-            .dashboard-header .btn-custom-secondary {
-                width: 100%;
-                justify-content: center;
-            }
-            .panel-title {
-                flex-direction: column;
-                align-items: stretch !important;
-                gap: 12px !important;
-            }
-            .panel-title form {
-                width: 100%;
-                flex-wrap: wrap !important;
-            }
-            .panel-title form select,
-            .panel-title form .input-group {
-                max-width: 100% !important;
-                width: 100% !important;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .wrapper {
-                padding: 10px;
-            }
-            .dashboard-header {
-                padding: 15px;
-            }
-            .dashboard-header h1 {
-                font-size: 20px;
-            }
-            .dashboard-header p {
-                font-size: 13px;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -371,22 +74,14 @@
             <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> Subject List</span>
                 <div class="d-flex align-items-center flex-wrap gap-3">
-                    <!-- Search / Filter Form -->
+                    <!-- Search Form -->
                     <form method="GET" action="{{ url_for('academic.manage_subjects') }}"
-                          class="d-flex flex-nowrap align-items-center gap-2" style="width: 800px; max-width: 100%;">
+                          class="d-flex flex-nowrap align-items-center gap-2" style="width: 600px; max-width: 100%;">
                         <input type="hidden" name="per_page" value="{{ per_page }}">
 
                         <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 me-4 flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addSubjectModal" style="background-color: #6366f1; border-color: #6366f1; border-radius: 24px; font-weight: 500; font-size: 14px; white-space: nowrap;">
                             <i class="bi bi-plus-circle-fill"></i> Add New Subject
                         </button>
-
-                        <!-- Group Filter -->
-                        <select name="group_id" class="form-select form-select-lg text-white border-secondary shadow-none flex-shrink-0" style="width: 180px; font-size: 15px; border-radius: 24px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
-                            <option value="">All Groups</option>
-                            {% for g in groups %}
-                                <option value="{{ g.GroupID }}" {% if group_filter == g.GroupID %}selected{% endif %}>{{ g.Name }}</option>
-                            {% endfor %}
-                        </select>
 
                         <div class="input-group input-group-lg flex-grow-1">
                             <input
@@ -397,13 +92,6 @@
                                 placeholder="Search by name or code..."
                                 style="font-size: 15px; border-bottom-left-radius: 24px; border-top-left-radius: 24px; background-color: rgba(255, 255, 255, 0.03);"
                             >
-{#                            {% if search_query or group_filter %}#}
-{#                            <a href="{{ url_for('academic.manage_subjects', per_page=per_page) }}"#}
-{#                               class="btn btn-outline-secondary text-white-50 border-secondary d-flex align-items-center"#}
-{#                               style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">#}
-{#                                <i class="bi bi-x-lg"></i>#}
-{#                            </a>#}
-{#                            {% endif %}#}
                             <button type="submit" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: #6366f1; border-color: #6366f1; border-bottom-right-radius: 24px; border-top-right-radius: 24px; padding: 8px 24px; font-size: 15px; font-weight: 500;">
                                 <i class="bi bi-search"></i>
                             </button>
@@ -419,18 +107,16 @@
                             <th>ID</th>
                             <th>Code</th>
                             <th>Subject Name</th>
-                            <th>Group Name</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% if subjects %}
-                            {% for sub, group_name in subjects %}
+                            {% for sub in subjects %}
                             <tr>
                                 <td><span class="id-badge">{{ sub.SubjectID }}</span></td>
                                 <td><span class="code-pill">{{ sub.Code }}</span></td>
                                 <td>{{ sub.Name }}</td>
-                                <td><span class="session-badge"><i class="bi bi-people-fill"></i> {{ group_name }}</span></td>
                                 <td class="text-center">
                                     <div class="d-inline-flex gap-2">
                                         <!-- Edit Trigger Button -->
@@ -439,8 +125,7 @@
                                                 data-bs-target="#editSubjectModal"
                                                 data-id="{{ sub.SubjectID }}"
                                                 data-code="{{ sub.Code }}"
-                                                data-name="{{ sub.Name }}"
-                                                data-group="{{ sub.GroupID }}">
+                                                data-name="{{ sub.Name }}">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
 
@@ -458,12 +143,12 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="5">
+                                <td colspan="4">
                                     <div class="empty-state">
                                         <i class="bi bi-inbox" style="font-size: 40px;"></i>
                                         <p class="mt-2 text-white-50">
-                                            {% if search_query or group_filter %}
-                                                No subjects found matching your filters.
+                                            {% if search_query %}
+                                                No subjects found matching your search.
                                             {% else %}
                                                 No subjects found in the system.
                                             {% endif %}
@@ -512,7 +197,6 @@
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-plus-circle-fill" style="color: var(--accent-indigo);"></i> Add New Subject</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form method="POST" novalidate>
                     {{ form.hidden_tag() }}
@@ -528,13 +212,6 @@
                             <label class="form-label"><i class="bi bi-book me-1"></i> {{ form.Name.label.text }}</label>
                             {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else "")) }}
                             {% for error in form.Name.errors %}
-                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="bi bi-people-fill me-1"></i> {{ form.GroupID.label.text }}</label>
-                            {{ form.GroupID(class="form-select " + ("is-invalid" if form.GroupID.errors else "")) }}
-                            {% for error in form.GroupID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
@@ -558,7 +235,6 @@
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Subject</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="editForm" method="POST" novalidate>
                     {{ form.hidden_tag() }}
@@ -575,13 +251,6 @@
                             <label class="form-label"><i class="bi bi-book me-1"></i> {{ form.Name.label.text }}</label>
                             {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
                             {% for error in form.Name.errors %}
-                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="bi bi-people-fill me-1"></i> {{ form.GroupID.label.text }}</label>
-                            {{ form.GroupID(class="form-select " + ("is-invalid" if form.GroupID.errors else ""), id="edit_group") }}
-                            {% for error in form.GroupID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
@@ -605,7 +274,6 @@
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <p>Are you sure you want to delete subject <strong id="delete_subject_name" class="text-warning"></strong>?</p>
@@ -679,11 +347,9 @@
                 const subjectId = button.getAttribute('data-id');
                 const code = button.getAttribute('data-code');
                 const name = button.getAttribute('data-name');
-                const groupId = button.getAttribute('data-group');
 
                 document.getElementById('edit_code').value = code;
                 document.getElementById('edit_name').value = name;
-                document.getElementById('edit_group').value = groupId;
 
                 const editForm = document.getElementById('editForm');
                 editForm.action = `/academic/subjects/edit/${subjectId}`;

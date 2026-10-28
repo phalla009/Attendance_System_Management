@@ -16,7 +16,7 @@ class Class(db.Model):
 class Group(db.Model):
   __tablename__ = 'groups'
   GroupID = db.Column(db.Integer, primary_key=True)
-  SessionID = db.Column(db.Integer, db.ForeignKey('sessions.SessionID'))
+  # SessionID = db.Column(db.Integer, db.ForeignKey('sessions.SessionID'))
   Code = db.Column(db.String(50), unique=True, nullable=False)
   Name = db.Column(db.String(100), nullable=False)
   ScheduleID = db.Column(db.Integer)
@@ -24,6 +24,6 @@ class Group(db.Model):
 class Subject(db.Model):
   __tablename__ = 'subjects'
   SubjectID = db.Column(db.Integer, primary_key=True)
-  GroupID = db.Column(db.Integer, db.ForeignKey('groups.GroupID'))
+  # GroupID = db.Column(db.Integer, db.ForeignKey('groups.GroupID'))
   Code = db.Column(db.String(50), unique=True, nullable=False)
   Name = db.Column(db.String(100), nullable=False)

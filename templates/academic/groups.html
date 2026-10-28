@@ -13,297 +13,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
-    <style>
-        :root {
-            --bg-main: #0b0f19;
-            --bg-card: #111827;
-            --border-color: #1f2937;
-            --text-main: #f9fafb;
-            --text-white: #9ca3af;
-            --accent-indigo: #6366f1;
-            --accent-green: #10b981;
-            --accent-amber: #f59e0b;
-            --accent-rose: #f43f5e;
-        }
-
-        * { font-family: 'Inter', 'Noto Sans Khmer', sans-serif; box-sizing: border-box; }
-
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-            margin: 0;
-        }
-
-        /* ---------- Main Wrapper ---------- */
-        .wrapper {
-            margin-left: 260px;
-            flex: 1;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            width: calc(100% - 260px);
-            transition: all 0.3s ease-in-out;
-        }
-
-        /* ---------- Header ---------- */
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 24px 30px;
-            border-radius: 16px;
-            gap: 16px;
-        }
-        .dashboard-header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 4px;
-            letter-spacing: -0.02em;
-            color: var(--text-main);
-        }
-        .dashboard-header p {
-            color: var(--text-white);
-            font-size: 14px;
-            margin: 0;
-        }
-
-        /* ---------- Panels & Cards ---------- */
-        .panel {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            color: var(--text-main);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .panel-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-main);
-        }
-
-        /* ---------- Tables ---------- */
-        .table-dark-custom {
-            background-color: transparent !important;
-            color: var(--text-main) !important;
-            margin-bottom: 0;
-        }
-        .table-dark-custom th {
-            background-color: rgba(255, 255, 255, 0.02) !important;
-            color: var(--text-white) !important;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border-color) !important;
-            padding: 12px 16px;
-        }
-        .table-dark-custom td {
-            background-color: transparent !important;
-            color: var(--text-main) !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            padding: 14px 16px;
-            vertical-align: middle;
-            font-size: 14px;
-        }
-        .table-dark-custom tbody tr {
-            transition: background-color 0.15s ease;
-        }
-        .table-dark-custom tbody tr:hover {
-            background-color: rgba(255, 255, 255, 0.02) !important;
-        }
-
-        /* ---------- Form Elements ---------- */
-        .form-control, .form-select {
-            background-color: rgba(255, 255, 255, 0.03) !important;
-            border: 1px solid var(--border-color) !important;
-            color: var(--text-main) !important;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .form-control:focus, .form-select:focus {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border-color: var(--accent-indigo) !important;
-            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25) !important;
-            color: var(--text-main) !important;
-        }
-        .form-select option {
-            background-color: #111827 !important;
-            color: #f9fafb !important;
-        }
-
-        /* ---------- Badges & Pills ---------- */
-        .id-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-white);
-        }
-        .code-pill {
-            background: rgba(16, 185, 129, 0.1);
-            color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .session-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            color: var(--text-main);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Custom Toast Container */
-        .toast-container-custom {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1080;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .custom-toast {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 12px 16px;
-            border-radius: 10px;
-            min-width: 300px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            transition: opacity 0.5s ease;
-        }
-        .custom-toast.hide {
-            opacity: 0;
-        }
-
-        /* Empty State */
-        .empty-state {
-            padding: 40px 0;
-            text-align: center;
-            color: var(--text-white);
-        }
-
-        /* ---------- Mobile Menu Overlay & Toggle Button ---------- */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(3px);
-            z-index: 98;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
-        .btn-menu-toggle {
-            margin-left: -280px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            font-size: 20px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: none;
-            transition: all 0.2s ease;
-        }
-        .btn-menu-toggle:hover {
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--accent-indigo);
-        }
-
-        /* ---------- Responsive Media Queries ---------- */
-        @media (max-width: 992px) {
-            .btn-menu-toggle {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease-in-out;
-                z-index: 100;
-                box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5);
-                position: fixed;
-                height: 100vh;
-            }
-            .sidebar.active {
-                transform: translateX(0);
-            }
-            .wrapper {
-                margin-left: 0;
-                padding: 15px;
-                width: 100%;
-            }
-            .dashboard-header {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 18px 20px;
-                gap: 16px;
-            }
-            .dashboard-header div:last-child {
-                width: 100%;
-            }
-            .dashboard-header .btn-custom-secondary {
-                width: 100%;
-                justify-content: center;
-            }
-            .panel-title {
-                flex-direction: column;
-                align-items: stretch !important;
-                gap: 12px !important;
-            }
-            .panel-title form {
-                max-width: 100% !important;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .wrapper {
-                padding: 10px;
-            }
-            .dashboard-header {
-                padding: 15px;
-            }
-            .dashboard-header h1 {
-                font-size: 20px;
-            }
-            .dashboard-header p {
-                font-size: 13px;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -350,9 +59,6 @@
                     <p>គ្រប់គ្រងក្រុមសិក្សា និងកាលវិភាគ</p>
                     <h6 class="mb-0 mt-2">
                         ក្រុមសរុប: <strong class="text-success me-3">{{ total_groups }} ក្រុម</strong>
-                        {% for sid, sname, cnt in session_stats %}
-                            {{ sname }}: <strong class="text-success me-3">{{ cnt }} ក្រុម</strong>
-                        {% endfor %}
                     </h6>
                 </div>
             </div>
@@ -369,22 +75,14 @@
             <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-list-task" style="color: var(--accent-green);"></i> Group List</span>
                 <div class="d-flex align-items-center flex-wrap gap-3">
-                    <!-- Search / Filter Form -->
+                    <!-- Search Form -->
                     <form method="GET" action="{{ url_for('academic.manage_groups') }}"
-                          class="d-flex flex-nowrap align-items-center gap-2" style="width: 800px; max-width: 100%;">
+                          class="d-flex flex-nowrap align-items-center gap-2" style="width: 600px; max-width: 100%;">
                         <input type="hidden" name="per_page" value="{{ per_page }}">
 
                         <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 me-4 flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addGroupModal" style="background-color: #6366f1; border-color: #6366f1; border-radius: 24px; font-weight: 500; font-size: 14px; white-space: nowrap;">
                             <i class="bi bi-plus-circle-fill"></i> Add New Group
                         </button>
-
-                        <!-- Session Filter (same style as Class inputs) -->
-                        <select name="session_id" class="form-select form-select-lg text-white border-secondary shadow-none flex-shrink-0" style="width: 180px; font-size: 15px; border-radius: 24px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
-                            <option value="">All Sessions</option>
-                            {% for s in sessions %}
-                                <option value="{{ s.SessionID }}" {% if session_filter == s.SessionID %}selected{% endif %}>{{ s.Session_name }}</option>
-                            {% endfor %}
-                        </select>
 
                         <div class="input-group input-group-lg flex-grow-1">
                             <input
@@ -395,13 +93,6 @@
                                 placeholder="Search by name or code..."
                                 style="font-size: 15px; border-bottom-left-radius: 24px; border-top-left-radius: 24px; background-color: rgba(255, 255, 255, 0.03);"
                             >
-{#                            {% if search_query or session_filter %}#}
-{#                            <a href="{{ url_for('academic.manage_groups', per_page=per_page) }}"#}
-{#                               class="btn btn-outline-secondary text-white-50 border-secondary d-flex align-items-center"#}
-{#                               style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">#}
-{#                                <i class="bi bi-x-lg"></i>#}
-{#                            </a>#}
-{#                            {% endif %}#}
                             <button type="submit" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: #6366f1; border-color: #6366f1; border-bottom-right-radius: 24px; border-top-right-radius: 24px; padding: 8px 24px; font-size: 15px; font-weight: 500;">
                                 <i class="bi bi-search"></i>
                             </button>
@@ -417,18 +108,18 @@
                             <th>ID</th>
                             <th>Code</th>
                             <th>Group Name</th>
-                            <th>Session Name</th>
+                            <th>Schedule ID</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% if groups %}
-                            {% for g, session_name in groups %}
+                            {% for g in groups %}
                             <tr>
                                 <td><span class="id-badge">{{ g.GroupID }}</span></td>
                                 <td><span class="code-pill">{{ g.Code }}</span></td>
                                 <td>{{ g.Name }}</td>
-                                <td><span class="session-badge"><i class="bi bi-calendar3"></i> {{ session_name }}</span></td>
+                                <td>{{ g.ScheduleID if g.ScheduleID is not none else '-' }}</td>
                                 <td class="text-center">
                                     <div class="d-inline-flex gap-2">
                                         <!-- Edit Trigger Button -->
@@ -438,8 +129,7 @@
                                                 data-id="{{ g.GroupID }}"
                                                 data-code="{{ g.Code }}"
                                                 data-name="{{ g.Name }}"
-                                                data-session="{{ g.SessionID }}"
-                                                data-schedule="{{ g.ScheduleID }}">
+                                                data-schedule="{{ g.ScheduleID if g.ScheduleID is not none else '' }}">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
 
@@ -461,8 +151,8 @@
                                     <div class="empty-state">
                                         <i class="bi bi-inbox" style="font-size: 40px;"></i>
                                         <p class="mt-2 text-white-50">
-                                            {% if search_query or session_filter %}
-                                                No groups found matching your filters.
+                                            {% if search_query %}
+                                                No groups found matching your search.
                                             {% else %}
                                                 No groups found in the system.
                                             {% endif %}
@@ -477,7 +167,7 @@
 
             <!-- Pagination & Per Page Selector Footer -->
             <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25 px-2 gap-3">
-                <!-- Per Page Dropdown Form -->
+                <!-- Per Page Dropdown -->
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-white-50" style="font-size: 13px;">Show</span>
                     <select id="perPageSelect" class="form-select form-select-sm text-white border-secondary" style="width: 75px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="changePerPage(this.value)">
@@ -503,7 +193,7 @@
 
     </div>
 
-{#    <!-- ================= MODALS ================= -->#}
+    <!-- ================= MODALS ================= -->
 
     <!-- 1. Add Group Modal -->
     <div class="modal fade" id="addGroupModal" tabindex="-1" aria-hidden="true">
@@ -511,7 +201,6 @@
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-plus-circle-fill" style="color: var(--accent-indigo);"></i> Add New Group</h5>
-{#                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>#}
                 </div>
                 <form method="POST" novalidate>
                     {{ form.hidden_tag() }}
@@ -527,13 +216,6 @@
                             <label class="form-label"><i class="bi bi-people-fill me-1"></i> {{ form.Name.label.text }}</label>
                             {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else "")) }}
                             {% for error in form.Name.errors %}
-                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="bi bi-clock-history me-1"></i> {{ form.SessionID.label.text }}</label>
-                            {{ form.SessionID(class="form-select " + ("is-invalid" if form.SessionID.errors else "")) }}
-                            {% for error in form.SessionID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
@@ -558,13 +240,12 @@
         </div>
     </div>
 
-{#    <!-- 2. Edit Group Modal -->#}
+    <!-- 2. Edit Group Modal -->
     <div class="modal fade" id="editGroupModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Group</h5>
-{#                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>#}
                 </div>
                 <form id="editForm" method="POST" novalidate>
                     {{ form.hidden_tag() }}
@@ -580,13 +261,6 @@
                             <label class="form-label"><i class="bi bi-people-fill me-1"></i> {{ form.Name.label.text }}</label>
                             {{ form.Name(class="form-control " + ("is-invalid" if form.Name.errors else ""), id="edit_name") }}
                             {% for error in form.Name.errors %}
-                                <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="bi bi-clock-history me-1"></i> {{ form.SessionID.label.text }}</label>
-                            {{ form.SessionID(class="form-select " + ("is-invalid" if form.SessionID.errors else ""), id="edit_session") }}
-                            {% for error in form.SessionID.errors %}
                                 <div class="invalid-feedback text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
                         </div>
@@ -611,13 +285,12 @@
         </div>
     </div>
 
-{#    <!-- 3. Delete Confirmation Modal -->#}
+    <!-- 3. Delete Confirmation Modal -->
     <div class="modal fade" id="deleteGroupModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
-{#                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>#}
                 </div>
                 <div class="modal-body p-4">
                     <p>Are you sure you want to delete group <strong id="delete_group_name" class="text-warning"></strong>?</p>
@@ -640,7 +313,6 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- JavaScript សម្រាប់គ្រប់គ្រង Modal, Toast Auto-hide, Per Page Change និង Re-opening Modal on Error -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
@@ -691,12 +363,10 @@
                 const groupId = button.getAttribute('data-id');
                 const code = button.getAttribute('data-code');
                 const name = button.getAttribute('data-name');
-                const sessionId = button.getAttribute('data-session');
                 const scheduleId = button.getAttribute('data-schedule');
 
                 document.getElementById('edit_code').value = code;
                 document.getElementById('edit_name').value = name;
-                document.getElementById('edit_session').value = sessionId;
                 document.getElementById('edit_schedule').value = scheduleId;
 
                 const editForm = document.getElementById('editForm');

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, SelectField, StringField
-from wtforms.validators import DataRequired, Length, ValidationError
+from wtforms.validators import DataRequired, Length, Optional, ValidationError
 from models.academic import Session, Class, Group, Subject
 
 
@@ -36,8 +36,7 @@ class ClassForm(FlaskForm):
 class GroupForm(FlaskForm):
     Code = StringField('Group Code', validators=[DataRequired(), Length(max=50)])
     Name = StringField('Group Name', validators=[DataRequired(), Length(max=100)])
-    SessionID = SelectField('Session', coerce=int, validators=[DataRequired()])
-    ScheduleID = IntegerField('Schedule ID')
+    ScheduleID = IntegerField('Schedule ID', validators=[Optional()])
 
     def validate_Code(self, field):
         group_id = getattr(self, '_group_id', None)
@@ -52,7 +51,6 @@ class GroupForm(FlaskForm):
 class SubjectForm(FlaskForm):
     Code = StringField('Subject Code', validators=[DataRequired(), Length(max=50)])
     Name = StringField('Subject Name', validators=[DataRequired(), Length(max=100)])
-    GroupID = SelectField('Group', coerce=int, validators=[DataRequired()])
 
     def validate_Code(self, field):
         subject_id = getattr(self, '_subject_id', None)
