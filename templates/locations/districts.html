@@ -256,30 +256,12 @@
     </div>
 
     <!-- 3. Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteDistrictModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete district <strong id="delete_district_name" class="text-warning"></strong>?</p>
-                    <p class="text-white small mb-0">This action cannot be undone.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i> Cancel
-                    </button>
-                    <form id="deleteForm" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">
-                            <i class="bi bi-trash3-fill me-1"></i> Delete District
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% with modal_id='deleteDistrictModal',
+            action_prefix='/location/districts/delete/',
+            item_label='district',
+            note='This action cannot be undone.' %}
+        {% include 'components/delete.html' %}
+    {% endwith %}
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -348,18 +330,6 @@
             }
         });
 
-        // Populate Delete Modal Data
-        const deleteDistrictModal = document.getElementById('deleteDistrictModal');
-        deleteDistrictModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const districtId = button.getAttribute('data-id');
-            const districtName = button.getAttribute('data-name');
-
-            document.getElementById('delete_district_name').textContent = districtName;
-
-            const deleteForm = document.getElementById('deleteForm');
-            deleteForm.action = `/location/districts/delete/${districtId}`;
-        });
 
         // Auto-hide Toast Notifications after 4 seconds
         document.addEventListener("DOMContentLoaded", function() {

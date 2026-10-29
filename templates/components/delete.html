@@ -1,0 +1,42 @@
+
+{% set _modal_id = modal_id|default('deleteUserModal') %}
+{% set _action_prefix = action_prefix|default('/users/profiles/delete/') %}
+{% set _item_label = item_label|default('profile') %}
+{% set _note = note|default('This action cannot be undone.') %}
+
+<div class="modal fade" id="{{ _modal_id }}" tabindex="-1" aria-hidden="true" data-action-prefix="{{ _action_prefix }}">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Confirm Deletion</h5>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete {{ _item_label }} <strong data-role="delete-name" class="text-warning"></strong>?</p>
+                <p class="text-white-50 small mb-0">{{ _note }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                <form data-role="delete-form" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash3-fill me-1"></i> Delete {{ _item_label|capitalize }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const modalEl = document.getElementById('{{ _modal_id }}');
+        if (!modalEl) return;
+
+        modalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            modalEl.querySelector('[data-role="delete-name"]').textContent =
+                button.dataset.name || button.dataset.label || '';
+            modalEl.querySelector('[data-role="delete-form"]').action =
+                modalEl.dataset.actionPrefix + button.dataset.id;
+        });
+    })();
+</script>

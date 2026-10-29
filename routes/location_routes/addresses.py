@@ -28,6 +28,8 @@ def manage_addresses():
         db.session.commit()
         flash('Address added successfully!', 'success')
         return redirect(url_for('location.manage_addresses'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -68,6 +70,8 @@ def edit_address(id):
         db.session.commit()
         flash('Address updated successfully!', 'success')
         return redirect(url_for('location.manage_addresses'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Attendance - Attendance Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/static/images/logo/logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}?v=3" rel="stylesheet">
+
+    <style>
+        .status-select { min-width: 140px; font-weight: 600; }
+        .status-select[data-status="Present"]    { color: #10b981; border-color: rgba(16,185,129,.5); }
+        .status-select[data-status="Late"]       { color: #f59e0b; border-color: rgba(245,158,11,.5); }
+        .status-select[data-status="Absent"]     { color: #f43f5e; border-color: rgba(244,63,94,.5); }
+        .status-select[data-status="Permission"] { color: #38bdf8; border-color: rgba(56,189,248,.5); }
+        .count-chip { font-size: 13px; padding: 6px 12px; border-radius: 24px; border: 1px solid var(--border-color); background: rgba(255,255,255,.03); }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar Navigation -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Flash Messages as Popup Toasts -->
+    <div class="toast-container-custom">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="custom-toast alert-{{ category }}" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="bi bi-exclamation-circle-fill text-danger fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-warning fs-5"></i>
+                            {% endif %}
+                            <span style="font-size: 13px; font-weight: 500;">{{ message }}</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 10px;" onclick="this.parentElement.remove()"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Wrapper Area -->
+    <div class="wrapper">
+
+        <!-- Header Section -->
+        <div class="dashboard-header flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3 flex-grow-1">
+                <button class="btn-menu-toggle d-lg-none" id="sidebarToggle" type="button" aria-label="Toggle Navigation">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div>
+                    <h1>Take Attendance</h1>
+                    <p>Select a session, class and group, then set the status of each student.</p>
+                </div>
+            </div>
+            <div class="header-actions ms-auto">
+                <a href="{{ url_for('attendance.manage_attendances', session_id=session_id, group_id=group_id, subject_id=subject_id) }}" class="btn-custom-secondary">
+                    <i class="bi bi-arrow-left"></i> Attendance Records
+                </a>
+            </div>
+        </div>
+
+        <!-- Step 1: choose Session / Class / Group / Subject / Date -->
+        <div class="panel">
+            <div class="panel-title">
+                <span><i class="bi bi-funnel-fill" style="color: var(--accent-indigo);"></i> Select Class Session</span>
+            </div>
+
+            <form method="GET" action="{{ url_for('attendance.take_attendance') }}" id="filterForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label"><i class="bi bi-calendar3 me-1"></i> Session</label>
+                        <select name="session_id" class="form-select rounded-pill"
+                                onchange="this.form.class_id.value=''; this.form.group_id.value=''; this.form.submit()">
+                            <option value="">-- All sessions --</option>
+                            {% for s in sessions %}
+                                <option value="{{ s.SessionID }}" {% if s.SessionID == session_id %}selected{% endif %}>{{ s.Session_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label"><i class="bi bi-mortarboard-fill me-1"></i> Class</label>
+                        <select name="class_id" class="form-select rounded-pill" onchange="this.form.submit()">
+                            <option value="">-- All classes --</option>
+                            {% for c in classes %}
+                                <option value="{{ c.ClassID }}" {% if c.ClassID == class_id %}selected{% endif %}>{{ c.Name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label"><i class="bi bi-people-fill me-1"></i> Group</label>
+                        <select name="group_id" class="form-select rounded-pill" onchange="this.form.submit()">
+                            <option value="">-- Select group --</option>
+                            {% for g in groups %}
+                                <option value="{{ g.GroupID }}" {% if g.GroupID == group_id %}selected{% endif %}>{{ g.Name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> Subject</label>
+                        <select name="subject_id" class="form-select rounded-pill" onchange="this.form.submit()">
+                            <option value="">-- Select subject --</option>
+                            {% for s in subjects %}
+                                <option value="{{ s.SubjectID }}" {% if s.SubjectID == subject_id %}selected{% endif %}>{{ s.Name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Date</label>
+                        <input type="date" name="date" class="form-control rounded-pill" value="{{ date_str }}" onchange="this.form.submit()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label"><i class="bi bi-clock me-1"></i> Time</label>
+                        <input type="time" name="time" class="form-control rounded-pill" value="{{ time_str }}">
+                    </div>
+                </div>
+                <div class="mt-3 text-end">
+                    <button type="submit" class="btn-custom-primary" style="padding: 10px 16px;">
+                        <i class="bi bi-search"></i> Load Students
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 2: students of the selected group -->
+        {% if group_id %}
+        <div class="panel">
+            <form method="POST" action="{{ url_for('attendance.take_attendance') }}" id="attendanceForm">
+                {{ form.hidden_tag() }}
+                <input type="hidden" name="session_id" value="{{ session_id or '' }}">
+                <input type="hidden" name="class_id" value="{{ class_id or '' }}">
+                <input type="hidden" name="group_id" value="{{ group_id }}">
+                <input type="hidden" name="subject_id" value="{{ subject_id or '' }}">
+                <input type="hidden" name="date" value="{{ date_str }}">
+                <input type="hidden" name="time" value="{{ time_str }}">
+
+                <div class="panel-title flex-wrap gap-3">
+                    <span>
+                        <i class="bi bi-people-fill text-success"></i>
+                        {% if current_session %}<span class="text-white-50" style="font-size: 13px;">{{ current_session.Session_name }} &middot;</span>{% endif %}
+                        {% if current_class %}<span class="text-white-50" style="font-size: 13px;">{{ current_class.Name }} &middot;</span>{% endif %}
+                        {{ current_group.Name if current_group else '' }}
+                        {% if current_subject %}
+                            <span class="text-white-50">/</span>
+                            <span class="text-info">{{ current_subject.Name }}</span>
+                        {% endif %}
+                        <span class="text-white-50" style="font-size: 13px; font-weight: 500;">&middot; {{ date_str }}</span>
+                    </span>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn-custom-secondary" onclick="markAll('Present')">
+                            <i class="bi bi-check2-all"></i> All Present
+                        </button>
+                        <button type="button" class="btn-custom-secondary" onclick="markAll('Absent')">
+                            <i class="bi bi-x-lg"></i> All Absent
+                        </button>
+                    </div>
+                </div>
+
+                {% if not subject_id %}
+                <div class="alert alert-warning py-2 px-3 mb-3" style="font-size: 13px;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Select a subject above before saving.
+                </div>
+                {% endif %}
+
+                {% if students %}
+                <div class="d-flex flex-wrap gap-2 mb-3 px-1">
+                    <span class="count-chip">Total: <strong>{{ students|length }}</strong></span>
+                    <span class="count-chip text-success">Present: <strong id="cntPresent">0</strong></span>
+                    <span class="count-chip text-warning">Late: <strong id="cntLate">0</strong></span>
+                    <span class="count-chip text-danger">Absent: <strong id="cntAbsent">0</strong></span>
+                    <span class="count-chip text-info">Permission: <strong id="cntPermission">0</strong></span>
+                    {% if existing %}
+                        <span class="count-chip text-white-50"><i class="bi bi-pencil-square"></i> {{ existing|length }} already recorded - saving will update them</span>
+                    {% endif %}
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark-custom">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Gender</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in students %}
+                            {% set rec = existing.get(s.ProfileID) %}
+                            {% set cur = rec.Status if rec else 'Present' %}
+                            <tr>
+                                <td><span class="id-badge">{{ loop.index }}</span></td>
+                                <td><span class="code-pill">{{ s.Code }}</span></td>
+                                <td>
+                                    <div class="fw-semibold">{{ s.Name }}</div>
+                                    {% if rec %}<small style="font-size: 11px; color: var(--text-muted);">Recorded {{ rec.Date.strftime('%H:%M') if rec.Date else '' }}</small>{% endif %}
+                                </td>
+                                <td>{{ s.Gender or '-' }}</td>
+                                <td>
+                                    <select name="status_{{ s.ProfileID }}" class="form-select form-select-sm status-select rounded-pill" data-status="{{ cur }}">
+                                        {% for st in ['Present', 'Late', 'Absent', 'Permission'] %}
+                                            <option value="{{ st }}" {% if cur == st %}selected{% endif %}>{{ st }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td style="min-width: 200px;">
+                                    <input type="text" name="remarks_{{ s.ProfileID }}" class="form-control form-control-sm rounded-pill"
+                                           placeholder="Optional" value="{{ rec.Remarks or '' if rec else '' }}">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary border-opacity-25">
+                    <a href="{{ url_for('attendance.manage_attendances', session_id=session_id, group_id=group_id, subject_id=subject_id) }}" class="btn-custom-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-custom-primary" style="padding: 10px 22px;" {% if not subject_id %}disabled{% endif %}>
+                        <i class="bi bi-check-lg"></i> Save Attendance
+                    </button>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    No students found in this group.
+                </div>
+                {% endif %}
+            </form>
+        </div>
+        {% else %}
+        <div class="panel">
+            <div class="empty-state">
+                <i class="bi bi-hand-index-thumb"></i>
+                Select a group to load the students.
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Bootstrap JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // ---- Sidebar toggle (mobile) ----
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                if (sidebar) sidebar.classList.toggle('active');
+                if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+            }
+            function closeSidebar() {
+                if (sidebar) sidebar.classList.remove('active');
+                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+            }
+
+            if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+            if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+            if (sidebar) {
+                sidebar.querySelectorAll('a.nav-item-custom').forEach(link => {
+                    link.addEventListener('click', function () {
+                        if (window.innerWidth <= 992) closeSidebar();
+                    });
+                });
+            }
+
+            // ---- Status colour + live counters ----
+            const selects = document.querySelectorAll('.status-select');
+
+            function updateCounts() {
+                const counts = { Present: 0, Late: 0, Absent: 0, Permission: 0 };
+                selects.forEach(sel => { counts[sel.value] = (counts[sel.value] || 0) + 1; });
+                Object.keys(counts).forEach(k => {
+                    const el = document.getElementById('cnt' + k);
+                    if (el) el.textContent = counts[k];
+                });
+            }
+
+            selects.forEach(sel => {
+                sel.addEventListener('change', () => {
+                    sel.dataset.status = sel.value;
+                    updateCounts();
+                });
+            });
+            updateCounts();
+
+            // ---- Auto-hide toasts after 4 seconds ----
+            document.querySelectorAll('.custom-toast').forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('hide');
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            });
+        });
+
+        // Set every student to the same status
+        function markAll(status) {
+            document.querySelectorAll('.status-select').forEach(sel => {
+                sel.value = status;
+                sel.dataset.status = status;
+            });
+            document.querySelectorAll('.status-select')[0]?.dispatchEvent(new Event('change'));
+        }
+    </script>
+</body>
+</html>

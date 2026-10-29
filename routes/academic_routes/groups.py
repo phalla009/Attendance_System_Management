@@ -5,8 +5,12 @@ from forms.academic_form import GroupForm
 from models.academic import Group, Session
 from models.user import UserProfile
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from . import academic_bp
+
+# The Address model class, taken from the relationship itself so no import path is needed.
+Address = UserProfile.address_rel.property.mapper.class_
 
 
 @academic_bp.route('/groups', methods=['GET', 'POST'])
@@ -22,7 +26,7 @@ def manage_groups():
         group = Group(
             Code=form.Code.data,
             Name=form.Name.data,
-            ScheduleID=form.ScheduleID.data,
+            ScheduleID=form.ScheduleID.data or None,
         )
         db.session.add(group)
         db.session.commit()
@@ -31,7 +35,7 @@ def manage_groups():
     elif request.method == 'POST':
         flash('Please correct the errors in the form.', 'danger')
 
-    query = Group.query
+    query = Group.query.options(joinedload(Group.session))
 
     if search_query:
         query = query.filter(
@@ -64,7 +68,7 @@ def edit_group(id):
     if form.validate_on_submit():
         group.Code = form.Code.data
         group.Name = form.Name.data
-        group.ScheduleID = form.ScheduleID.data
+        group.ScheduleID = form.ScheduleID.data or None
         db.session.commit()
         flash('Group updated successfully!', 'success')
         return redirect(url_for('academic.manage_groups'))
@@ -73,7 +77,9 @@ def edit_group(id):
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    pagination = Group.query.order_by(Group.GroupID).paginate(page=page, per_page=per_page, error_out=False)
+    pagination = (Group.query.options(joinedload(Group.session))
+                  .order_by(Group.GroupID)
+                  .paginate(page=page, per_page=per_page, error_out=False))
     groups = pagination.items
 
     return render_template('academic/groups.html', form=form, groups=groups, per_page=per_page,
@@ -117,7 +123,7 @@ def groups_cards():
 
     query = query.group_by(Group.GroupID, Session.Session_name)
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    groups = pagination.items  # This will now contain tuples of (Group, session_name, total_students)
+    groups = pagination.items  # tuples of (Group, session_name, total_students)
 
     return render_template(
         'academic/groups_cards.html',
@@ -149,7 +155,17 @@ def group_students(group_id):
         )
 
     filtered_count = query.count()
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Load address + village / commune / district / province together with each student
+    query = query.options(
+        joinedload(UserProfile.address_rel).joinedload(Address.village),
+        joinedload(UserProfile.address_rel).joinedload(Address.commune),
+        joinedload(UserProfile.address_rel).joinedload(Address.district),
+        joinedload(UserProfile.address_rel).joinedload(Address.province),
+        joinedload(UserProfile.contact_rel),
+    )
+
+    pagination = query.order_by(UserProfile.ProfileID).paginate(page=page, per_page=per_page, error_out=False)
     students = pagination.items
 
     prev_url = url_for('academic.group_students', group_id=group_id, page=pagination.prev_num,

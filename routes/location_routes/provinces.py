@@ -16,6 +16,8 @@ def manage_provinces():
         db.session.commit()
         flash('Province added successfully!', 'success')
         return redirect(url_for('location.manage_provinces'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -47,6 +49,8 @@ def edit_province(id):
         db.session.commit()
         flash('Province updated successfully!', 'success')
         return redirect(url_for('location.manage_provinces'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)

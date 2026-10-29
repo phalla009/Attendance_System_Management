@@ -194,7 +194,7 @@
     <!-- 1. Add Subject Modal -->
     <div class="modal fade" id="addSubjectModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-content">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-plus-circle-fill" style="color: var(--accent-indigo);"></i> Add New Subject</h5>
                 </div>
@@ -232,7 +232,7 @@
     <!-- 2. Edit Subject Modal -->
     <div class="modal fade" id="editSubjectModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-content">
                 <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                     <h5 class="modal-title"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Subject</h5>
                 </div>
@@ -269,29 +269,12 @@
     </div>
 
     <!-- 3. Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteSubjectModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
-                <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
-                </div>
-                <div class="modal-body p-4">
-                    <p>Are you sure you want to delete subject <strong id="delete_subject_name" class="text-warning"></strong>?</p>
-                    <p class="text-white-50 small mb-0">This action cannot be undone.</p>
-                </div>
-                <div class="modal-footer border-top border-secondary border-opacity-25 px-4 py-3">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i> Cancel
-                    </button>
-                    <form id="deleteForm" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">
-                            <i class="bi bi-trash3-fill me-1"></i> Delete Subject
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% with modal_id='deleteSubjectModal',
+            action_prefix='/academic/subjects/delete/',
+            item_label='subject',
+            note='This action cannot be undone.' %}
+        {% include 'components/delete.html' %}
+    {% endwith %}
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -354,18 +337,6 @@
                 const editForm = document.getElementById('editForm');
                 editForm.action = `/academic/subjects/edit/${subjectId}`;
             }
-        });
-
-        const deleteSubjectModal = document.getElementById('deleteSubjectModal');
-        deleteSubjectModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const subjectId = button.getAttribute('data-id');
-            const subjectName = button.getAttribute('data-name');
-
-            document.getElementById('delete_subject_name').textContent = subjectName;
-
-            const deleteForm = document.getElementById('deleteForm');
-            deleteForm.action = `/academic/subjects/delete/${subjectId}`;
         });
 
         document.addEventListener("DOMContentLoaded", function() {

@@ -13,8 +13,60 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
+    <style>
+        /* ធ្វើឲ្យអក្សរក្នុង dropdown option អានច្បាស់ */
+        select.form-select option {
+            background-color: #0f172a;
+            color: #ffffff;
+        }
+    </style>
 </head>
 <body>
+
+    {# ================= MACRO: Address fields (Home, Street, Province → District → Commune → Village) ================= #}
+    {% macro address_fields(prefix, provinces) %}
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label"><i class="bi bi-house me-1"></i> Home (ផ្ទះលេខ)</label>
+            <input type="text" name="home" id="{{ prefix }}_home" class="form-control">
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label"><i class="bi bi-signpost me-1"></i> Street (ផ្លូវ)</label>
+            <input type="text" name="street" id="{{ prefix }}_street" class="form-control">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label"><i class="bi bi-geo-alt me-1"></i> Province (រាជធានី/ខេត្ត)</label>
+            <select name="province_id" id="{{ prefix }}_province" class="form-select">
+                <option value="">-- Select Province --</option>
+                {% for p in provinces %}
+                    <option value="{{ p.ProvinceID }}">{{ p.Name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label"><i class="bi bi-geo-alt me-1"></i> District (ស្រុក/ខណ្ឌ)</label>
+            <select name="district_id" id="{{ prefix }}_district" class="form-select">
+                <option value="">-- Select District --</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label"><i class="bi bi-geo-alt me-1"></i> Commune (ឃុំ/សង្កាត់)</label>
+            <select name="commune_id" id="{{ prefix }}_commune" class="form-select">
+                <option value="">-- Select Commune --</option>
+            </select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label"><i class="bi bi-geo-alt me-1"></i> Village (ភូមិ)</label>
+            <select name="village_id" id="{{ prefix }}_village" class="form-select">
+                <option value="">-- Select Village --</option>
+            </select>
+        </div>
+    </div>
+    {% endmacro %}
 
     <!-- Sidebar Overlay for Mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -56,12 +108,12 @@
                 </button>
                 <div>
                     <h1>Manage User Profiles</h1>
-                    <p>គ្រប់គ្រងទិន្នន័យប្រូហ្វាល និងព័ត៌មានលម្អិតរបស់អ្នកប្រើប្រាស់ក្នុងប្រព័ន្ធ</p>
+                    <p>គ្រប់គ្រងទិន្នន័យប្រូហ្វាល និងព័ត៌មានលម្អិតរបស់អ្នកប្រើប្រាស់</p>
                 </div>
             </div>
             <div>
-                <a href="{{ url_for('dashboard') if url_for('dashboard') else '#' }}" class="btn-custom-secondary">
-                    <i class="bi bi-house-door me-1"></i> Back to Dashboard
+                <a href="{{ url_for('user_index') }}" class="btn-custom-secondary">
+                    <i class="bi bi-house-door me-1"></i> Back to User Dashboard
                 </a>
             </div>
         </div>
@@ -71,45 +123,54 @@
             <div class="panel-title d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-table text-white"></i> User Profile List</span>
 
-                <!-- Search & Filter Form Toolbar -->
-                <form method="GET" action="{{ url_for('user.manage_profiles') }}" class="d-flex flex-nowrap align-items-center gap-2">
+               <!-- Search & Filter Form Toolbar -->
+                <form method="GET" action="{{ url_for('user.manage_profiles') }}"
+                      class="d-flex flex-nowrap align-items-center gap-2" style="width: 620px; max-width: 100%;">
                     <input type="hidden" name="per_page" value="{{ per_page }}">
 
                     <!-- User Type Filter Dropdown -->
-                    <select name="type_id" class="form-select form-select-sm text-white border-secondary" style="width: 140px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
-                        <option value="" class="bg-dark text-white">All Types</option>
+                    <select name="type_id" class="form-select form-select-sm text-white border-secondary flex-shrink-0"
+                            style="width: 130px; font-size: 13px; border-radius: 24px; background-color: rgba(255, 255, 255, 0.03);"
+                            onchange="this.form.submit()">
+                        <option value="">All Types</option>
                         {% for t in user_types %}
-                            <option value="{{ t.TypeID }}" class="bg-dark text-white" {% if type_filter == t.TypeID %}selected{% endif %}>{{ t.TypeName }}</option>
+                            <option value="{{ t.TypeID }}" {% if type_filter == t.TypeID %}selected{% endif %}>{{ t.TypeName }}</option>
                         {% endfor %}
                     </select>
 
                     <!-- Group Filter Dropdown -->
-                    <select name="group_id" class="form-select form-select-sm text-white border-secondary" style="width: 140px; font-size: 13px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);" onchange="this.form.submit()">
-                        <option value="" class="bg-dark text-white">All Groups</option>
+                    <select name="group_id" class="form-select form-select-sm text-white border-secondary flex-shrink-0"
+                            style="width: 130px; font-size: 13px; border-radius: 24px; background-color: rgba(255, 255, 255, 0.03);"
+                            onchange="this.form.submit()">
+                        <option value="">All Groups</option>
                         {% for g in groups %}
-                            <option value="{{ g.GroupID }}" class="bg-dark text-white" {% if group_filter == g.GroupID %}selected{% endif %}>{{ g.Name }}</option>
+                            <option value="{{ g.GroupID }}" {% if group_filter == g.GroupID %}selected{% endif %}>{{ g.Name }}</option>
                         {% endfor %}
                     </select>
 
-                    <!-- Unified Search Input Bar -->
-                    <div class="input-group input-group-sm" style="max-width: 240px; width: 100%;">
-                        <span class="input-group-text text-white-50 border-secondary" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: rgba(255, 255, 255, 0.03);">
-                            <i class="bi bi-search"></i>
-                        </span>
+                    <!-- Search Input + Submit Button -->
+                    <div class="input-group flex-grow-1">
                         <input
                             type="text"
                             name="q"
                             value="{{ search_query or '' }}"
                             class="form-control text-white border-secondary shadow-none"
-                            placeholder="Search code or name..."
-                            style="font-size: 13px; background-color: rgba(255, 255, 255, 0.03);"
+                            placeholder="Search by code or name..."
+                            style="font-size: 14px; border-bottom-left-radius: 24px; border-top-left-radius: 24px; background-color: rgba(255, 255, 255, 0.03);"
                         >
+
                         {% if search_query or type_filter or group_filter %}
                         <a href="{{ url_for('user.manage_profiles', per_page=per_page) }}"
-                           class="btn btn-sm btn-outline-secondary text-white-50 border-secondary d-flex align-items-center" style="background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">
+                           class="btn btn-outline-secondary text-white-50 border-secondary d-flex align-items-center"
+                           style="border-radius: 0; background-color: rgba(255, 255, 255, 0.03);" title="Clear filters">
                             <i class="bi bi-x-lg"></i>
                         </a>
                         {% endif %}
+
+                        <button type="submit" class="btn btn-primary d-flex align-items-center gap-2"
+                                style="background-color: #6366f1; border-color: #6366f1; border-bottom-right-radius: 24px; border-top-right-radius: 24px; padding: 6px 20px; font-size: 14px; font-weight: 500;">
+                            <i class="bi bi-search"></i>
+                        </button>
                     </div>
                 </form>
 
@@ -147,6 +208,7 @@
                     <tbody>
                         {% if profiles %}
                             {% for u in profiles %}
+                            {% set a = u.address_rel %}
                             <tr>
                                 <td><span class="id-badge">{{ u.ProfileID }}</span></td>
                                 <td><span class="code-pill">{{ u.Code }}</span></td>
@@ -191,8 +253,13 @@
                                                 data-typeid="{{ u.TypeID }}"
                                                 data-groupid="{{ u.GroupID or '' }}"
                                                 data-subjectid="{{ u.SubjectID or '' }}"
-                                                data-addressid="{{ u.AddressID or '' }}"
-                                                data-contactid="{{ u.ContactNoID or '' }}">
+                                                data-contactid="{{ u.ContactNoID or '' }}"
+                                                data-home="{{ a.Home if a and a.Home else '' }}"
+                                                data-street="{{ a.Street if a and a.Street else '' }}"
+                                                data-provinceid="{{ a.ProvinceID if a and a.ProvinceID else '' }}"
+                                                data-districtid="{{ a.DistrictID if a and a.DistrictID else '' }}"
+                                                data-communeid="{{ a.CommuneID if a and a.CommuneID else '' }}"
+                                                data-villageid="{{ a.VillageID if a and a.VillageID else '' }}">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
 
@@ -253,8 +320,7 @@
         {% for u in profiles %}
         <div class="modal fade" id="viewProfileModal-{{ u.ProfileID }}" tabindex="-1" aria-labelledby="profileModalLabel-{{ u.ProfileID }}" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content bg-dark text-white border border-secondary border-opacity-50 shadow-lg" style="border-radius: 12px;">
-
+                <div class="modal-content shadow-lg">
                     <!-- Modal Header -->
                     <div class="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
                         <h5 class="modal-title" id="profileModalLabel-{{ u.ProfileID }}">
@@ -328,10 +394,10 @@
                                         <span class="text-white fw-semibold" style="font-size: 13px;">
                                             {% if u.address_rel %}
                                                 ផ្ទះលេខ {{ u.address_rel.Home or '-' }}, ផ្លូវ {{ u.address_rel.Street or '-' }}
-                                                {% if u.address_rel.village_rel %}, ភូមិ {{ u.address_rel.village_rel.Name }}{% endif %}
-                                                {% if u.address_rel.commune_rel %}, ឃុំ/សង្កាត់ {{ u.address_rel.commune_rel.Name }}{% endif %}
-                                                {% if u.address_rel.district_rel %}, ស្រុក/ខណ្ឌ {{ u.address_rel.district_rel.Name }}{% endif %}
-                                                {% if u.address_rel.province_rel %}, រាជធានី/ខេត្ត {{ u.address_rel.province_rel.Name }}{% endif %}
+                                                {% if u.address_rel.village %}, ភូមិ {{ u.address_rel.village.Name }}{% endif %}
+                                                {% if u.address_rel.commune %}, ឃុំ/សង្កាត់ {{ u.address_rel.commune.Name }}{% endif %}
+                                                {% if u.address_rel.district %}, ស្រុក/ខណ្ឌ {{ u.address_rel.district.Name }}{% endif %}
+                                                {% if u.address_rel.province %}, រាជធានី/ខេត្ត {{ u.address_rel.province.Name }}{% endif %}
                                             {% else %}
                                                 -
                                             {% endif %}
@@ -354,9 +420,9 @@
         {% endfor %}
     {% endif %}
 
-    <!-- ================= MODALS ================= -->
+{#    <!-- ================= MODALS ================= -->#}
 
-    <!-- 1. Add Student Profile Modal -->
+{#    <!-- 1. Add Student Profile Modal -->#}
     <div class="modal fade" id="addStudentModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -401,14 +467,12 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ student_form.AddressID.label.text }}</label>
-                                {{ student_form.AddressID(class="form-select") }}
-                            </div>
-                            <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ student_form.ContactNoID.label.text }}</label>
                                 {{ student_form.ContactNoID(class="form-select") }}
                             </div>
                         </div>
+
+                        {{ address_fields('add_student', provinces) }}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
@@ -464,14 +528,12 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ teacher_form.AddressID.label.text }}</label>
-                                {{ teacher_form.AddressID(class="form-select") }}
-                            </div>
-                            <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ teacher_form.ContactNoID.label.text }}</label>
                                 {{ teacher_form.ContactNoID(class="form-select") }}
                             </div>
                         </div>
+
+                        {{ address_fields('add_teacher', provinces) }}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
@@ -482,7 +544,7 @@
         </div>
     </div>
 
-    <!-- 3. Edit User Profile Modal (Dynamic Student/Teacher Toggle with Icons) -->
+{#    <!-- 3. Edit User Profile Modal (Dynamic Student/Teacher Toggle with Icons) -->#}
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -532,14 +594,12 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-geo-alt me-1"></i> {{ student_form.AddressID.label.text }}</label>
-                                {{ student_form.AddressID(class="form-select", id="edit_address_id") }}
-                            </div>
-                            <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ student_form.ContactNoID.label.text }}</label>
                                 {{ student_form.ContactNoID(class="form-select", id="edit_contact_id") }}
                             </div>
                         </div>
+
+                        {{ address_fields('edit', provinces) }}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
@@ -551,25 +611,7 @@
     </div>
 
     <!-- 4. Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Confirm Deletion</h5>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete profile <strong id="delete_user_name" class="text-warning"></strong>?</p>
-                    <p class="text-white-50 small mb-0">This action cannot be undone and will remove associated data.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
-                    <form id="deleteUserForm" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger"><i class="bi bi-trash3-fill me-1"></i> Delete Profile</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'components/delete.html' %}
 
     <!-- 5. Import Excel Modal -->
     <div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true">
@@ -598,8 +640,8 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- JavaScript សម្រាប់គ្រប់គ្រង Modal, Toast, Per Page Change, Sidebar Toggle និង Data Population -->
     <script>
+        // ================= Sidebar =================
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');
@@ -615,94 +657,116 @@
                 if(sidebarOverlay) sidebarOverlay.classList.remove('active');
             }
 
-            if(sidebarToggle) {
-                sidebarToggle.addEventListener('click', toggleSidebar);
-            }
-
-            if(sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', closeSidebar);
-            }
+            if(sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+            if(sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 
             if(sidebar) {
-                const navLinks = sidebar.querySelectorAll('a.nav-item-custom');
-                navLinks.forEach(link => {
+                sidebar.querySelectorAll('a.nav-item-custom').forEach(link => {
                     link.addEventListener('click', function() {
-                        if(window.innerWidth <= 992) {
-                            closeSidebar();
-                        }
+                        if(window.innerWidth <= 992) closeSidebar();
                     });
                 });
             }
         });
 
-        // Function to handle changing items per page dynamically via URL query parameter
+        // ================= Per page =================
         function changePerPage(perPageValue) {
             const url = new URL(window.location.href);
             url.searchParams.set('per_page', perPageValue);
-            url.searchParams.set('page', 1); // Reset to page 1 on limit change
+            url.searchParams.set('page', 1);
             window.location.href = url.toString();
         }
 
-        // Populate Edit User Modal Data & Toggle Group/Subject fields based on User Type
+        // ================= Address cascade (Province → District → Commune → Village) =================
+        async function loadOptions(url, select, placeholder, selectedValue) {
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+            if (!url) return;
+            try {
+                const res = await fetch(url);
+                if (!res.ok) return;
+                const items = await res.json();
+                items.forEach(i => select.add(new Option(i.name, i.id)));
+                if (selectedValue) select.value = String(selectedValue);
+            } catch (err) {
+                console.error('Failed to load options from', url, err);
+            }
+        }
+
+        function initAddressCascade(prefix) {
+            const p = document.getElementById(prefix + '_province');
+            const d = document.getElementById(prefix + '_district');
+            const c = document.getElementById(prefix + '_commune');
+            const v = document.getElementById(prefix + '_village');
+
+            p.addEventListener('change', async () => {
+                await loadOptions(p.value ? `/users/api/districts/${p.value}` : null, d, '-- Select District --');
+                await loadOptions(null, c, '-- Select Commune --');
+                await loadOptions(null, v, '-- Select Village --');
+            });
+
+            d.addEventListener('change', async () => {
+                await loadOptions(d.value ? `/users/api/communes/${d.value}` : null, c, '-- Select Commune --');
+                await loadOptions(null, v, '-- Select Village --');
+            });
+
+            c.addEventListener('change', async () => {
+                await loadOptions(c.value ? `/users/api/villages/${c.value}` : null, v, '-- Select Village --');
+            });
+        }
+
+        ['add_student', 'add_teacher', 'edit'].forEach(initAddressCascade);
+
+        // ================= Populate Edit Modal =================
         const editUserModal = document.getElementById('editUserModal');
-        editUserModal.addEventListener('show.bs.modal', function (event) {
+        editUserModal.addEventListener('show.bs.modal', async function (event) {
             const button = event.relatedTarget;
-            if (button) {
-                const profileId = button.getAttribute('data-id');
-                const code = button.getAttribute('data-code');
-                const name = button.getAttribute('data-name');
-                const gender = button.getAttribute('data-gender');
-                const dob = button.getAttribute('data-dob');
-                const typeId = button.getAttribute('data-typeid');
-                const groupId = button.getAttribute('data-groupid');
-                const subjectId = button.getAttribute('data-subjectid');
-                const addressId = button.getAttribute('data-addressid');
-                const contactId = button.getAttribute('data-contactid');
+            if (!button) return;
 
-                document.getElementById('edit_code').value = code;
-                document.getElementById('edit_name').value = name;
-                document.getElementById('edit_gender').value = gender;
-                document.getElementById('edit_dob').value = dob;
-                document.getElementById('edit_address_id').value = addressId;
-                document.getElementById('edit_contact_id').value = contactId;
+            const code = button.dataset.code;
 
-                const groupContainer = document.getElementById('edit_group_container');
-                const subjectContainer = document.getElementById('edit_subject_container');
+            document.getElementById('edit_code').value = code || '';
+            document.getElementById('edit_name').value = button.dataset.name || '';
+            document.getElementById('edit_gender').value = button.dataset.gender || '';
+            document.getElementById('edit_dob').value = button.dataset.dob || '';
+            document.getElementById('edit_contact_id').value = button.dataset.contactid || '';
 
-                if (code && code.startsWith('T')) {
-                    groupContainer.classList.add('d-none');
-                    subjectContainer.classList.remove('d-none');
-                    document.getElementById('edit_subject_id').value = subjectId;
-                } else {
-                    subjectContainer.classList.add('d-none');
-                    groupContainer.classList.remove('d-none');
-                    document.getElementById('edit_group_id').value = groupId;
-                }
+            const groupContainer = document.getElementById('edit_group_container');
+            const subjectContainer = document.getElementById('edit_subject_container');
 
-                const editForm = document.getElementById('editUserForm');
-                editForm.action = `/users/profiles/edit/${profileId}`;
+            if (code && code.startsWith('T')) {
+                groupContainer.classList.add('d-none');
+                subjectContainer.classList.remove('d-none');
+                document.getElementById('edit_subject_id').value = button.dataset.subjectid || '';
+            } else {
+                subjectContainer.classList.add('d-none');
+                groupContainer.classList.remove('d-none');
+                document.getElementById('edit_group_id').value = button.dataset.groupid || '';
             }
+
+            document.getElementById('editUserForm').action = `/users/profiles/edit/${button.dataset.id}`;
+
+            // ----- Address -----
+            document.getElementById('edit_home').value = button.dataset.home || '';
+            document.getElementById('edit_street').value = button.dataset.street || '';
+
+            const pId = button.dataset.provinceid;
+            const dId = button.dataset.districtid;
+            const cId = button.dataset.communeid;
+            const vId = button.dataset.villageid;
+
+            document.getElementById('edit_province').value = pId || '';
+
+            await loadOptions(pId ? `/users/api/districts/${pId}` : null,
+                document.getElementById('edit_district'), '-- Select District --', dId);
+            await loadOptions(dId ? `/users/api/communes/${dId}` : null,
+                document.getElementById('edit_commune'), '-- Select Commune --', cId);
+            await loadOptions(cId ? `/users/api/villages/${cId}` : null,
+                document.getElementById('edit_village'), '-- Select Village --', vId);
         });
 
-        // Populate Delete Modal Data
-        const deleteUserModal = document.getElementById('deleteUserModal');
-        deleteUserModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            if (button) {
-                const profileId = button.getAttribute('data-id');
-                const name = button.getAttribute('data-name');
-
-                document.getElementById('delete_user_name').textContent = name;
-
-                const deleteForm = document.getElementById('deleteUserForm');
-                deleteForm.action = `/users/profiles/delete/${profileId}`;
-            }
-        });
-
-        // Auto-hide Toast Notifications
+        // ================= Auto-hide Toasts =================
         document.addEventListener("DOMContentLoaded", function() {
-            const toasts = document.querySelectorAll('.custom-toast');
-            toasts.forEach(toast => {
+            document.querySelectorAll('.custom-toast').forEach(toast => {
                 setTimeout(() => {
                     toast.classList.add('hide');
                     setTimeout(() => { toast.remove(); }, 500);

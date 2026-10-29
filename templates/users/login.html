@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="/static/images/logo/logo.png">
-    <title>Attendance Portal - Check-In</title>
+    <title>Login</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -20,15 +20,15 @@
 
         <!-- Header Branding -->
         <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 mb-3 shadow-inner">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30 mb-3 shadow-inner">
                 <i class="fa-solid fa-clipboard-user text-2xl"></i>
             </div>
-            <h2 class="text-2xl font-bold tracking-tight text-white">Attendance Portal</h2>
-            <p class="text-sm text-slate-400 mt-1">Check-in for Class & Daily Sessions</p>
+            <h2 class="text-2xl font-bold tracking-tight text-white">Login</h2>
+            <p class="text-sm text-slate-400 mt-1">School Management System</p>
         </div>
 
         <!-- Live Digital Clock / Status Banner -->
-        <div class="mb-6 bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex items-center justify-between text-xs text-slate-300">
+        <div class="mb-6 bg-slate-950/60 border border-slate-800/80 rounded-lg p-3 flex items-center justify-between text-xs text-slate-300">
             <div class="flex items-center space-x-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span class="font-medium text-emerald-400">System Active</span>
@@ -53,31 +53,30 @@
         <!-- Attendance Check-In Form -->
         <form method="POST" action="{{ url_for('user.login') }}" class="space-y-4">
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Student Name</label>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">User Name</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                         <i class="fa-solid fa-user"></i>
                     </span>
-                    <input type="text" name="username" required placeholder="Enter your full name"
-                        class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-100 text-sm transition">
+                    <input type="text" name="username" required placeholder="Enter your user name"
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-100 text-sm transition">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Contact Number</label>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Password</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                         <i class="fa-solid fa-phone"></i>
                     </span>
-                    <input type="text" name="password" required placeholder="Enter your phone number"
-                        class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-100 text-sm transition">
+                    <input type="password" name="password" required placeholder="Enter your password"
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-100 text-sm transition">
                 </div>
             </div>
 
-            <button type="submit"
-                class="w-full mt-2 py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-medium rounded-xl transition duration-200 shadow-lg shadow-blue-600/20 flex items-center justify-center space-x-2 text-sm">
-                <i class="fa-solid fa-right-to-bracket"></i>
-                <span>Submit Attendance</span>
+           <button type="submit"
+                class="w-full mt-2 py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-medium rounded-full transition duration-200 shadow-lg shadow-blue-600/20 flex items-center justify-center space-x-2 text-sm">
+                <span>Login</span>
             </button>
         </form>
 

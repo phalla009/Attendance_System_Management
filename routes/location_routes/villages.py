@@ -19,6 +19,8 @@ def manage_villages():
         db.session.commit()
         flash('Village added successfully!', 'success')
         return redirect(url_for('location.manage_villages'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -52,6 +54,8 @@ def edit_village(id):
         db.session.commit()
         flash('Village updated successfully!', 'success')
         return redirect(url_for('location.manage_villages'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)

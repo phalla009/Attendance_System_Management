@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, SelectField, StringField
+from wtforms import SelectField, StringField
 from wtforms.validators import DataRequired, Length, Optional, ValidationError
 from models.academic import Session, Class, Group, Subject
 
@@ -36,7 +36,15 @@ class ClassForm(FlaskForm):
 class GroupForm(FlaskForm):
     Code = StringField('Group Code', validators=[DataRequired(), Length(max=50)])
     Name = StringField('Group Name', validators=[DataRequired(), Length(max=100)])
-    ScheduleID = IntegerField('Schedule ID', validators=[Optional()])
+    # Dropdown ជ្រើសរើស Session (0 = គ្មាន Session)
+    ScheduleID = SelectField('Session', coerce=int, validators=[Optional()])
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ScheduleID.choices = [(0, '-- Select Session --')] + [
+            (s.SessionID, f'{s.Session_name} ({s.Code})')
+            for s in Session.query.order_by(Session.Session_name).all()
+        ]
 
     def validate_Code(self, field):
         group_id = getattr(self, '_group_id', None)

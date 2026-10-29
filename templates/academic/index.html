@@ -29,23 +29,23 @@
     <div class="wrapper">
 
         <!-- Header Section -->
-        <div class="dashboard-header">
-            <div class="d-flex align-items-center gap-3 w-100">
+        <div class="dashboard-header d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3 flex-grow-1">
                 <button class="btn-menu-toggle d-lg-none" id="sidebarToggle" type="button" aria-label="Toggle Navigation">
                     <i class="bi bi-list"></i>
                 </button>
                 <div>
                     <h1>Academic Management</h1>
-                    <p>ប្រព័ន្ធគ្រប់គ្រងទិន្នន័យសិក្សា វគ្គសិក្សា ថ្នាក់រៀន ក្រុមសិក្សា និងមុខវិជ្ជាយ៉ាងមានប្រសិទ្ធភាព។</p>
+                    <p>ប្រព័ន្ធគ្រប់គ្រងទិន្នន័យសិក្សា វគ្គសិក្សា ថ្នាក់រៀន ក្រុមសិក្សា និងមុខវិជ្ជា។</p>
                 </div>
             </div>
-            <div>
+
+            <div class="ms-auto">
                 <a href="{{ url_for('dashboard') }}" class="btn-custom-primary">
                     <i class="bi bi-speedometer2"></i> View Dashboard
                 </a>
             </div>
         </div>
-
         <!-- Stat Cards Section (Total counts for Session, Class, Group, Subject) -->
         <div>
             <div class="row g-2">

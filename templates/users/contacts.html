@@ -106,7 +106,7 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#deleteContactModal"
                                                 data-id="{{ c.ContactID }}"
-                                                data-number="{{ c.ContactNumber }}">
+                                                data-name="{{ c.ContactNumber }}">
                                             <i class="bi bi-trash3-fill"></i>
                                         </button>
                                     </div>
@@ -219,30 +219,13 @@
         </div>
     </div>
 
-    <!-- 3. Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteContactModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-rose);"></i> Confirm Deletion</h5>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete contact number <strong id="delete_contact_number" class="text-warning"></strong>?</p>
-                    <p class="text-white small mb-0">This action cannot be undone.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i> Cancel
-                    </button>
-                    <form id="deleteForm" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 16px;">
-                            <i class="bi bi-trash3-fill me-1"></i> Delete Contact
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+{#     <!-- 3. Delete Confirmation Modal -->#}
+    {% with modal_id='deleteContactModal',
+            action_prefix='/users/contacts/delete/',
+            item_label='contact number',
+            note='This action cannot be undone.' %}
+        {% include 'components/delete.html' %}
+    {% endwith %}
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -305,19 +288,6 @@
                 const editForm = document.getElementById('editForm');
                 editForm.action = `/users/contacts/edit/${contactId}`;
             }
-        });
-
-        // Populate Delete Modal Data
-        const deleteContactModal = document.getElementById('deleteContactModal');
-        deleteContactModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const contactId = button.getAttribute('data-id');
-            const contactNumber = button.getAttribute('data-number');
-
-            document.getElementById('delete_contact_number').textContent = contactNumber;
-
-            const deleteForm = document.getElementById('deleteForm');
-            deleteForm.action = `/users/contacts/delete/${contactId}`;
         });
 
         // Auto-hide Toast Notifications

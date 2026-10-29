@@ -1,12 +1,43 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import extract
 from extensions import db
 from forms.attendance_form import AttendanceForm
-from models.academic import Group, Subject
+from models.academic import Class, Group, Session, Subject
 from models.attendance import Attendance, QrCode
 from models.user import UserProfile, UserType
 from . import attendance_bp
+
+VALID_STATUSES = ('Present', 'Late', 'Absent', 'Permission')
+
+
+def student_group_ids(u):
+    """Return the list of GroupIDs a student belongs to.
+
+    Supports both a many-to-many relationship (u.groups)
+    and a single column (u.GroupID). Adjust here if your model differs.
+    """
+    if hasattr(u, 'groups'):
+        return [g.GroupID for g in u.groups]
+    gid = getattr(u, 'GroupID', None)
+    return [gid] if gid is not None else []
+
+
+def all_students():
+    return UserProfile.query.join(UserType).filter(UserType.TypeName == 'Student').all()
+
+
+def parse_time(value):
+    """Parse 'HH:MM' (or 'HH:MM:SS') from a time input. Returns a time or None."""
+    if not value:
+        return None
+    for fmt in ('%H:%M', '%H:%M:%S'):
+        try:
+            return datetime.strptime(value, fmt).time()
+        except ValueError:
+            continue
+    return None
 
 
 @attendance_bp.route('/records', methods=['GET', 'POST'])
@@ -14,14 +45,30 @@ from . import attendance_bp
 def manage_attendances():
     form = AttendanceForm()
 
-    students = UserProfile.query.join(UserType).filter(UserType.TypeName == 'Student').all()
+    students = all_students()
     form.UserID.choices = [(u.ProfileID, u.Name) for u in students]
-
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
     form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+
+    # Filters from the dropdowns / inputs (GET)
+    session_id = request.args.get('session_id', type=int)
+    group_id = request.args.get('group_id', type=int)
+    subject_id = request.args.get('subject_id', type=int)
+    date_str = request.args.get('date', '', type=str)
+    time_str = request.args.get('time', '', type=str)
+
+    sessions = Session.query.order_by(Session.Session_name).all()
+    groups_q = Group.query
+    if session_id:
+        groups_q = groups_q.filter(Group.ScheduleID == session_id)
+    groups = groups_q.order_by(Group.Name).all()
+
+    # Drop a group selection that doesn't belong to the chosen session
+    if group_id and group_id not in [g.GroupID for g in groups]:
+        group_id = None
 
     if form.validate_on_submit():
         latest_qr = QrCode.query.order_by(QrCode.QrCodeID.desc()).first()
@@ -40,21 +87,202 @@ def manage_attendances():
         db.session.add(attendance)
         db.session.commit()
         flash('Attendance recorded successfully!', 'success')
-        return redirect(url_for('attendance.manage_attendances'))
+        return redirect(url_for('attendance.manage_attendances', session_id=session_id,
+                                group_id=group_id, subject_id=subject_id,
+                                date=date_str or None, time=time_str or None))
 
     if form.errors:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f'Validation Error [{field}]: {error}', 'danger')
 
-    pagination = Attendance.query.paginate(page=page, per_page=per_page, error_out=False)
+    query = Attendance.query
+    if session_id:
+        query = query.join(Group, Attendance.GroupID == Group.GroupID)\
+                     .filter(Group.ScheduleID == session_id)
+    if group_id:
+        query = query.filter(Attendance.GroupID == group_id)
+    if subject_id:
+        query = query.filter(Attendance.SubjectID == subject_id)
+
+    # Date filter: the whole selected day
+    if date_str:
+        try:
+            day_start = datetime.strptime(date_str, '%Y-%m-%d')
+            query = query.filter(Attendance.Date >= day_start,
+                                 Attendance.Date < day_start + timedelta(days=1))
+        except ValueError:
+            date_str = ''
+
+    # Time filter: records saved at the selected HH:MM (the whole minute).
+    # extract() works on MySQL, PostgreSQL, SQLite and SQL Server.
+    t_val = parse_time(time_str)
+    if t_val:
+        query = query.filter(
+            extract('hour', Attendance.Date) == t_val.hour,
+            extract('minute', Attendance.Date) == t_val.minute,
+        )
+    else:
+        time_str = ''
+
+    pagination = query.order_by(Attendance.Date.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
     attendances = pagination.items
+
+    # Data used by the template to filter Students by the selected Group
+    students_data = [
+        {'id': u.ProfileID, 'name': u.Name, 'groups': student_group_ids(u)}
+        for u in students
+    ]
 
     return render_template(
         'attendance/attendances.html',
         form=form,
         attendances=attendances,
-        pagination=pagination
+        pagination=pagination,
+        students_data=students_data,
+        sessions=sessions,
+        groups=groups,
+        subjects=Subject.query.order_by(Subject.Name).all(),
+        session_id=session_id,
+        group_id=group_id,
+        subject_id=subject_id,
+        date_str=date_str,
+        time_str=time_str,
+    )
+
+
+@attendance_bp.route('/records/take', methods=['GET', 'POST'])
+@login_required
+def take_attendance():
+    """Pick Session -> Class / Group + Subject + Date, list that group's students,
+    and save (or edit) everyone's attendance in one go."""
+    form = AttendanceForm()  # only used for the CSRF hidden field in the template
+
+    src = request.form if request.method == 'POST' else request.args
+    session_id = src.get('session_id', type=int)
+    class_id = src.get('class_id', type=int)
+    group_id = src.get('group_id', type=int)
+    subject_id = src.get('subject_id', type=int)
+    date_str = src.get('date') or datetime.now().strftime('%Y-%m-%d')
+    time_str = src.get('time') or datetime.now().strftime('%H:%M')
+
+    sessions = Session.query.order_by(Session.Session_name).all()
+    classes_q = Class.query
+    groups_q = Group.query
+    if session_id:
+        classes_q = classes_q.filter(Class.SessionID == session_id)
+        groups_q = groups_q.filter(Group.ScheduleID == session_id)
+    classes = classes_q.order_by(Class.Name).all()
+    groups = groups_q.order_by(Group.Name).all()
+    subjects = Subject.query.order_by(Subject.Name).all()
+
+    # Drop selections that don't belong to the chosen session
+    if class_id and class_id not in [c.ClassID for c in classes]:
+        class_id = None
+    if group_id and group_id not in [g.GroupID for g in groups]:
+        group_id = None
+
+    try:
+        att_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        att_time = datetime.strptime(time_str, '%H:%M').time()
+    except ValueError:
+        flash('Invalid date or time.', 'danger')
+        return redirect(url_for('attendance.take_attendance'))
+
+    students = []
+    existing = {}
+    if group_id:
+        students = sorted(
+            [s for s in all_students() if group_id in student_group_ids(s)],
+            key=lambda s: s.Name or ''
+        )
+
+        if subject_id:
+            day_start = datetime.combine(att_date, datetime.min.time())
+            day_end = day_start + timedelta(days=1)
+            existing = {
+                a.ProfileID: a
+                for a in Attendance.query.filter(
+                    Attendance.GroupID == group_id,
+                    Attendance.SubjectID == subject_id,
+                    Attendance.Date >= day_start,
+                    Attendance.Date < day_end,
+                ).all()
+            }
+
+    if request.method == 'POST':
+        if not (group_id and subject_id):
+            flash('Please select a group and a subject first.', 'danger')
+            return redirect(url_for('attendance.take_attendance', session_id=session_id,
+                                    class_id=class_id))
+
+        latest_qr = QrCode.query.order_by(QrCode.QrCodeID.desc()).first()
+        qr_id = latest_qr.QrCodeID if latest_qr else 1
+        when = datetime.combine(att_date, att_time)
+
+        created = updated = 0
+        for s in students:
+            status = request.form.get(f'status_{s.ProfileID}')
+            if status not in VALID_STATUSES:
+                continue
+            remarks = (request.form.get(f'remarks_{s.ProfileID}') or '').strip() or None
+
+            record = existing.get(s.ProfileID)
+            if record:
+                record.Status = status
+                record.Remarks = remarks
+                record.Date = when
+                updated += 1
+            else:
+                db.session.add(Attendance(
+                    ProfileID=s.ProfileID,
+                    QrCodeID=qr_id,
+                    ScanNumber=s.Code,
+                    Status=status,
+                    GroupID=group_id,
+                    SubjectID=subject_id,
+                    Date=when,
+                    Remarks=remarks,
+                ))
+                created += 1
+
+        try:
+            db.session.commit()
+            flash(f'Attendance saved: {created} added, {updated} updated.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Could not save attendance: {e}', 'danger')
+
+        return redirect(url_for('attendance.take_attendance', session_id=session_id,
+                                class_id=class_id, group_id=group_id,
+                                subject_id=subject_id, date=date_str, time=time_str))
+
+    current_session = next((s for s in sessions if s.SessionID == session_id), None)
+    current_class = next((c for c in classes if c.ClassID == class_id), None)
+    current_group = next((g for g in groups if g.GroupID == group_id), None)
+    current_subject = next((s for s in subjects if s.SubjectID == subject_id), None)
+
+    return render_template(
+        'attendance/take_attendance.html',
+        form=form,
+        sessions=sessions,
+        classes=classes,
+        groups=groups,
+        subjects=subjects,
+        students=students,
+        existing=existing,
+        session_id=session_id,
+        class_id=class_id,
+        group_id=group_id,
+        subject_id=subject_id,
+        current_session=current_session,
+        current_class=current_class,
+        current_group=current_group,
+        current_subject=current_subject,
+        date_str=date_str,
+        time_str=time_str,
     )
 
 
@@ -64,9 +292,8 @@ def edit_attendance(id):
     attendance = Attendance.query.get_or_404(id)
     form = AttendanceForm()
 
-    students = UserProfile.query.join(UserType).filter(UserType.TypeName == 'Student').all()
+    students = all_students()
     form.UserID.choices = [(u.ProfileID, u.Name) for u in students]
-
     form.GroupID.choices = [(g.GroupID, g.Name) for g in Group.query.all()]
     form.SubjectID.choices = [(s.SubjectID, s.Name) for s in Subject.query.all()]
 

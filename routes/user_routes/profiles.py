@@ -4,6 +4,7 @@ import uuid
 from flask import (
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -17,6 +18,7 @@ from werkzeug.utils import secure_filename
 from extensions import db
 from forms.user_form import StudentProfileForm, TeacherProfileForm
 from models.academic import Group
+from models.location import Address, Commune, District, Province, Village
 from models.user import UserProfile, UserType
 from . import (
     populate_student_form_choices,
@@ -24,6 +26,121 @@ from . import (
     user_bp,
 )
 
+
+# ======================= HELPERS =======================
+
+def _to_int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def save_photo(photo_file):
+    """Save uploaded photo and return the new filename (or None)."""
+    if not photo_file:
+        return None
+    filename = secure_filename(photo_file.filename or '')
+    if not filename:
+        return None
+    upload_folder = os.path.join(
+        current_app.root_path, 'static', 'uploads', 'profiles'
+    )
+    os.makedirs(upload_folder, exist_ok=True)
+    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+    photo_filename = f'{uuid.uuid4().hex}.{ext}'
+    photo_file.save(os.path.join(upload_folder, photo_filename))
+    return photo_filename
+
+
+def get_or_create_address(form):
+    """Read home/street/province/district/commune/village from the form,
+    find a matching Address (or create one) and return its AddressID."""
+    home = (form.get('home') or '').strip() or None
+    street = (form.get('street') or '').strip() or None
+    province_id = _to_int(form.get('province_id'))
+    district_id = _to_int(form.get('district_id'))
+    commune_id = _to_int(form.get('commune_id'))
+    village_id = _to_int(form.get('village_id'))
+
+    if not any([home, street, province_id, district_id, commune_id, village_id]):
+        return None
+
+    addr = Address.query.filter_by(
+        Home=home,
+        Street=street,
+        ProvinceID=province_id,
+        DistrictID=district_id,
+        CommuneID=commune_id,
+        VillageID=village_id,
+    ).first()
+
+    if not addr:
+        addr = Address(
+            Home=home,
+            Street=street,
+            ProvinceID=province_id,
+            DistrictID=district_id,
+            CommuneID=commune_id,
+            VillageID=village_id,
+        )
+        db.session.add(addr)
+        db.session.flush()
+
+    return addr.AddressID
+
+
+def build_address(addr):
+    """Full address as one line (used in Excel export)."""
+    if not addr:
+        return '-'
+    parts = [
+        f'ផ្ទះលេខ {addr.Home}' if addr.Home else None,
+        f'ផ្លូវ {addr.Street}' if addr.Street else None,
+        f'ភូមិ {addr.village.Name}' if addr.village else None,
+        f'ឃុំ/សង្កាត់ {addr.commune.Name}' if addr.commune else None,
+        f'ស្រុក/ខណ្ឌ {addr.district.Name}' if addr.district else None,
+        f'{addr.province.Name}' if addr.province else None,
+    ]
+    return ', '.join(p for p in parts if p) or '-'
+
+
+# ======================= CASCADE API =======================
+
+@user_bp.route('/api/districts/<int:province_id>', methods=['GET'])
+@login_required
+def api_districts(province_id):
+    rows = (
+        District.query.filter_by(ProvinceID=province_id)
+        .order_by(District.Name)
+        .all()
+    )
+    return jsonify([{'id': r.DistrictID, 'name': r.Name} for r in rows])
+
+
+@user_bp.route('/api/communes/<int:district_id>', methods=['GET'])
+@login_required
+def api_communes(district_id):
+    rows = (
+        Commune.query.filter_by(DistrictID=district_id)
+        .order_by(Commune.Name)
+        .all()
+    )
+    return jsonify([{'id': r.CommuneID, 'name': r.Name} for r in rows])
+
+
+@user_bp.route('/api/villages/<int:commune_id>', methods=['GET'])
+@login_required
+def api_villages(commune_id):
+    rows = (
+        Village.query.filter_by(CommuneID=commune_id)
+        .order_by(Village.Name)
+        .all()
+    )
+    return jsonify([{'id': r.VillageID, 'name': r.Name} for r in rows])
+
+
+# ======================= LIST =======================
 
 @user_bp.route('/profiles', methods=['GET'])
 @login_required
@@ -84,6 +201,7 @@ def manage_profiles():
 
     user_types = UserType.query.all()
     groups = Group.query.all()
+    provinces = Province.query.order_by(Province.Name).all()
 
     return render_template(
         'users/profiles.html',
@@ -98,8 +216,11 @@ def manage_profiles():
         group_filter=group_filter,
         user_types=user_types,
         groups=groups,
+        provinces=provinces,
     )
 
+
+# ======================= ADD =======================
 
 @user_bp.route('/profiles/add-student', methods=['POST'])
 @login_required
@@ -110,26 +231,14 @@ def manage_students():
 
     student_form = StudentProfileForm()
     populate_student_form_choices(student_form)
+    del student_form.AddressID  # address is handled by get_or_create_address
 
     student_type = UserType.query.filter_by(TypeName='Student').first()
     if student_type:
         student_form.TypeID.data = student_type.TypeID
 
     if student_form.validate_on_submit():
-        photo_filename = None
-        if student_form.Photo.data:
-            photo_file = student_form.Photo.data
-            filename = secure_filename(photo_file.filename)
-            if filename:
-                upload_folder = os.path.join(
-                    current_app.root_path, 'static', 'uploads', 'profiles'
-                )
-                os.makedirs(upload_folder, exist_ok=True)
-                ext = (
-                    filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
-                )
-                photo_filename = f'{uuid.uuid4().hex}.{ext}'
-                photo_file.save(os.path.join(upload_folder, photo_filename))
+        photo_filename = save_photo(student_form.Photo.data)
 
         user = UserProfile(
             Code=student_form.Code.data,
@@ -139,7 +248,7 @@ def manage_students():
             Photo=photo_filename,
             TypeID=student_form.TypeID.data,
             GroupID=student_form.GroupID.data,
-            AddressID=student_form.AddressID.data,
+            AddressID=get_or_create_address(request.form),
             ContactNoID=student_form.ContactNoID.data,
         )
         db.session.add(user)
@@ -160,26 +269,14 @@ def manage_teachers():
 
     teacher_form = TeacherProfileForm()
     populate_teacher_form_choices(teacher_form)
+    del teacher_form.AddressID  # address is handled by get_or_create_address
 
     teacher_type = UserType.query.filter_by(TypeName='Teacher').first()
     if teacher_type:
         teacher_form.TypeID.data = teacher_type.TypeID
 
     if teacher_form.validate_on_submit():
-        photo_filename = None
-        if teacher_form.Photo.data:
-            photo_file = teacher_form.Photo.data
-            filename = secure_filename(photo_file.filename)
-            if filename:
-                upload_folder = os.path.join(
-                    current_app.root_path, 'static', 'uploads', 'profiles'
-                )
-                os.makedirs(upload_folder, exist_ok=True)
-                ext = (
-                    filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
-                )
-                photo_filename = f'{uuid.uuid4().hex}.{ext}'
-                photo_file.save(os.path.join(upload_folder, photo_filename))
+        photo_filename = save_photo(teacher_form.Photo.data)
 
         user = UserProfile(
             Code=teacher_form.Code.data,
@@ -189,7 +286,7 @@ def manage_teachers():
             Photo=photo_filename,
             TypeID=teacher_form.TypeID.data,
             SubjectID=teacher_form.SubjectID.data,
-            AddressID=teacher_form.AddressID.data,
+            AddressID=get_or_create_address(request.form),
             ContactNoID=teacher_form.ContactNoID.data,
         )
         db.session.add(user)
@@ -200,6 +297,8 @@ def manage_teachers():
     flash(f'Failed to add teacher profile: {teacher_form.errors}', 'danger')
     return redirect(url_for('user.manage_profiles'))
 
+
+# ======================= EDIT =======================
 
 @user_bp.route('/profiles/edit/<int:id>', methods=['POST'])
 @login_required
@@ -224,12 +323,14 @@ def edit_profile(id):
         if student_type:
             form.TypeID.data = student_type.TypeID
 
+    del form.AddressID  # address is handled by get_or_create_address
+
     if form.validate_on_submit():
         user.Name = form.Name.data
         user.Gender = form.Gender.data
         user.DOB = form.DOB.data
         user.TypeID = form.TypeID.data
-        user.AddressID = form.AddressID.data
+        user.AddressID = get_or_create_address(request.form)
         user.ContactNoID = form.ContactNoID.data
 
         if is_teacher:
@@ -239,20 +340,9 @@ def edit_profile(id):
             user.GroupID = form.GroupID.data
             user.SubjectID = None
 
-        if form.Photo.data:
-            photo_file = form.Photo.data
-            filename = secure_filename(photo_file.filename)
-            if filename:
-                upload_folder = os.path.join(
-                    current_app.root_path, 'static', 'uploads', 'profiles'
-                )
-                os.makedirs(upload_folder, exist_ok=True)
-                ext = (
-                    filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
-                )
-                photo_filename = f'{uuid.uuid4().hex}.{ext}'
-                photo_file.save(os.path.join(upload_folder, photo_filename))
-                user.Photo = photo_filename
+        new_photo = save_photo(form.Photo.data)
+        if new_photo:
+            user.Photo = new_photo
 
         db.session.commit()
         flash('User Profile updated successfully!', 'success')
@@ -261,6 +351,8 @@ def edit_profile(id):
     flash(f'Failed to update profile: {form.errors}', 'danger')
     return redirect(url_for('user.manage_profiles'))
 
+
+# ======================= DELETE =======================
 
 @user_bp.route('/profiles/delete/<int:id>', methods=['POST'])
 @login_required
@@ -285,6 +377,8 @@ def delete_profile(id):
     return redirect(url_for('user.manage_profiles'))
 
 
+# ======================= EXPORT EXCEL =======================
+
 @user_bp.route('/profiles/export-excel', methods=['GET'])
 @login_required
 def export_students_excel():
@@ -304,14 +398,8 @@ def export_students_excel():
         dob_str = u.DOB.strftime('%Y-%m-%d') if u.DOB else '-'
         user_type_name = u.user_type.TypeName if u.user_type else '-'
         group_name = u.group_rel.Name if u.group_rel else '-'
-
-        address_str = (
-            f"ផ្ទះលេខ {u.address_rel.Home or ''}, ផ្លូវ"
-            f" {u.address_rel.Street or ''}"
-            if u.address_rel
-            else '-'
-        )
         contact_str = u.contact_rel.ContactNumber if u.contact_rel else '-'
+        addr = u.address_rel
 
         data.append({
             'No.': index,
@@ -322,7 +410,13 @@ def export_students_excel():
             'User Type': user_type_name,
             'Group': group_name,
             'Contact Number': contact_str,
-            'Address': address_str,
+            'Home': (addr.Home or '-') if addr else '-',
+            'Street': (addr.Street or '-') if addr else '-',
+            'Village': addr.village.Name if addr and addr.village else '-',
+            'Commune': addr.commune.Name if addr and addr.commune else '-',
+            'District': addr.district.Name if addr and addr.district else '-',
+            'Province': addr.province.Name if addr and addr.province else '-',
+            'Full Address': build_address(addr),
         })
 
     df = pd.DataFrame(data)
@@ -330,6 +424,13 @@ def export_students_excel():
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Students List')
+
+        ws = writer.sheets['Students List']
+        for col in ws.columns:
+            max_len = max(len(str(c.value)) if c.value else 0 for c in col)
+            ws.column_dimensions[col[0].column_letter].width = min(
+                max_len + 4, 60
+            )
 
     output.seek(0)
 
@@ -343,6 +444,8 @@ def export_students_excel():
     )
 
 
+# ======================= IMPORT EXCEL =======================
+
 @user_bp.route('/profiles/import-excel', methods=['POST'])
 @login_required
 def import_students_excel():
@@ -353,18 +456,17 @@ def import_students_excel():
         )
         return redirect(url_for('user.manage_profiles'))
 
-    if 'excel_file' not in request.files:
+    # Template uses name="file"; also accept "excel_file" for safety.
+    file = request.files.get('file') or request.files.get('excel_file')
+    if file is None:
         flash('No file part uploaded!', 'danger')
         return redirect(url_for('user.manage_profiles'))
 
-    file = request.files['excel_file']
     if file.filename == '':
         flash('No selected file!', 'danger')
         return redirect(url_for('user.manage_profiles'))
 
-    if file and (
-        file.filename.endswith('.xlsx') or file.filename.endswith('.xls')
-    ):
+    if file.filename.lower().endswith(('.xlsx', '.xls')):
         try:
             df = pd.read_excel(file)
 
@@ -450,6 +552,8 @@ def import_students_excel():
 
     return redirect(url_for('user.manage_profiles'))
 
+
+# ======================= VIEW =======================
 
 @user_bp.route('/profiles/view/<int:id>', methods=['GET'])
 @login_required

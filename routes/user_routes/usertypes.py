@@ -15,7 +15,7 @@ def manage_usertypes():
     per_page = request.args.get('per_page', 10, type=int)
 
     if request.method == 'POST':
-        if session.get('user_type') != 'Admin':
+        if session.get('user_type') != 'Teacher':
             flash('Access Denied! Only Admin can add user types.', 'danger')
             return redirect(url_for('user.manage_usertypes'))
 
@@ -27,6 +27,8 @@ def manage_usertypes():
             db.session.commit()
             flash('User Type added successfully!', 'success')
             return redirect(url_for('user.manage_usertypes'))
+        elif request.method == 'POST':
+            flash('Please correct the errors in the form.', 'danger')
 
     pagination = UserType.query.paginate(
         page=page, per_page=per_page, error_out=False
@@ -57,7 +59,7 @@ def manage_usertypes():
 @user_bp.route('/usertypes/edit/<int:id>', methods=['POST'])
 @login_required
 def edit_usertype(id):
-    if session.get('user_type') != 'Admin':
+    if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Admin can edit user types.', 'danger')
         return redirect(url_for('user.manage_usertypes'))
 
@@ -70,6 +72,8 @@ def edit_usertype(id):
         db.session.commit()
         flash('User Type updated successfully!', 'success')
         return redirect(url_for('user.manage_usertypes'))
+    elif request.method == 'POST':
+        flash('Please correct the errors in the form.', 'danger')
 
     flash('Failed to update user type. Please check your inputs.', 'danger')
     return redirect(url_for('user.manage_usertypes'))
@@ -78,7 +82,7 @@ def edit_usertype(id):
 @user_bp.route('/usertypes/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_usertype(id):
-    if session.get('user_type') != 'Admin':
+    if session.get('user_type') != 'Teacher':
         flash('Access Denied! Only Admin can delete user types.', 'danger')
         return redirect(url_for('user.manage_usertypes'))
 

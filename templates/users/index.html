@@ -29,8 +29,8 @@
     <div class="wrapper">
 
         <!-- Header Section -->
-        <div class="dashboard-header">
-            <div class="d-flex align-items-center gap-3 w-100">
+        <div class="dashboard-header d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3 flex-grow-1">
                 <button class="btn-menu-toggle d-lg-none" id="sidebarToggle" type="button" aria-label="Toggle Navigation">
                     <i class="bi bi-list"></i>
                 </button>
@@ -39,7 +39,8 @@
                     <p>ប្រព័ន្ធគ្រប់គ្រងទិន្នន័យអ្នកប្រើប្រាស់ ប្រូហ្វាល ប្រភេទអ្នកប្រើប្រាស់ លេខទូរស័ព្ទ និងអាសយដ្ឋាន។</p>
                 </div>
             </div>
-            <div>
+
+            <div class="ms-auto">
                 <a href="{{ url_for('dashboard') }}" class="btn-custom-primary">
                     <i class="bi bi-speedometer2"></i> View Dashboard
                 </a>
@@ -142,7 +143,7 @@
                                 <i class="bi bi-person-badge"></i>
                             </div>
                             <h5>Profiles</h5>
-                            <p>គ្រប់គ្រងព័ត៌មានលម្អិតរបស់បុគ្គលិក សិស្ស ឬអ្នកប្រើប្រាស់ក្នុងប្រព័ន្ធ។</p>
+                            <p>គ្រប់គ្រងព័ត៌មានលម្អិតរបស់បុគ្គលិក សិស្ស ឬអ្នកប្រើប្រាស់។</p>
                         </div>
                         <a href="{{ url_for('user.manage_profiles') }}" class="card-link">
                             Manage Profiles <i class="bi bi-arrow-right"></i>
