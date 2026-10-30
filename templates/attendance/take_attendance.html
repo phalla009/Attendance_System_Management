@@ -80,9 +80,10 @@
                 <span><i class="bi bi-funnel-fill" style="color: var(--accent-indigo);"></i> Select Class Session</span>
             </div>
 
-            <form method="GET" action="{{ url_for('attendance.take_attendance') }}" id="filterForm">
+           <form method="GET" action="{{ url_for('attendance.take_attendance') }}" id="filterForm">
+                <!-- Row 1 -->
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label"><i class="bi bi-calendar3 me-1"></i> Session</label>
                         <select name="session_id" class="form-select rounded-pill"
                                 onchange="this.form.class_id.value=''; this.form.group_id.value=''; this.form.submit()">
@@ -92,7 +93,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label"><i class="bi bi-mortarboard-fill me-1"></i> Class</label>
                         <select name="class_id" class="form-select rounded-pill" onchange="this.form.submit()">
                             <option value="">-- All classes --</option>
@@ -101,7 +102,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label"><i class="bi bi-people-fill me-1"></i> Group</label>
                         <select name="group_id" class="form-select rounded-pill" onchange="this.form.submit()">
                             <option value="">-- Select group --</option>
@@ -110,7 +111,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> Subject</label>
                         <select name="subject_id" class="form-select rounded-pill" onchange="this.form.submit()">
                             <option value="">-- Select subject --</option>
@@ -119,19 +120,27 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-2">
+                </div>
+
+                <!-- Row 2 -->
+                <div class="row g-3 align-items-end mt-0">
+                    <div class="col-md-3">
                         <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Date</label>
                         <input type="date" name="date" class="form-control rounded-pill" value="{{ date_str }}" onchange="this.form.submit()">
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label"><i class="bi bi-clock me-1"></i> Time</label>
-                        <input type="time" name="time" class="form-control rounded-pill" value="{{ time_str }}">
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-clock me-1"></i> From time</label>
+                        <input type="time" name="time_from" class="form-control rounded-pill" value="{{ time_from_str }}">
                     </div>
-                </div>
-                <div class="mt-3 text-end">
-                    <button type="submit" class="btn-custom-primary" style="padding: 10px 16px;">
-                        <i class="bi bi-search"></i> Load Students
-                    </button>
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-clock-history me-1"></i> To time</label>
+                        <input type="time" name="time_to" class="form-control rounded-pill" value="{{ time_to_str }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn-custom-primary w-100" style="padding: 10px 16px;">
+                            <i class="bi bi-search"></i> Load Students
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

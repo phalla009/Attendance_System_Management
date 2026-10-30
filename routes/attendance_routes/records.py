@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import extract
+from sqlalchemy import extract, or_
 from extensions import db
 from forms.attendance_form import AttendanceForm
 from models.academic import Class, Group, Session, Subject
@@ -55,18 +55,33 @@ def manage_attendances():
 
     # Filters from the dropdowns / inputs (GET)
     session_id = request.args.get('session_id', type=int)
+    class_id = request.args.get('class_id', type=int)
     group_id = request.args.get('group_id', type=int)
     subject_id = request.args.get('subject_id', type=int)
     date_str = request.args.get('date', '', type=str)
-    time_str = request.args.get('time', '', type=str)
+    time_from_str = request.args.get('time_from', '', type=str)
+    time_to_str = request.args.get('time_to', '', type=str)
 
     sessions = Session.query.order_by(Session.Session_name).all()
+
+    classes_q = Class.query
     groups_q = Group.query
     if session_id:
+        classes_q = classes_q.filter(Class.SessionID == session_id)
         groups_q = groups_q.filter(Group.ScheduleID == session_id)
+
+    # ប្រសិនបើមានការជ្រើសរើស Class អាចទាញយក SessionID របស់ Class មកជួយ Filter Group បន្ថែម
+    if class_id:
+        selected_class = Class.query.get(class_id)
+        if selected_class and selected_class.SessionID:
+            groups_q = groups_q.filter(Group.ScheduleID == selected_class.SessionID)
+
+    classes = classes_q.order_by(Class.Name).all()
     groups = groups_q.order_by(Group.Name).all()
 
-    # Drop a group selection that doesn't belong to the chosen session
+    # Drop selections that don't belong to the chosen session
+    if class_id and class_id not in [c.ClassID for c in classes]:
+        class_id = None
     if group_id and group_id not in [g.GroupID for g in groups]:
         group_id = None
 
@@ -88,8 +103,10 @@ def manage_attendances():
         db.session.commit()
         flash('Attendance recorded successfully!', 'success')
         return redirect(url_for('attendance.manage_attendances', session_id=session_id,
-                                group_id=group_id, subject_id=subject_id,
-                                date=date_str or None, time=time_str or None))
+                                class_id=class_id, group_id=group_id, subject_id=subject_id,
+                                date=date_str or None,
+                                time_from=time_from_str or None,
+                                time_to=time_to_str or None))
 
     if form.errors:
         for field, errors in form.errors.items():
@@ -97,9 +114,16 @@ def manage_attendances():
                 flash(f'Validation Error [{field}]: {error}', 'danger')
 
     query = Attendance.query
-    if session_id:
-        query = query.join(Group, Attendance.GroupID == Group.GroupID)\
-                     .filter(Group.ScheduleID == session_id)
+
+    # Join Group ដើម្បី Filter តាម Session និង Class
+    if session_id or class_id:
+        query = query.join(Group, Attendance.GroupID == Group.GroupID)
+        if session_id:
+            query = query.filter(Group.ScheduleID == session_id)
+        if class_id:
+            # ភ្ជាប់តាមរយៈ SessionID ដែល Class និង Group មានដូចគ្នា
+            query = query.join(Class, Group.ScheduleID == Class.SessionID).filter(Class.ClassID == class_id)
+
     if group_id:
         query = query.filter(Attendance.GroupID == group_id)
     if subject_id:
@@ -114,16 +138,29 @@ def manage_attendances():
         except ValueError:
             date_str = ''
 
-    # Time filter: records saved at the selected HH:MM (the whole minute).
-    # extract() works on MySQL, PostgreSQL, SQLite and SQL Server.
-    t_val = parse_time(time_str)
-    if t_val:
-        query = query.filter(
-            extract('hour', Attendance.Date) == t_val.hour,
-            extract('minute', Attendance.Date) == t_val.minute,
-        )
-    else:
-        time_str = ''
+    # Time-of-day range filter: from HH:MM to HH:MM (inclusive, by minute).
+    t_from = parse_time(time_from_str)
+    t_to = parse_time(time_to_str)
+    if not t_from:
+        time_from_str = ''
+    if not t_to:
+        time_to_str = ''
+
+    if t_from or t_to:
+        minutes = (extract('hour', Attendance.Date) * 60
+                   + extract('minute', Attendance.Date))
+        from_min = t_from.hour * 60 + t_from.minute if t_from else None
+        to_min = t_to.hour * 60 + t_to.minute if t_to else None
+
+        if from_min is not None and to_min is not None:
+            if from_min <= to_min:
+                query = query.filter(minutes >= from_min, minutes <= to_min)
+            else:
+                query = query.filter(or_(minutes >= from_min, minutes <= to_min))
+        elif from_min is not None:
+            query = query.filter(minutes >= from_min)
+        else:
+            query = query.filter(minutes <= to_min)
 
     pagination = query.order_by(Attendance.Date.desc()).paginate(
         page=page, per_page=per_page, error_out=False
@@ -143,13 +180,16 @@ def manage_attendances():
         pagination=pagination,
         students_data=students_data,
         sessions=sessions,
+        classes=classes,
         groups=groups,
         subjects=Subject.query.order_by(Subject.Name).all(),
         session_id=session_id,
+        class_id=class_id,
         group_id=group_id,
         subject_id=subject_id,
         date_str=date_str,
-        time_str=time_str,
+        time_from_str=time_from_str,
+        time_to_str=time_to_str,
     )
 
 
@@ -158,7 +198,7 @@ def manage_attendances():
 def take_attendance():
     """Pick Session -> Class / Group + Subject + Date, list that group's students,
     and save (or edit) everyone's attendance in one go."""
-    form = AttendanceForm()  # only used for the CSRF hidden field in the template
+    form = AttendanceForm()
 
     src = request.form if request.method == 'POST' else request.args
     session_id = src.get('session_id', type=int)
@@ -178,7 +218,6 @@ def take_attendance():
     groups = groups_q.order_by(Group.Name).all()
     subjects = Subject.query.order_by(Subject.Name).all()
 
-    # Drop selections that don't belong to the chosen session
     if class_id and class_id not in [c.ClassID for c in classes]:
         class_id = None
     if group_id and group_id not in [g.GroupID for g in groups]:

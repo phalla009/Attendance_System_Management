@@ -72,185 +72,221 @@
                 <span><i class="bi bi-table" style="color: var(--accent-indigo);"></i> Attendance Records</span>
 
                 <div class="d-flex flex-wrap align-items-end gap-2">
-                    <!-- Filter form (GET): Session + Group + Subject + Date + Time -->
-                    <form method="GET" action="{{ url_for('attendance.manage_attendances') }}"
-                          class="d-flex flex-wrap align-items-end gap-2">
-                        <input type="hidden" name="per_page" value="{{ pagination.per_page }}">
+                    <!-- Opens the student list for the chosen session + group + subject + date -->
+                    <a href="{{ url_for('attendance.take_attendance', session_id=session_id, group_id=group_id, subject_id=subject_id, date=date_str or None) }}"
+                       class="btn-custom-secondary">
+                        <i class="bi bi-list-check"></i> Take Attendance
+                    </a>
+                </div>
+            </div>
 
-                        <div>
-                            <label class="form-label"><i class="bi bi-calendar3 me-1"></i> Session</label>
-                            <select name="session_id" class="form-select rounded-pill px-3"
-                                    onchange="this.form.group_id.value=''; this.form.submit()">
-                                <option value="">-- All sessions --</option>
-                                {% for s in sessions %}
-                                    <option value="{{ s.SessionID }}" {% if s.SessionID == session_id %}selected{% endif %}>{{ s.Session_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+            <!-- Filter form (GET): Session + Class + Group + Subject + Date + From/To time (2 rows) -->
+            <form method="GET" action="{{ url_for('attendance.manage_attendances') }}" class="mb-4">
+                <input type="hidden" name="per_page" value="{{ pagination.per_page if pagination else 10 }}">
 
-                        <div>
-                            <label class="form-label"><i class="bi bi-people-fill me-1"></i> Group</label>
-                            <select name="group_id" class="form-select rounded-pill px-3" onchange="this.form.submit()">
-                                <option value="">-- All groups --</option>
-                                {% for g in groups %}
-                                    <option value="{{ g.GroupID }}" {% if g.GroupID == group_id %}selected{% endif %}>{{ g.Name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                <!-- Row 1 -->
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-calendar3 me-1"></i> Session</label>
+                        <select name="session_id" class="form-select rounded-pill px-3"
+                                onchange="this.form.group_id.value=''; this.form.submit()">
+                            <option value="">-- All sessions --</option>
+                            {% for s in sessions %}
+                                <option value="{{ s.SessionID }}" {% if s.SessionID == session_id %}selected{% endif %}>{{ s.Session_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div>
-                            <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> Subject</label>
-                            <select name="subject_id" class="form-select rounded-pill px-3" onchange="this.form.submit()">
-                                <option value="">-- All subjects --</option>
-                                {% for s in subjects %}
-                                    <option value="{{ s.SubjectID }}" {% if s.SubjectID == subject_id %}selected{% endif %}>{{ s.Name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-mortarboard-fill me-1"></i> Class</label>
+                        <select name="class_id" class="form-select rounded-pill px-3" onchange="this.form.submit()">
+                            <option value="">-- All classes --</option>
+                            {% for c in classes %}
+                                <option value="{{ c.ClassID }}" {% if c.ClassID == class_id %}selected{% endif %}>{{ c.Name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div>
-                            <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Date</label>
-                            <input type="date" name="date" class="form-control rounded-pill px-3"
-                                   value="{{ date_str }}" onchange="this.form.submit()">
-                        </div>
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-people-fill me-1"></i> Group</label>
+                        <select name="group_id" class="form-select rounded-pill px-3" onchange="this.form.submit()">
+                            <option value="">-- All groups --</option>
+                            {% for g in groups %}
+                                <option value="{{ g.GroupID }}" {% if g.GroupID == group_id %}selected{% endif %}>{{ g.Name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div>
-                            <label class="form-label"><i class="bi bi-clock me-1"></i> Time</label>
-                            <input type="time" name="time" class="form-control rounded-pill px-3"
-                                   value="{{ time_str }}" onchange="this.form.submit()">
-                        </div>
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> Subject</label>
+                        <select name="subject_id" class="form-select rounded-pill px-3" onchange="this.form.submit()">
+                            <option value="">-- All subjects --</option>
+                            {% for s in subjects %}
+                                <option value="{{ s.SubjectID }}" {% if s.SubjectID == subject_id %}selected{% endif %}>{{ s.Name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
-                        {% if session_id or group_id or subject_id or date_str or time_str %}
+                <!-- Row 2 -->
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Date</label>
+                        <input type="date" name="date" class="form-control rounded-pill px-3"
+                               value="{{ date_str }}" onchange="this.form.submit()">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-clock me-1"></i> From time</label>
+                        <input type="time" name="time_from" class="form-control rounded-pill px-3"
+                               value="{{ time_from_str }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-clock-history me-1"></i> To time</label>
+                        <input type="time" name="time_to" class="form-control rounded-pill px-3"
+                               value="{{ time_to_str }}">
+                    </div>
+
+                    <div class="col-md-3 d-flex flex-wrap justify-content-md-end align-items-end gap-2">
+                        {% if session_id or class_id or group_id or subject_id or date_str or time_from_str or time_to_str %}
                         <a href="{{ url_for('attendance.manage_attendances') }}" class="btn-custom-secondary">
                             <i class="bi bi-x-circle"></i> Clear
                         </a>
                         {% endif %}
-                    </form>
-
-                    <!-- Opens the student list for the chosen session + group + subject + date + time -->
-                    <a href="{{ url_for('attendance.take_attendance', session_id=session_id, group_id=group_id, subject_id=subject_id, date=date_str or None, time=time_str or None) }}"
-                       class="btn-custom-secondary">
-                        <i class="bi bi-list-check"></i> Take Attendance
-                    </a>
-{#                    <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addAttendanceModal">#}
-{#                        <i class="bi bi-plus-circle-fill"></i> Add New Attendance#}
-{#                    </button>#}
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-dark-custom">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Code</th>
-                            <th>Students Name</th>
-                            <th>Group</th>
-                            <th>Subject</th>
-                            <th>Date &amp; Time</th>
-                            <th>Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if attendances %}
-                            {% for att in attendances %}
-                            <tr>
-                                <td><span class="id-badge">{{ (pagination.page - 1) * pagination.per_page + loop.index }}</span></td>
-                                <td><span class="code-pill">{{ att.ScanNumber }}</span></td>
-                                <td>
-                                    <div class="fw-semibold">{{ att.user.Name if att.user else 'Unknown User' }}</div>
-                                    <small style="font-size: 11px; color: var(--text-muted);">ID: {{ att.ProfileID }}</small>
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 px-2 py-1">
-                                        {{ att.group.Name if att.group else 'N/A' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    {% if att.subject %}
-                                        <span class="text-info fw-medium">{{ att.subject.Name }}</span>
-                                    {% else %}
-                                        <span style="color: var(--text-muted);">N/A</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ att.Date.strftime('%Y-%m-%d %H:%M') if att.Date else '-' }}</td>
-                                <td>
-                                    {% if att.Status == 'Present' %}
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Present</span>
-                                    {% elif att.Status == 'Late' %}
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">Late</span>
-                                    {% elif att.Status == 'Absent' %}
-                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">Absent</span>
-                                    {% else %}
-                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">Permission</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-inline-flex gap-2">
-                                        <button type="button" class="btn-action btn-edit" title="Edit"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#editModal{{ att.AttendanceID }}">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </button>
-                                        <button type="button" class="btn-action btn-delete" title="Delete"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteAttendanceModal"
-                                                data-id="{{ att.AttendanceID }}"
-                                                data-name="{{ att.user.Name if att.user else 'this record' }}">
-                                            <i class="bi bi-trash3-fill"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="8">
-                                    <div class="empty-state">
-                                        <i class="bi bi-inbox"></i>
-                                        No attendance records found.
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination & Per Page Selector Footer -->
-            {% if pagination %}
-            <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25 px-2 gap-3">
-                <div class="d-flex align-items-center flex-wrap gap-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="text-white-50" style="font-size: 13px;">Show</span>
-                        <select id="perPageSelect" class="form-select form-select-sm" style="width: 75px; font-size: 13px;" onchange="changePerPage(this.value)">
-                            <option value="5" {% if pagination.per_page == 5 %}selected{% endif %}>5</option>
-                            <option value="10" {% if pagination.per_page == 10 %}selected{% endif %}>10</option>
-                            <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25</option>
-                            <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50</option>
-                        </select>
-                        <span class="text-white-50" style="font-size: 13px;">entries</span>
+                        <button type="submit" class="btn-custom-primary" style="padding: 10px 16px;">
+                            <i class="bi bi-funnel-fill"></i> Filter
+                        </button>
                     </div>
-                    <span class="text-white-50" style="font-size: 13px;">
-                        Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 if pagination.total > 0 else 0 }}
-                        to {{ (pagination.page * pagination.per_page) if (pagination.page * pagination.per_page) < pagination.total else pagination.total }}
-                        of {{ pagination.total }}
-                    </span>
+                </div>
+            </form>
+
+            <!-- Table Section (Will only show if at least one filter is applied) -->
+            {% if session_id or class_id or group_id or subject_id or date_str or time_from_str or time_to_str %}
+                <div class="table-responsive">
+                    <table class="table table-dark-custom">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Code</th>
+                                <th>Students Name</th>
+                                <th>Group</th>
+                                <th>Subject</th>
+                                <th>Date &amp; Time</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if attendances %}
+                                {% for att in attendances %}
+                                <tr>
+                                    <td><span class="id-badge">{{ (pagination.page - 1) * pagination.per_page + loop.index }}</span></td>
+                                    <td><span class="code-pill">{{ att.ScanNumber }}</span></td>
+                                    <td>
+                                        <div class="fw-semibold">{{ att.user.Name if att.user else 'Unknown User' }}</div>
+                                        <small style="font-size: 11px; color: var(--text-muted);">ID: {{ att.ProfileID }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 px-2 py-1">
+                                            {{ att.group.Name if att.group else 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if att.subject %}
+                                            <span class="text-info fw-medium">{{ att.subject.Name }}</span>
+                                        {% else %}
+                                            <span style="color: var(--text-muted);">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ att.Date.strftime('%Y-%m-%d %H:%M') if att.Date else '-' }}</td>
+                                    <td>
+                                        {% if att.Status == 'Present' %}
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Present</span>
+                                        {% elif att.Status == 'Late' %}
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">Late</span>
+                                        {% elif att.Status == 'Absent' %}
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">Absent</span>
+                                        {% else %}
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">Permission</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-inline-flex gap-2">
+                                            <button type="button" class="btn-action btn-edit" title="Edit"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editModal{{ att.AttendanceID }}">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </button>
+                                            <button type="button" class="btn-action btn-delete" title="Delete"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteAttendanceModal"
+                                                    data-id="{{ att.AttendanceID }}"
+                                                    data-name="{{ att.user.Name if att.user else 'this record' }}">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="8">
+                                        <div class="empty-state">
+                                            <i class="bi bi-inbox"></i>
+                                            No attendance records found.
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
                 </div>
 
-                <div class="d-flex align-items-center gap-2">
-                    <a href="{{ url_for('attendance.manage_attendances', page=pagination.prev_num, per_page=pagination.per_page, session_id=session_id, group_id=group_id, subject_id=subject_id, date=date_str or None, time=time_str or None) if pagination.has_prev else '#' }}"
-                       class="btn-custom-secondary btn-custom-sm {% if not pagination.has_prev %}disabled{% endif %}">
-                        <i class="bi bi-chevron-left"></i> Previous
-                    </a>
-                    <a href="{{ url_for('attendance.manage_attendances', page=pagination.next_num, per_page=pagination.per_page, session_id=session_id, group_id=group_id, subject_id=subject_id, date=date_str or None, time=time_str or None) if pagination.has_next else '#' }}"
-                       class="btn-custom-secondary btn-custom-sm {% if not pagination.has_next %}disabled{% endif %}">
-                        Next <i class="bi bi-chevron-right"></i>
-                    </a>
+                <!-- Pagination & Per Page Selector Footer -->
+                {% if pagination %}
+                <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25 px-2 gap-3">
+                    <div class="d-flex align-items-center flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-white-50" style="font-size: 13px;">Show</span>
+                            <select id="perPageSelect" class="form-select form-select-sm" style="width: 75px; font-size: 13px;" onchange="changePerPage(this.value)">
+                                <option value="5" {% if pagination.per_page == 5 %}selected{% endif %}>5</option>
+                                <option value="10" {% if pagination.per_page == 10 %}selected{% endif %}>10</option>
+                                <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25</option>
+                                <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50</option>
+                            </select>
+                            <span class="text-white-50" style="font-size: 13px;">entries</span>
+                        </div>
+                        <span class="text-white-50" style="font-size: 13px;">
+                            Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 if pagination.total > 0 else 0 }}
+                            to {{ (pagination.page * pagination.per_page) if (pagination.page * pagination.per_page) < pagination.total else pagination.total }}
+                            of {{ pagination.total }}
+                        </span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{{ url_for('attendance.manage_attendances', page=pagination.prev_num, per_page=pagination.per_page, session_id=session_id, class_id=class_id, group_id=group_id, subject_id=subject_id, date=date_str or None, time_from=time_from_str or None, time_to=time_to_str or None) if pagination.has_prev else '#' }}"
+                           class="btn-custom-secondary btn-custom-sm {% if not pagination.has_prev %}disabled{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                        <a href="{{ url_for('attendance.manage_attendances', page=pagination.next_num, per_page=pagination.per_page, session_id=session_id, class_id=class_id, group_id=group_id, subject_id=subject_id, date=date_str or None, time_from=time_from_str or None, time_to=time_to_str or None) if pagination.has_next else '#' }}"
+                           class="btn-custom-secondary btn-custom-sm {% if not pagination.has_next %}disabled{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
                 </div>
-            </div>
+                {% endif %}
+            {% else %}
+                <!-- Message when no filter is selected -->
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="bi bi-funnel fs-1 text-muted mb-3 d-block"></i>
+                        <h5 class="text-light">Please select a filter to view attendance records.</h5>
+                        <p class="text-muted mb-0" style="font-size: 14px;">Choose a Session, Class, Group, Subject, or Date above and click Filter.</p>
+                    </div>
+                </div>
             {% endif %}
+
         </div>
 
     </div>
@@ -258,173 +294,101 @@
     <!-- ================= MODALS ================= -->
 
     <!-- Edit modals (one per record) -->
-    {% for att in attendances %}
-    <!-- Edit Modal -->
-    <div class="modal fade" id="editModal{{ att.AttendanceID }}" tabindex="-1" aria-labelledby="editModalLabel{{ att.AttendanceID }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <form action="{{ url_for('attendance.edit_attendance', id=att.AttendanceID) }}" method="POST" novalidate data-user-id="{{ att.ProfileID }}">
-                    {{ form.hidden_tag() }}
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel{{ att.AttendanceID }}"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Attendance (#{{ att.AttendanceID }})</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-start">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-upc-scan me-1"></i> Code</label>
-                                <input type="text" name="Code" class="form-control" value="{{ att.ScanNumber }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-people-fill me-1"></i> Group</label>
-                                <select name="GroupID" class="form-select group-select-field">
-                                    {% for g_id, g_name in form.GroupID.choices %}
-                                        <option value="{{ g_id }}" {% if g_id == att.GroupID %}selected{% endif %}>{{ g_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+    {% if attendances %}
+        {% for att in attendances %}
+        <div class="modal fade" id="editModal{{ att.AttendanceID }}" tabindex="-1" aria-labelledby="editModalLabel{{ att.AttendanceID }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <form action="{{ url_for('attendance.edit_attendance', id=att.AttendanceID) }}" method="POST" novalidate data-user-id="{{ att.ProfileID }}">
+                        {{ form.hidden_tag() }}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editModalLabel{{ att.AttendanceID }}"><i class="bi bi-pencil-square" style="color: var(--accent-amber);"></i> Edit Attendance (#{{ att.AttendanceID }})</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
+                        <div class="modal-body text-start">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-upc-scan me-1"></i> Code</label>
+                                    <input type="text" name="Code" class="form-control" value="{{ att.ScanNumber }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-people-fill me-1"></i> Group</label>
+                                    <select name="GroupID" class="form-select group-select-field">
+                                        {% for g_id, g_name in form.GroupID.choices %}
+                                            <option value="{{ g_id }}" {% if g_id == att.GroupID %}selected{% endif %}>{{ g_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-person-fill me-1"></i> Students</label>
-                                <select name="UserID" class="form-select user-select-field">
-                                    {% for u_id, u_name in form.UserID.choices %}
-                                        <option value="{{ u_id }}" {% if u_id == att.ProfileID %}selected{% endif %}>{{ u_name }}</option>
-                                    {% endfor %}
-                                </select>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-person-fill me-1"></i> Students</label>
+                                    <select name="UserID" class="form-select user-select-field">
+                                        {% for u_id, u_name in form.UserID.choices %}
+                                            <option value="{{ u_id }}" {% if u_id == att.ProfileID %}selected{% endif %}>{{ u_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> Subject</label>
+                                    <select name="SubjectID" class="form-select">
+                                        {% for s_id, s_name in form.SubjectID.choices %}
+                                            <option value="{{ s_id }}" {% if s_id == att.SubjectID %}selected{% endif %}>{{ s_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> Subject</label>
-                                <select name="SubjectID" class="form-select">
-                                    {% for s_id, s_name in form.SubjectID.choices %}
-                                        <option value="{{ s_id }}" {% if s_id == att.SubjectID %}selected{% endif %}>{{ s_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Date</label>
-                                <input type="date" name="Date" class="form-control" value="{{ att.Date.strftime('%Y-%m-%d') if att.Date else '' }}">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Date</label>
+                                    <input type="date" name="Date" class="form-control" value="{{ att.Date.strftime('%Y-%m-%d') if att.Date else '' }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-clock me-1"></i> Time</label>
+                                    <input type="time" name="Time" class="form-control" value="{{ att.Date.strftime('%H:%M') if att.Date else '' }}">
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-clock me-1"></i> Time</label>
-                                <input type="time" name="Time" class="form-control" value="{{ att.Date.strftime('%H:%M') if att.Date else '' }}">
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-check-circle me-1"></i> Status</label>
-                                <select name="Status" class="form-select">
-                                    <option value="Present" {% if att.Status == 'Present' %}selected{% endif %}>Present</option>
-                                    <option value="Late" {% if att.Status == 'Late' %}selected{% endif %}>Late</option>
-                                    <option value="Absent" {% if att.Status == 'Absent' %}selected{% endif %}>Absent</option>
-                                    <option value="Permission" {% if att.Status == 'Permission' %}selected{% endif %}>Permission</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-chat-left-text me-1"></i> Remarks</label>
-                                <input type="text" name="Remarks" class="form-control" value="{{ att.Remarks or '' }}">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-check-circle me-1"></i> Status</label>
+                                    <select name="Status" class="form-select">
+                                        <option value="Present" {% if att.Status == 'Present' %}selected{% endif %}>Present</option>
+                                        <option value="Late" {% if att.Status == 'Late' %}selected{% endif %}>Late</option>
+                                        <option value="Absent" {% if att.Status == 'Absent' %}selected{% endif %}>Absent</option>
+                                        <option value="Permission" {% if att.Status == 'Permission' %}selected{% endif %}>Permission</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-chat-left-text me-1"></i> Remarks</label>
+                                    <input type="text" name="Remarks" class="form-control" value="{{ att.Remarks or '' }}">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-warning btn-sm text-white">
-                            <i class="bi bi-arrow-repeat me-1"></i> Update Attendance
-                        </button>
-                    </div>
-                </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-warning btn-sm text-white">
+                                <i class="bi bi-arrow-repeat me-1"></i> Update Attendance
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+        {% endfor %}
+    {% endif %}
 
-    {% endfor %}
-
-    <!-- Delete Confirmation Modal (shared, one for the whole page) -->
+    <!-- Delete Confirmation Modal -->
     {% with modal_id='deleteAttendanceModal',
             action_prefix=url_for('attendance.delete_attendance', id=0)[:-1],
             item_label='attendance record',
             note='This action cannot be undone.' %}
         {% include 'components/delete.html' %}
     {% endwith %}
-
-    <!-- Add Attendance Modal -->
-    <div class="modal fade" id="addAttendanceModal" tabindex="-1" aria-labelledby="addAttendanceModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <form method="POST" action="{{ url_for('attendance.manage_attendances', session_id=session_id, group_id=group_id, subject_id=subject_id, date=date_str or None, time=time_str or None) }}" novalidate>
-                    {{ form.hidden_tag() }}
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addAttendanceModalLabel"><i class="bi bi-plus-circle-fill" style="color: var(--accent-indigo);"></i> Record Attendance</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-start">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.Code.label.text }}</label>
-                                {{ form.Code(class="form-control", placeholder="Enter scan/code number") }}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-people-fill me-1"></i> {{ form.GroupID.label.text }}</label>
-                                {{ form.GroupID(class="form-select group-select-field") }}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-person-fill me-1"></i> {{ form.UserID.label.text }}</label>
-                                {{ form.UserID(class="form-select user-select-field") }}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> {{ form.SubjectID.label.text }}</label>
-                                {{ form.SubjectID(class="form-select") }}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ form.Date.label.text }}</label>
-                                {{ form.Date(class="form-control", type="date") }}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-clock me-1"></i> {{ form.Time.label.text }}</label>
-                                {{ form.Time(class="form-control", type="time") }}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-check-circle me-1"></i> {{ form.Status.label.text }}</label>
-                                {{ form.Status(class="form-select") }}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-chat-left-text me-1"></i> {{ form.Remarks.label.text if form.Remarks else 'Remarks' }}</label>
-                                {% if form.Remarks %}
-                                    {{ form.Remarks(class="form-control", placeholder="Optional remarks") }}
-                                {% else %}
-                                    <input type="text" name="Remarks" class="form-control" placeholder="Optional remarks">
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-custom-primary btn-sm">
-                            <i class="bi bi-check-lg me-1"></i> Save Attendance
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- Bootstrap JS Bundle CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -456,7 +420,7 @@
             }
 
             // ---- Filter Students by the selected Group (inside modals) ----
-            const STUDENTS = {{ students_data|tojson }};
+            const STUDENTS = {{ students_data|tojson if students_data else '[]' }};
 
             function filterStudents(form, keepId) {
                 const groupSel = form.querySelector('.group-select-field');
@@ -501,7 +465,7 @@
             });
         });
 
-        // Change items per page via URL query parameter (keeps session/group/subject/date/time filters)
+        // Change items per page via URL query parameter
         function changePerPage(perPageValue) {
             const url = new URL(window.location.href);
             url.searchParams.set('per_page', perPageValue);
